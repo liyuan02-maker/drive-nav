@@ -84,6 +84,21 @@ button{cursor:pointer}
 .banner b{display:block}
 .mapbtns{position:absolute;right:10px;bottom:34px;display:flex;flex-direction:column;gap:6px;z-index:2}
 .mapbtns button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0;font-size:13px}
+.cctv{position:absolute;top:10px;right:10px;width:min(52%,340px);z-index:4;background:#000;border:1px solid #3a4a56;border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.cctv.big{left:10px;width:auto;max-width:720px}
+.cctvview{position:relative;aspect-ratio:16/9;background:#0b0f12;display:grid;place-items:center;cursor:zoom-in;overflow:hidden}
+.cctv.big .cctvview{cursor:zoom-out}
+.cctvview img,.cctvview video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#000}
+.cctvview .note{font-size:12px;color:var(--muted);padding:10px;text-align:center;line-height:1.4}
+.cctvview .note a{color:var(--route)}
+.cctvview .live{position:absolute;left:6px;top:6px;font:700 10px var(--display);background:#E5484D;color:#fff;padding:1px 6px;border-radius:4px;z-index:1}
+.cctvbar{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;font-size:12px;background:rgba(11,17,22,.94)}
+.cctvbar b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cctvbar span{flex:none;color:var(--muted);font-variant-numeric:tabular-nums}
+.cctvchips{display:none;gap:6px;overflow-x:auto;padding:6px 8px;background:rgba(11,17,22,.94)}
+.cctv.big .cctvchips{display:flex}
+.cctvchips button{flex:none;border:1px solid var(--line);background:var(--raise);border-radius:99px;padding:5px 10px;font-size:12.5px;white-space:nowrap}
+.cctvchips button.on{border-color:var(--route);color:var(--route)}
 .recenter{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;z-index:3}
 .car{width:40px;height:40px;display:grid;place-items:center}
 .car svg{width:34px;height:34px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
@@ -197,6 +212,11 @@ mark{background:none;color:var(--accent);font-weight:700}
 
   <div class="mapwrap">
     <div id="map" aria-label="導航地圖"></div>
+    <div class="cctv" id="cctv" hidden aria-label="路口攝影機（副駕模式）">
+      <div class="cctvview" id="cctvView" role="button" tabindex="0" aria-label="放大或縮小畫面"></div>
+      <div class="cctvbar"><b id="cctvName">路口攝影機</b><span id="cctvDist"></span></div>
+      <div class="cctvchips" id="cctvChips"></div>
+    </div>
     <div class="banner" id="banner" hidden><div id="bannerText"></div><button class="btn primary" id="bannerBtn" hidden></button></div>
     <div class="mapbtns">
       <button id="compass" aria-label="地圖方向：車頭朝上" title="車頭朝上"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 3l4 9h-8z" fill="#FF4A4F"/><path d="M12 21l-4-9h8z" fill="#8C9DA8"/></svg></button>
@@ -210,6 +230,7 @@ mark{background:none;color:var(--accent);font-weight:700}
       <button class="btn primary grow" id="searchBtn">搜尋目的地</button>
       <button class="btn danger" id="endBtn" hidden>結束導航</button>
       <button class="btn" id="voice" aria-pressed="true">語音</button>
+      <button class="btn" id="coBtn" aria-pressed="false">副駕</button>
       <button class="btn" id="more" aria-expanded="false">設定</button>
     </div>
     <div class="extra">
@@ -850,6 +871,61 @@ function updateHUD(){
 }
 setInterval(()=>{if(S.pos)updateHUD()},1000);
 
+
+/* ---------- 副駕模式：路口攝影機（交通部 TDX 清單，GitHub 每週更新） ---------- */
+S.co=LS.get('co',false);S.cctvAll=null;S.coCur=null;S.coPin=null;S.coPinT=0;
+(async()=>{try{const j=await getJSON('cctv.json?d='+new Date().toISOString().slice(0,10),{},30000);if(j&&Array.isArray(j.cctv)&&j.cctv.length){S.cctvAll=j;S.cctvC=null}}
+  catch(e){console.warn('[cctv] 沒有攝影機清單',e.kind||e.message)}finally{updateCo(true)}})();
+const routeSnap=new WeakMap();
+function cctvNear(p){const d=.04;return S.cctvAll.cctv.filter(c=>Math.abs(c.lat-p.lat)<d&&Math.abs(c.lon-p.lon)<d*1.1)}
+function coList(){
+  const p=S.pos;if(!p||!S.cctvAll)return[];
+  if(!S.cctvC||hav(S.cctvC,p)>400){S.cctvC={lat:p.lat,lon:p.lon};S.cctvNearL=cctvNear(p)}
+  const r=S.route,out=[];let snap=null;
+  if(r){snap=routeSnap.get(r);if(!snap){snap=new Map();routeSnap.set(r,snap)}}
+  for(const c of S.cctvNearL){let d;
+    if(r){let s=snap.get(c);if(s===undefined){const q=r.pj(c);let best={d:1e9,s:0};for(let i=0;i<r.xy.length-1;i++){const g=segDist(q,r.xy[i],r.xy[i+1]);if(g.d<best.d)best={d:g.d,s:r.cum[i]+g.t*g.l}}
+        s=best.d<60?best.s:null;snap.set(c,s)}
+      if(s==null)continue;d=s-r.s;if(d<-30||d>3000)continue;c._s=s}
+    else{d=hav(p,c);if(d>2500)continue;if(S.speed>5&&d>60&&adiff(brg(p,c),S.heading)>35)continue}
+    out.push({c,d:Math.max(0,d)})}
+  return out.sort((a,b)=>a.d-b.d)}
+function coPick(list){
+  if(S.coPin&&Date.now()<S.coPinT){const f=list.find(x=>x.c===S.coPin)||{c:S.coPin,d:S.pos?hav(S.pos,S.coPin):0};return{...f,why:'你選的'}}
+  S.coPin=null;const r=S.route;
+  if(r){const jam=r.tr.find(t=>t.cat==='JAM'&&t.s2>r.s&&t.s1-r.s<3000);
+    if(jam){const f=list.find(x=>x.c._s>=jam.s1-200&&x.c._s<=jam.s2);if(f)return{...f,why:'前方壅塞'}}}
+  return list[0]?{...list[0],why:'前方路口'}:null}
+function streamOf(c){let u=c.url||c.img||'';if(location.protocol==='https:')u=u.replace(/^http:\/\//i,'https://');return u}
+function showStream(c){
+  const v=$('cctvView');clearInterval(S.coTimer);v.innerHTML='<span class="live">LIVE</span>';
+  const orig=c.url||c.img||'',u=streamOf(c),fail=()=>{clearInterval(S.coTimer);
+    v.innerHTML=`<div class="note">這支攝影機的畫面無法在這裡播放${/^http:/i.test(orig)?'（只提供不加密的 http，手機瀏覽器會擋下）':''}。<br><a href="${esc(orig)}" target="_blank" rel="noopener">在新分頁打開</a></div>`};
+  if(!u){fail();return}
+  if(/\.m3u8(\?|$)/i.test(u)){const vd=document.createElement('video');vd.muted=true;vd.autoplay=true;vd.playsInline=true;vd.setAttribute('playsinline','');vd.src=u;vd.onerror=fail;v.appendChild(vd);vd.play&&vd.play().catch(()=>{});return}
+  const im=document.createElement('img');im.alt=c.name;im.referrerPolicy='no-referrer';let tried=false;
+  im.onerror=()=>{if(!tried&&c.img&&c.url&&u!==streamOf({img:c.img})){tried=true;im.src=streamOf({img:c.img});startSnap(im,streamOf({img:c.img}));return}fail()};
+  im.src=u;v.appendChild(im);
+  if(/\.(jpe?g|png)(\?|$)|snapshot|getimage|image/i.test(u)&&!/mjpe?g|stream/i.test(u))startSnap(im,u)}
+function startSnap(im,u){clearInterval(S.coTimer);S.coTimer=setInterval(()=>{if(!document.hidden)im.src=u+(u.includes('?')?'&':'?')+'_t='+Date.now()},5000)}
+function stopStream(){clearInterval(S.coTimer);$('cctvView').innerHTML='';S.coCur=null}
+function updateCo(force){
+  const box=$('cctv');$('coBtn').setAttribute('aria-pressed',S.co);box.hidden=!S.co;if(!S.co){if(S.coCur)stopStream();return}
+  if(!S.cctvAll){$('cctvView').innerHTML='<div class="note">正在載入攝影機清單…<br>（第一次使用要等 GitHub 下載完成）</div>';$('cctvName').textContent='路口攝影機';$('cctvDist').textContent='';return}
+  if(!S.pos){$('cctvView').innerHTML='<div class="note">等待 GPS 定位…</div>';return}
+  const list=coList(),pick=coPick(list);
+  if(!pick){if(S.coCur||force){stopStream();$('cctvView').innerHTML=`<div class="note">${S.route?'路線前方 3 公里':'行進方向 2.5 公里'}內沒有攝影機</div>`}$('cctvName').textContent='路口攝影機';$('cctvDist').textContent='';$('cctvChips').innerHTML='';return}
+  if(pick.c!==S.coCur){S.coCur=pick.c;showStream(pick.c)}
+  $('cctvName').textContent=pick.c.name||'路口攝影機';$('cctvDist').textContent=`${pick.why} · ${fmtD(pick.d)}`;
+  const html=list.slice(0,6).map((x,i)=>`<button data-i="${i}" class="${x.c===pick.c?'on':''}">${esc((x.c.name||'').slice(0,14))} · ${fmtD(x.d)}</button>`).join('');
+  if($('cctvChips').dataset.h!==html){$('cctvChips').innerHTML=html;$('cctvChips').dataset.h=html;S.coListNow=list}}
+$('coBtn').addEventListener('click',()=>{S.co=!S.co;LS.set('co',S.co);updateCo(true);if(S.co)toast('副駕模式：自動顯示前方路口畫面，點畫面可放大')});
+$('cctvView').addEventListener('click',e=>{if(e.target.closest('a'))return;$('cctv').classList.toggle('big')});
+$('cctvView').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('cctv').classList.toggle('big')}});
+$('cctvChips').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;const x=S.coListNow[+b.dataset.i];if(!x)return;S.coPin=x.c;S.coPinT=Date.now()+30000;updateCo(true)});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.coCur)stopStream();else if(!document.hidden)updateCo(true)});
+setInterval(()=>updateCo(),2000);
+
 /* ---------- 設定 ---------- */
 $('more').addEventListener('click',()=>{const o=$('controls').classList.toggle('open');$('more').setAttribute('aria-expanded',o);$('more').textContent=o?'收起':'設定'});
 $('voice').setAttribute('aria-pressed',S.voice);
@@ -888,6 +964,7 @@ function diagTests(){const b=S.pos||{lat:24.89,lon:121.10},oq=`[out:json][timeou
   {n:'Google 即時路況路線',skip:!S.gKey&&'沒有填金鑰',run:()=>getJSON('https://routes.googleapis.com/directions/v2:computeRoutes',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':S.gKey,'X-Goog-FieldMask':'routes.duration'},body:JSON.stringify({origin:{location:{latLng:{latitude:25.0478,longitude:121.517}}},destination:{location:{latLng:{latitude:25.0446,longitude:121.544}}},travelMode:'DRIVE',routingPreference:'TRAFFIC_AWARE'})},10000)},
   {n:'TomTom 搜尋／路況',skip:!S.key&&'沒有填金鑰',run:()=>getJSON(`https://api.tomtom.com/search/2/search/${encodeURIComponent('台北車站')}.json?key=${encodeURIComponent(S.key)}&limit=1&countrySet=TW`,{},10000)},
   {n:'路線規劃（OSRM）',run:()=>getJSON('https://router.project-osrm.org/route/v1/driving/121.5170,25.0478;121.5440,25.0446?overview=false',{},10000)},
+  {n:'路口攝影機清單（TDX）',run:async()=>{if(S.cctvAll)return`${S.cctvAll.cctv.length} 支攝影機，資料更新於 ${S.cctvAll.updated}`;const e=new Error('');e.kind='env';e.msg='還沒有攝影機清單（GitHub 每週自動下載）';throw e}},
   {n:'官方測速點（警政署）',run:async()=>{if(S.official)return`${S.official.cams.length} 個測速點，資料更新於 ${S.official.updated}`;const e=new Error('');e.kind='env';e.msg='還沒有官方資料（GitHub 每週自動下載，第一次要等它跑完）';throw e}},
   {n:'速限資料（OpenStreetMap）',run:async()=>{let last;for(const u of OVERPASS){try{return await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(oq),headers:{'Content-Type':'application/x-www-form-urlencoded'}},15000)}catch(e){last=e}}throw last}}]}
 async function runDiag(){const tests=diagTests();
