@@ -1,0 +1,33 @@
+name: 更新路口攝影機清單
+
+on:
+  schedule:
+    - cron: "41 19 * * 0"   # 每週一 03:41（台灣時間）
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/update_cctv.py
+      - .github/workflows/update-cctv.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/update_cctv.py
+        env:
+          TDX_CLIENT_ID: ${{ secrets.TDX_CLIENT_ID }}
+          TDX_CLIENT_SECRET: ${{ secrets.TDX_CLIENT_SECRET }}
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase -q
+          git add cctv.json
+          git diff --cached --quiet || (git commit -m "Update CCTV list" && git push)
