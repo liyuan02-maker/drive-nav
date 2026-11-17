@@ -114,6 +114,7 @@ html.mapday .mapwrap{background:#E9EEF1}
 .hud.nocam .enf{display:none}
 .src.on{display:none}
 .sign.est{border-color:#E57373}
+.sign.d3{font-size:15px;letter-spacing:-.03em}
 .sign.est::after{content:"約";position:absolute;font-size:9px;font-family:var(--body);margin-top:-30px;color:#555}
 .sign{position:relative}
 .overtxt{font-family:var(--display);font-size:13px;color:#fff;background:var(--danger);border-radius:6px;padding:0 6px}
@@ -904,8 +905,8 @@ async function routeGoogle(pts,stops){
     if(S.travel==='moto'&&e.kind==='http'&&e.status===400){body.travelMode='DRIVE';j=await call(body)}else throw e}
   const rt=j.routes&&j.routes[0];if(!rt||!rt.polyline)throw errOf('找不到路線','none');
   const coords=decodePoly(rt.polyline.encodedPolyline),dur=parseFloat(rt.duration)||0,sdur=parseFloat(rt.staticDuration||rt.duration)||dur;
-  let road='';const steps=[];rt.legs.forEach((leg,li)=>{(leg.steps||[]).forEach((st,k)=>{const ni=st.navigationInstruction||{},loc=st.startLocation?.latLng;
-      const tx0=(ni.instructions||'').replace(/\s*\n\s*/g,'，');if(li===0&&k===0){road=roadIn(tx0)||road;return}if(!loc||!tx0)return;
+  let road='',firstRoad='';const steps=[];rt.legs.forEach((leg,li)=>{(leg.steps||[]).forEach((st,k)=>{const ni=st.navigationInstruction||{},loc=st.startLocation?.latLng;
+      const tx0=(ni.instructions||'').replace(/\s*\n\s*/g,'，');if(li===0&&k===0){road=roadIn(tx0)||road;firstRoad=tx0;return}if(!loc||!tx0)return;
       const mv=ni.maneuver||'',side=/LEFT/.test(mv)?'left':'right',isExit=/RAMP/.test(mv)&&/出口|交流道/.test(tx0)&&!/入口|上國道|上快速/.test(tx0),isFork=/FORK/.test(mv);
       const sg=(isExit||isFork)?{to:towardOf(tx0)||exitNameOf(tx0),exitNo:exitNoOf(tx0),other:road}:null;
       steps.push({lat:loc.latitude,lon:loc.longitude,icon:G_ICON(mv),text:tx0,exit:isExit?side:null,fork:isFork&&!isExit?side:null,sign:sg});
@@ -918,7 +919,7 @@ async function routeGoogle(pts,stops){
   const segLen=(a,b)=>{let l=0;for(let k=a;k<b&&k<coords.length-1;k++)l+=hav({lon:coords[k][0],lat:coords[k][1]},{lon:coords[k+1][0],lat:coords[k+1][1]});return l};
   iv.forEach(x=>x.w=segLen(x.i0,x.i1)*(x.cat==='JAM'?3:1));const W=iv.reduce((a,x)=>a+x.w,0)||1,delay=Math.max(0,dur-sdur);
   const traffic=iv.map(x=>({i0:x.i0,i1:x.i1,cat:x.cat,delay:delay*x.w/W}));
-  return{coords,steps,distance:rt.distanceMeters||0,duration:dur,delay:tm.traffic?delay:0,traffic:tm.traffic?traffic:[],src:'Google',mode:S.travel};
+  return{coords,steps,distance:rt.distanceMeters||0,duration:dur,delay:tm.traffic?delay:0,traffic:tm.traffic?traffic:[],src:'Google',mode:S.travel,firstRoad};
 }
 async function routeOSRM(pts,stops=S.plan.stops){
   const base={car:'https://router.project-osrm.org/route/v1/driving',moto:'https://router.project-osrm.org/route/v1/driving',
@@ -926,7 +927,7 @@ async function routeOSRM(pts,stops=S.plan.stops){
   const j=await getJSON(`${base}/${pts.map(p=>p.lon.toFixed(6)+','+p.lat.toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true${S.travel==='moto'?'&exclude=motorway':''}`,{},15000);
   if(j.code!=='Ok'||!j.routes||!j.routes.length)throw new Error(j.code||'no route');
   const rt=j.routes[0],coords=rt.geometry.coordinates;
-  let road='';const steps=[];rt.legs.forEach((leg,li)=>leg.steps.forEach(st=>{const m=st.maneuver;const here=st.name||st.ref||'';if(m.type==='depart'){road=here;return}
+  let road='',firstRoad='';const steps=[];rt.legs.forEach((leg,li)=>leg.steps.forEach(st=>{const m=st.maneuver;const here=st.name||st.ref||'';if(m.type==='depart'){road=here;if(!firstRoad)firstRoad=here;return}
     const isArr=m.type==='arrive',last=li===rt.legs.length-1;
     if(isArr&&!last){steps.push({lon:m.location[0],lat:m.location[1],icon:'stop',text:'中途點 '+(stops[li]?.name||''),stop:li});return}
     if(isArr){steps.push({lon:m.location[0],lat:m.location[1],icon:'arrive',text:'抵達 '+S.plan.dest.name,arrive:true});return}
@@ -935,7 +936,7 @@ async function routeOSRM(pts,stops=S.plan.stops){
     steps.push({lon:m.location[0],lat:m.location[1],icon:osrmIcon(m),text:osrmText(st)+(to&&isExit?'，往'+to:''),exit:isExit?side:null,fork:isFork?side:null,
       sign:(isExit||isFork)?{to,exitNo:(st.exits||'').split(';')[0],other:road}:null});
     road=here||road}));
-  return{coords,steps,distance:rt.distance,duration:rt.duration,traffic:[],src:'OSRM',mode:S.travel};
+  return{coords,steps,distance:rt.distance,duration:rt.duration,traffic:[],src:'OSRM',mode:S.travel,firstRoad};
 }
 async function routeTomTom(pts,stops=S.plan.stops){
   const url=`https://api.tomtom.com/routing/1/calculateRoute/${pts.map(p=>p.lat.toFixed(6)+','+p.lon.toFixed(6)).join(':')}/json?key=${encodeURIComponent(S.key)}&traffic=${motorized()}&travelMode=${TRAVEL[S.travel].tt}${S.travel==='moto'?'&avoid=motorways':''}&routeType=fastest&instructionsType=text&language=zh-TW&sectionType=traffic&computeTravelTimeFor=all`;
@@ -1142,6 +1143,10 @@ function updateLimit(){
   if(best){if(best.w.lim)lim=best.w.lim;else{lim=estLim(best.w);est=!!lim}}
   // 都沒有資料時：旁邊 150 m 內有同方向的國道攝影機，就當作在國道上（約 100）
   if(!lim&&S.cctvNearL&&S.headingKnown){const f=S.cctvNearL.find(c=>c.src==='國道'&&hav(p,c)<150&&camTravel(c)!=null&&adiff(camTravel(c),S.heading)<60);if(f){lim=100;est=true}}
+  // 還是沒有：導航中就看路線上目前這一段是哪種路（國道約 100、快速道路約 80）
+  if(!lim&&S.route){const r=S.route;let cur='';for(let i=r.steps.length-1;i>=0;i--){if(r.steps[i].s<=r.s+3){cur=r.steps[i].text||'';break}}
+    if(!cur&&r.steps.length===0)cur='';const head=cur||(r.firstRoad||'');
+    if(/國道|國\d|高速公路/.test(head)&&!/下交流道|出口/.test(head)){lim=100;est=true}else if(/快速(道路|公路)/.test(head)){lim=80;est=true}}
   if(lim){S.limit=lim;S.limitEst=est;S.limitT=Date.now()}else if(!S.limitT||Date.now()-S.limitT>20000){S.limit=null;S.limitEst=false}
 }
 function updateCam(){
@@ -1161,7 +1166,7 @@ function updateCam(){
 function updateHUD(){
   const v=Math.round(S.speed);$('spd').textContent=S.pos?v:'--';$('spd').classList.toggle('three',v>=100);
   const cam=S.camAhead,camLim=cam&&cam.d<500&&cam.c.lim?cam.c.lim:null,lim=camLim||S.limit,est=!camLim&&S.limitEst;
-  $('limit').className='sign'+(lim?'':' unk')+(est?' est':'');$('limit').textContent=lim||'速限';$('limit').title=lim?(est?'依道路類型推算的速限':'目前路段速限'):'這段路沒有速限資料';
+  $('limit').className='sign'+(lim?'':' unk')+(est?' est':'')+(lim>=100?' d3':'');$('limit').textContent=lim||'速限';$('limit').title=lim?(est?'依道路類型推算的速限':'目前路段速限'):'這段路沒有速限資料';
   $('hud').classList.toggle('nocam',!(cam&&cam.d<(S.speed>80?2000:1200))&&!!S.area);
   if(cam){const fast=S.speed>80,warn=fast?1000:500;$('eType').textContent='測速';$('eDist').innerHTML=cam.d>=1000?(cam.d/1000).toFixed(1)+'<small>km</small>':Math.round(cam.d)+'<small>m</small>';
     $('eName').textContent=(cam.c.lim?'限速 '+cam.c.lim+' · ':'')+(cam.c.addr?cam.c.addr.replace(/^(..[縣市])/,''):'OpenStreetMap');$('eBar').style.width=Math.max(0,Math.min(100,100*(1-cam.d/(warn*1.6))))+'%'}
