@@ -404,7 +404,9 @@ function themeLabel(){const p=S.pos||{lat:23.97,lon:120.97},s=sunTimes(p.lat,p.l
 function checkTheme(){const d=wantDark();if(d!==S.dark){S.dark=d;document.documentElement.classList.toggle('mapday',!d);if(A&&$('start').hidden)mountMap(S.mapNow,true)}renderTheme()}
 document.documentElement.classList.toggle('mapday',!S.dark);
 setInterval(checkTheme,60000);
-S.mapSrc=LS.get('mapSrc','free');S.gMapId=LS.get('gMapId','');S.appleTok=LS.get('appleTok','');
+// 預設用 Google 地圖（舊版存過的選擇一次性改成 Google）；沒有 Google 金鑰時自動用免費地圖
+if(!LS.get('mapSrcV2',false)){LS.set('mapSrc','google');LS.set('mapSrcV2',true)}
+S.mapSrc=LS.get('mapSrc','google');S.gMapId=LS.get('gMapId','');S.appleTok=LS.get('appleTok','');
 let A=null;
 const CAR_SVG='<svg viewBox="0 0 24 24"><path d="M12 2l7 19-7-4-7 4z" fill="#fff" stroke="#0B1116" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 function mkEl(cls,html){const e=document.createElement('div');e.className=cls;e.innerHTML=html||'';return e}
@@ -551,6 +553,7 @@ function AppleMap(){let map,car,carEl,lines=[],cams=[],pins=[],sign=1;
     return v==='3d'?'no3d':'ok'}};return self}
 
 async function mountMap(src,quiet){
+  if(src==='google'&&!S.gKey)src='free';
   if(A){try{A.destroy()}catch(e){}A=null}
   const host=$('map');host.innerHTML='';const box=document.createElement('div');box.className='mapbox';host.appendChild(box);
   const a=({free:FreeMap,google:GoogleMap,apple:AppleMap}[src]||FreeMap)();
