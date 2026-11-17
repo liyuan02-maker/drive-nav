@@ -84,6 +84,10 @@ button{cursor:pointer}
 .banner b{display:block}
 .mapbtns{position:absolute;right:10px;bottom:34px;display:flex;flex-direction:column;gap:6px;z-index:2}
 .mapbtns button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0;font-size:13px}
+.sigpill{position:absolute;left:10px;top:10px;z-index:3;display:flex;align-items:center;gap:7px;max-width:calc(100% - 20px);background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px 5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
+.mapwrap:has(.cctv:not([hidden])) .sigpill{max-width:44%}
+.sigpill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sigdot{width:12px;height:22px;display:grid;place-items:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
 .cctv{position:absolute;top:10px;right:10px;width:min(52%,340px);z-index:4;background:#000;border:1px solid #3a4a56;border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.45)}
 .cctv.big{left:10px;width:auto;max-width:720px}
 .cctvview{position:relative;aspect-ratio:16/9;background:#0b0f12;display:grid;place-items:center;cursor:zoom-in;overflow:hidden}
@@ -214,6 +218,7 @@ mark{background:none;color:var(--accent);font-weight:700}
 
   <div class="mapwrap">
     <div id="map" aria-label="導航地圖"></div>
+    <div class="sigpill" id="sigPill" hidden><svg viewBox="0 0 12 24" width="10" height="20" aria-hidden="true"><rect x="1" y="1" width="10" height="22" rx="3" fill="#0B1116" stroke="#F2B33D" stroke-width="1.2"/><circle cx="6" cy="6" r="2.3" fill="#E5484D"/><circle cx="6" cy="12" r="2.3" fill="#F2B33D"/><circle cx="6" cy="18" r="2.3" fill="#36C276"/></svg><span id="sigText"></span></div>
     <div class="cctv" id="cctv" hidden aria-label="路口攝影機（副駕模式）">
       <div class="cctvview" id="cctvView" role="button" tabindex="0" aria-label="放大或縮小畫面"></div>
       <div class="cctvbar" id="cctvBar"><b id="cctvName">路口攝影機</b><span id="cctvDist"></span><a id="cctvOpen" href="#" target="_blank" rel="noopener" hidden aria-label="在新分頁打開這支攝影機">↗</a></div>
@@ -241,6 +246,9 @@ mark{background:none;color:var(--accent);font-weight:700}
       <p class="msg" id="mapSrcNote"></p>
       <div class="field" id="gMapIdRow" hidden><input id="gMapId" autocomplete="off" placeholder="Google Map ID（選填）"><button class="btn" id="gMapIdSave">儲存</button></div>
       <div class="field" id="appleRow" hidden><input id="appleTok" type="password" autocomplete="off" placeholder="Apple MapKit JS 權杖"><button class="btn" id="appleSave">儲存</button></div>
+      <div class="label">紅綠燈</div>
+      <p class="msg">地圖會標出紅綠燈位置，畫面左上角顯示前方紅綠燈的距離。台灣沒有公開即時燈號，所以無法顯示紅燈或綠燈。</p>
+      <button class="btn" id="sigVoiceBtn" aria-pressed="false">紅綠燈語音提醒：關</button>
       <div class="label">即時路況</div>
       <p class="msg">有 Google 金鑰（並在 Google Cloud 啟用「Routes API」）時，路線會依 Google 即時路況規劃、避開塞車；選 Google 地圖還能看到整片路況。也可以改用 TomTom 金鑰，免費申請：<a href="https://developer.tomtom.com/" target="_blank" rel="noopener">developer.tomtom.com</a></p>
       <div class="field"><input id="ttKey" type="password" autocomplete="off" placeholder="TomTom API 金鑰"><button class="btn" id="ttSave">儲存</button></div>
@@ -354,6 +362,8 @@ let A=null;
 const CAR_SVG='<svg viewBox="0 0 24 24"><path d="M12 2l7 19-7-4-7 4z" fill="#fff" stroke="#0B1116" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 function mkEl(cls,html){const e=document.createElement('div');e.className=cls;e.innerHTML=html||'';return e}
 const camEl=lim=>mkEl('camdot',lim?String(lim):'');
+const SIG_SVG='<svg viewBox="0 0 12 24" width="10" height="20" aria-hidden="true"><rect x="1" y="1" width="10" height="22" rx="3" fill="#0B1116" stroke="#F2B33D" stroke-width="1.2"/><circle cx="6" cy="6" r="2.3" fill="#E5484D"/><circle cx="6" cy="12" r="2.3" fill="#F2B33D"/><circle cx="6" cy="18" r="2.3" fill="#36C276"/></svg>';
+const sigEl=()=>mkEl('sigdot',SIG_SVG);
 const pinEl=(cls,txt)=>mkEl('pin '+cls,`<span>${txt}</span>`);
 function loadScript(src,attrs={}){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.async=true;
   for(const[k,v]of Object.entries(attrs))s.setAttribute(k,v);s.onload=()=>res();s.onerror=()=>{const e=new Error('script');e.kind='blocked';rej(e)};document.head.appendChild(s)})}
@@ -389,6 +399,7 @@ function FreeMap(){let map,car,pins=[];const self={trafficOK:()=>!!S.key,
   view(o){map.easeTo({center:[o.lon,o.lat],bearing:o.bearing,pitch:o.pitch,zoom:o.zoom,offset:[0,o.offY],duration:o.dur,easing:x=>x})},
   setRoute(segs){map.getSource('route').setData({type:'FeatureCollection',features:segs.map(s=>({type:'Feature',properties:{c:s.color},geometry:{type:'LineString',coordinates:s.coords}}))})},
   setCams(list){map.getSource('cams').setData({type:'FeatureCollection',features:list.map(c=>({type:'Feature',properties:{lim:c.lim||''},geometry:{type:'Point',coordinates:[c.lon,c.lat]}}))})},
+  setSignals(list){(self.sg||[]).forEach(m=>m.remove());self.sg=list.map(s=>new maplibregl.Marker({element:sigEl()}).setLngLat([s.lon,s.lat]).addTo(map))},
   setPins(list){pins.forEach(m=>m.remove());pins=list.map(p=>new maplibregl.Marker({element:pinEl(p.cls,p.txt),anchor:'bottom-left',offset:[-4,4]}).setLngLat([p.lon,p.lat]).addTo(map))},
   setTraffic(on){if(!S.key)on=false;
     if(on&&!map.getSource('tt')){map.addSource('tt',{type:'raster',tileSize:256,tiles:[`https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${encodeURIComponent(S.key)}`],attribution:'路況 © TomTom'});
@@ -432,6 +443,7 @@ function GoogleMap(){let map,car,carEl,lines=[],cams=[],pins=[],traffic=null;
     for(const s of segs){const path=s.coords.map(([lng,lat])=>({lat,lng}));
       lines.push(new google.maps.Polyline({map,path,strokeColor:'#06121d',strokeWeight:11,strokeOpacity:1,zIndex:1}),new google.maps.Polyline({map,path,strokeColor:s.color,strokeWeight:7,strokeOpacity:1,zIndex:2}))}},
   setCams(list){cams.forEach(m=>m.map=null);cams=list.slice(0,150).map(c=>new self.AME({map,position:{lat:c.lat,lng:c.lon},content:wrap(camEl(c.lim)),zIndex:50}))},
+  setSignals(list){(self.sg||[]).forEach(m=>m.map=null);self.sg=list.map(s=>new self.AME({map,position:{lat:s.lat,lng:s.lon},content:wrap(sigEl()),zIndex:40}))},
   setPins(list){pins.forEach(m=>m.map=null);pins=list.map(p=>new self.AME({map,position:{lat:p.lat,lng:p.lon},content:pinEl(p.cls,p.txt),zIndex:60}))},
   setTraffic(on){if(!traffic)traffic=new google.maps.TrafficLayer();traffic.setMap(on?map:null)}};return self}
 
@@ -474,6 +486,7 @@ function AppleMap(){let map,car,carEl,lines=[],cams=[],pins=[],sign=1;
         new mapkit.PolylineOverlay(pts,{style:new mapkit.Style({strokeColor:s.color,lineWidth:7,lineCap:'round',lineJoin:'round'})}))}
     if(lines.length)map.addOverlays(lines)},
   setCams(list){if(cams.length)map.removeAnnotations(cams);cams=list.slice(0,150).map(c=>new mapkit.Annotation(C(c.lat,c.lon),()=>camEl(c.lim),{anchorOffset:new DOMPoint(0,11),calloutEnabled:false,enabled:false}));if(cams.length)map.addAnnotations(cams)},
+  setSignals(list){if(self.sg&&self.sg.length)map.removeAnnotations(self.sg);self.sg=list.map(s=>new mapkit.Annotation(C(s.lat,s.lon),()=>sigEl(),{anchorOffset:new DOMPoint(0,10),calloutEnabled:false,enabled:false}));if(self.sg.length)map.addAnnotations(self.sg)},
   setPins(list){if(pins.length)map.removeAnnotations(pins);pins=list.map(p=>new mapkit.MarkerAnnotation(C(p.lat,p.lon),{color:p.cls==='dest'?'#F2B33D':'#C9A7FF',glyphText:String(p.txt||''),calloutEnabled:false}));if(pins.length)map.addAnnotations(pins)},
   setTraffic(){}};return self}
 
@@ -490,7 +503,7 @@ async function mountMap(src,quiet){
   renderMapSrc();refreshMap();
   if(!quiet)toast('地圖：'+MAP_NAME[src]);
 }
-function refreshMap(){if(!A)return;if(S.pos){A.setCar(S.pos,S.heading);S.carAdded=true}drawRoute();drawCams();drawPins();
+function refreshMap(){if(!A)return;if(S.pos){A.setCar(S.pos,S.heading);S.carAdded=true}drawRoute();drawCams();drawPins();S.sigDrawn=null;drawSignals();
   $('trafficBtn').hidden=!A.trafficOK();if(S.traffic&&A.trafficOK())A.setTraffic(true);follow(true)}
 new ResizeObserver(()=>A&&A.resize()).observe(document.querySelector('.mapwrap'));
 function follow(force){
@@ -668,8 +681,9 @@ async function planRoute(fresh){
   S.said.clear();S.offCount=0;S.lastReroute=Date.now();S.lastCheck=Date.now();
   if(fresh){const tr=TRAFFIC_SRC.has(r.src)?(r.delay>=60?`，目前路況會多${Math.round(r.delay/60)}分鐘`:'，目前路況順暢'):'';
     say(`開始導航，前往${p.dest.name}，全程${cnD(r.distance)}，約${Math.max(1,Math.round(r.duration/60))}分鐘${tr}`);S.follow=true;$('recenter').hidden=true}
-  $('endBtn').hidden=false;$('searchBtn').textContent='目的地／中途點';
+  $('endBtn').hidden=false;$('searchBtn').textContent='改目的地';
   drawRoute();progress();updateHUD();follow(true);
+  routeSignals(S.route);
 }
 function decodePoly(s){let i=0,lat=0,lng=0;const out=[];while(i<s.length){for(const k of[0,1]){let b,sh=0,res=0;do{b=s.charCodeAt(i++)-63;res|=(b&31)<<sh;sh+=5}while(b>=32);const d=(res&1)?~(res>>1):(res>>1);if(k)lng+=d;else lat+=d}out.push([lng/1e5,lat/1e5])}return out}
 const G_ICON=m=>!m?'straight':/UTURN/.test(m)?'uturn':/ROUNDABOUT/.test(m)?'round':/SLIGHT_LEFT|RAMP_LEFT|FORK_LEFT|MERGE/.test(m)&&/LEFT/.test(m)?'slightleft':/SLIGHT_RIGHT|RAMP_RIGHT|FORK_RIGHT/.test(m)?'slightright':/LEFT/.test(m)?'left':/RIGHT/.test(m)?'right':'straight';
@@ -812,17 +826,19 @@ async function ensureArea(){
   if(S.wayC&&hav(S.wayC,p)<900&&Date.now()-S.wayT<600000)return;
   if(S.areaFail&&Date.now()-S.areaFail<45000)return;
   S.areaBusy=true;
-  const q=`[out:json][timeout:20];(${S.official?'':`node["highway"="speed_camera"](around:5000,${p.lat},${p.lon});`}way["highway"]["maxspeed"](around:1200,${p.lat},${p.lon}););out geom qt;`;
+  const q=`[out:json][timeout:20];(${S.official?'':`node["highway"="speed_camera"](around:5000,${p.lat},${p.lon});`}way["highway"]["maxspeed"](around:1200,${p.lat},${p.lon});node["highway"="traffic_signals"](around:1500,${p.lat},${p.lon}););out geom qt;`;
   let j=null,last=null;
   for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},15000);break}catch(e){last=e}}
   S.areaBusy=false;
   if(!j){S.areaFail=Date.now();S.areaErr=last;updateHUD();return}
   S.areaErr=null;
-  const cams=[],ways=[];
+  const cams=[],ways=[],sigs=[];
   for(const el of j.elements||[]){const tg=el.tags||{};
-    if(el.type==='node'){cams.push({lat:el.lat,lon:el.lon,lim:parseLim(tg.maxspeed),dir:tg.direction,id:el.id,db:tg.direction&&!isNaN(+tg.direction)?+tg.direction:null})}
+    if(el.type==='node'&&tg.highway==='traffic_signals'){sigs.push({lat:el.lat,lon:el.lon})}
+    else if(el.type==='node'){cams.push({lat:el.lat,lon:el.lon,lim:parseLim(tg.maxspeed),dir:tg.direction,id:el.id,db:tg.direction&&!isNaN(+tg.direction)?+tg.direction:null})}
     else if(el.type==='way'&&el.geometry){const lim=parseLim(tg.maxspeed);if(lim)ways.push({lim,g:el.geometry,oneway:tg.oneway==='yes'||/motorway/.test(tg.highway),name:tg.name||tg.ref||''})}}
   S.wayC={lat:p.lat,lon:p.lon};S.wayT=Date.now();
+  S.sigArea=clusterPts(sigs);
   setArea(S.official?{ways}:{cams,ways});
 }
 function parseLim(v){if(!v)return null;const m=String(v).match(/(\d+)\s*(mph)?/);if(!m)return null;return m[2]?Math.round(+m[1]*1.609):+m[1]}
@@ -873,6 +889,44 @@ function updateHUD(){
 }
 setInterval(()=>{if(S.pos)updateHUD()},1000);
 
+
+
+/* ---------- 紅綠燈位置（OpenStreetMap）。台灣沒有公開即時燈號，這裡只提示位置 ---------- */
+S.sigVoice=LS.get('sigVoice',false);S.sigArea=[];
+function clusterPts(list){const out=[];for(const s of list){if(!out.some(o=>hav(o,s)<45))out.push(s)}return out}
+function simplify(pts,tol){ // Douglas-Peucker，pts 是 {x,y}
+  if(pts.length<3)return pts.map((_,i)=>i);const keep=new Uint8Array(pts.length);keep[0]=keep[pts.length-1]=1;const st=[[0,pts.length-1]];
+  while(st.length){const[a,b]=st.pop();let md=0,mi=-1;for(let i=a+1;i<b;i++){const d=segDist(pts[i],pts[a],pts[b]).d;if(d>md){md=d;mi=i}}if(md>tol){keep[mi]=1;st.push([a,mi],[mi,b])}}
+  const idx=[];keep.forEach((k,i)=>k&&idx.push(i));return idx}
+async function routeSignals(r){
+  let idx=simplify(r.xy,12);if(idx.length>450){const k=Math.ceil(idx.length/450);idx=idx.filter((_,i)=>i%k===0||i===idx.length-1)}
+  const line=idx.map(i=>r.coords[i][1].toFixed(5)+','+r.coords[i][0].toFixed(5)).join(',');
+  const q=`[out:json][timeout:25];node["highway"="traffic_signals"](around:30,${line});out qt;`;
+  let j=null;for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},25000);break}catch(e){}}
+  if(!j||S.route!==r)return;
+  const list=[];for(const el of j.elements||[]){const p=r.pj(el);let best={d:1e9,s:0};
+    for(let i=0;i<r.xy.length-1;i++){const g=segDist(p,r.xy[i],r.xy[i+1]);if(g.d<best.d)best={d:g.d,s:r.cum[i]+g.t*g.l}}
+    if(best.d<30)list.push({lat:el.lat,lon:el.lon,s:best.s})}
+  list.sort((a,b)=>a.s-b.s);const cl=[];for(const s of list){const l=cl[cl.length-1];if(l&&s.s-l.s<60)continue;cl.push(s)}
+  r.sigs=cl;S.sigDrawn=null;drawSignals();updateSignal()}
+function sigAhead(){const r=S.route,p=S.pos;if(!p)return null;
+  if(r&&r.sigs){const i=r.sigs.findIndex(s=>s.s>r.s+5);if(i<0)return{none:true,left:0};return{d:r.sigs[i].s-r.s,left:r.sigs.length-i,id:'r'+r.sigs[i].s.toFixed(0),pt:r.sigs[i]}}
+  let best=null;for(const s of S.sigArea){const d=hav(p,s);if(d>700||d<5)continue;if(S.speed>5&&adiff(brg(p,s),S.heading)>30)continue;if(!best||d<best.d)best={d,id:s.lat.toFixed(5)+s.lon.toFixed(5),pt:s}}
+  return best}
+function updateSignal(){
+  const a=sigAhead(),pill=$('sigPill');
+  if(!a||(a.none&&!S.route)){pill.hidden=true;return}
+  pill.hidden=false;
+  if(a.none){$('sigText').textContent='到目的地前沒有紅綠燈了';return}
+  $('sigText').textContent=`${fmtD(a.d)} 紅綠燈`+(a.left!=null?` · 剩 ${a.left} 個`:'');
+  if(S.sigVoice&&a.d<=180&&a.d>60&&!S.said.has('sig'+a.id)){S.said.add('sig'+a.id);say('前方紅綠燈')}}
+function drawSignals(){if(!A||!A.setSignals)return;const p=S.pos;let l=[];
+  if(S.route&&S.route.sigs)l=S.route.sigs.filter(s=>s.s>S.route.s-20&&s.s<S.route.s+4000);
+  else if(p)l=S.sigArea.filter(s=>hav(p,s)<1500);
+  l=l.slice(0,120);const key=l.map(s=>s.lat.toFixed(5)).join();if(key===S.sigDrawn)return;S.sigDrawn=key;A.setSignals(l)}
+setInterval(()=>{if(S.pos){updateSignal();drawSignals()}},1000);
+$('sigVoiceBtn').addEventListener('click',()=>{S.sigVoice=!S.sigVoice;LS.set('sigVoice',S.sigVoice);$('sigVoiceBtn').setAttribute('aria-pressed',S.sigVoice);$('sigVoiceBtn').textContent='紅綠燈語音提醒：'+(S.sigVoice?'開':'關')});
+$('sigVoiceBtn').setAttribute('aria-pressed',S.sigVoice);$('sigVoiceBtn').textContent='紅綠燈語音提醒：'+(S.sigVoice?'開':'關');
 
 /* ---------- 副駕模式：路口攝影機（交通部 TDX 清單，GitHub 每週更新） ---------- */
 S.co=LS.get('co',false);S.cctvAll=null;S.coCur=null;S.coPin=null;S.coPinT=0;
