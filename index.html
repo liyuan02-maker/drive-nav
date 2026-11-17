@@ -145,6 +145,7 @@ html.navigating .wxpill{display:none!important}
 .wxpill.rain{border-color:var(--route);background:rgba(16,36,56,.94)}
 .wxpill svg{flex:none;width:18px;height:18px}
 .sigpill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evdot{width:26px;height:26px;border-radius:8px;background:#D9252A;border:2px solid #fff;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.45)}
 .sigdot{width:12px;height:22px;display:grid;place-items:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
 /* 攝影機有自己的位置（不再疊在地圖上）；點畫面放大成全螢幕 */
 .cctv{grid-area:cam;position:relative;min-width:0;background:#000;border:1px solid var(--line);border-radius:14px;overflow:hidden}
@@ -291,6 +292,9 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
       <div class="label">地圖顏色</div>
       <div class="seg" id="themeSeg" role="group" aria-label="地圖顏色"><button data-t="auto">自動</button><button data-t="day">白天</button><button data-t="night">夜間</button></div>
       <p class="msg" id="themeNote"></p>
+      <div class="label">電動車</div>
+      <button class="btn" id="evBtn" aria-pressed="true">地圖顯示特斯拉超充站：開</button>
+      <p class="msg">搜尋時點「特斯拉超充」可以列出附近或路線沿途的站點。特斯拉沒有公開即時空位，所以通常看不到現在有幾座空著。</p>
       <div class="label">紅綠燈</div>
       <p class="msg">地圖會標出紅綠燈位置，畫面左上角顯示前方紅綠燈的距離。台灣沒有公開即時燈號，所以無法顯示紅燈或綠燈。</p>
       <button class="btn" id="sigVoiceBtn" aria-pressed="false">紅綠燈語音提醒：關</button>
@@ -487,6 +491,8 @@ function mkEl(cls,html){const e=document.createElement('div');e.className=cls;e.
 const camEl=lim=>mkEl('camdot',lim?String(lim):'');
 const SIG_SVG='<svg viewBox="0 0 12 24" width="10" height="20" aria-hidden="true"><rect x="1" y="1" width="10" height="22" rx="3" fill="#0B1116" stroke="#F2B33D" stroke-width="1.2"/><circle cx="6" cy="6" r="2.3" fill="#E5484D"/><circle cx="6" cy="12" r="2.3" fill="#F2B33D"/><circle cx="6" cy="18" r="2.3" fill="#36C276"/></svg>';
 const sigEl=()=>mkEl('sigdot',SIG_SVG);
+const EV_SVG='<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#fff"/></svg>';
+const evEl=s=>{const e=mkEl('evdot',EV_SVG);e.title=s.name||'特斯拉超充站';return e};
 const pinEl=(cls,txt)=>mkEl('pin '+cls,`<span>${txt}</span>`);
 function loadScript(src,attrs={}){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.async=true;
   for(const[k,v]of Object.entries(attrs))s.setAttribute(k,v);s.onload=()=>res();s.onerror=()=>{const e=new Error('script');e.kind='blocked';rej(e)};document.head.appendChild(s)})}
@@ -528,6 +534,7 @@ function FreeMap(){let map,car,pins=[];const self={trafficOK:()=>!!S.key,
   view(o){map.easeTo({center:[o.lon,o.lat],bearing:o.bearing,pitch:o.pitch,zoom:o.zoom,offset:[0,o.offY],duration:o.dur,easing:x=>x})},
   setRoute(segs){map.getSource('route').setData({type:'FeatureCollection',features:segs.map(s=>({type:'Feature',properties:{c:s.color},geometry:{type:'LineString',coordinates:s.coords}}))})},
   setCams(list){map.getSource('cams').setData({type:'FeatureCollection',features:list.map(c=>({type:'Feature',properties:{lim:c.lim||''},geometry:{type:'Point',coordinates:[c.lon,c.lat]}}))})},
+  setPois(list){(self.ev||[]).forEach(m=>m.remove());self.ev=list.map(s=>new maplibregl.Marker({element:evEl(s)}).setLngLat([s.lon,s.lat]).addTo(map))},
   setSignals(list){(self.sg||[]).forEach(m=>m.remove());self.sg=list.map(s=>new maplibregl.Marker({element:sigEl()}).setLngLat([s.lon,s.lat]).addTo(map))},
   setPins(list){pins.forEach(m=>m.remove());pins=list.map(p=>new maplibregl.Marker({element:pinEl(p.cls,p.txt),anchor:'bottom-left',offset:[-4,4]}).setLngLat([p.lon,p.lat]).addTo(map))},
   setTraffic(on){if(!S.key)on=false;
@@ -581,6 +588,7 @@ function GoogleMap(){let map,car,carEl,lines=[],cams=[],pins=[],traffic=null;
     for(const s of segs){const path=s.coords.map(([lng,lat])=>({lat,lng}));
       lines.push(new google.maps.Polyline({map,path,strokeColor:'#06121d',strokeWeight:11,strokeOpacity:1,zIndex:1}),new google.maps.Polyline({map,path,strokeColor:s.color,strokeWeight:7,strokeOpacity:1,zIndex:2}))}},
   setCams(list){cams.forEach(m=>m.map=null);cams=list.slice(0,150).map(c=>new self.AME({map,position:{lat:c.lat,lng:c.lon},content:wrap(camEl(c.lim)),zIndex:50}))},
+  setPois(list){(self.ev||[]).forEach(m=>m.map=null);self.ev=list.map(s=>new self.AME({map,position:{lat:s.lat,lng:s.lon},content:wrap(evEl(s)),zIndex:45}))},
   setSignals(list){(self.sg||[]).forEach(m=>m.map=null);self.sg=list.map(s=>new self.AME({map,position:{lat:s.lat,lng:s.lon},content:wrap(sigEl()),zIndex:40}))},
   setPins(list){pins.forEach(m=>m.map=null);pins=list.map(p=>new self.AME({map,position:{lat:p.lat,lng:p.lon},content:pinEl(p.cls,p.txt),zIndex:60}))},
   setTraffic(on){if(!traffic)traffic=new google.maps.TrafficLayer();traffic.setMap(on?map:null)},
@@ -625,6 +633,7 @@ function AppleMap(){let map,car,carEl,lines=[],cams=[],pins=[],sign=1;
         new mapkit.PolylineOverlay(pts,{style:new mapkit.Style({strokeColor:s.color,lineWidth:7,lineCap:'round',lineJoin:'round'})}))}
     if(lines.length)map.addOverlays(lines)},
   setCams(list){if(cams.length)map.removeAnnotations(cams);cams=list.slice(0,150).map(c=>new mapkit.Annotation(C(c.lat,c.lon),()=>camEl(c.lim),{anchorOffset:new DOMPoint(0,11),calloutEnabled:false,enabled:false}));if(cams.length)map.addAnnotations(cams)},
+  setPois(list){if(self.ev&&self.ev.length)map.removeAnnotations(self.ev);self.ev=list.map(s=>new mapkit.Annotation(C(s.lat,s.lon),()=>evEl(s),{anchorOffset:new DOMPoint(0,13),calloutEnabled:false,enabled:false}));if(self.ev.length)map.addAnnotations(self.ev)},
   setSignals(list){if(self.sg&&self.sg.length)map.removeAnnotations(self.sg);self.sg=list.map(s=>new mapkit.Annotation(C(s.lat,s.lon),()=>sigEl(),{anchorOffset:new DOMPoint(0,10),calloutEnabled:false,enabled:false}));if(self.sg.length)map.addAnnotations(self.sg)},
   setPins(list){if(pins.length)map.removeAnnotations(pins);pins=list.map(p=>new mapkit.MarkerAnnotation(C(p.lat,p.lon),{color:p.cls==='dest'?'#F2B33D':'#C9A7FF',glyphText:String(p.txt||''),calloutEnabled:false}));if(pins.length)map.addAnnotations(pins)},
   setTraffic(){},
@@ -645,7 +654,7 @@ async function mountMap(src,quiet){
   renderMapSrc();refreshMap();applyView(true);
   if(!quiet)toast('地圖：'+MAP_NAME[src]);
 }
-function refreshMap(){if(!A)return;if(S.pos){A.setCar(S.pos,S.heading);S.carAdded=true}drawRoute();drawCams();drawPins();S.sigDrawn=null;drawSignals();
+function refreshMap(){if(!A)return;if(S.pos){A.setCar(S.pos,S.heading);S.carAdded=true}drawRoute();drawCams();drawPins();S.sigDrawn=null;drawSignals();S.evDrawn=null;drawEV();
   $('trafficBtn').hidden=!A.trafficOK();$('trafficBtn').setAttribute('aria-pressed',S.traffic);if(A.trafficOK())A.setTraffic(S.traffic);follow(true)}
 new ResizeObserver(()=>A&&A.resize()).observe(document.querySelector('.mapwrap'));
 /* 地圖顯示：2D、3D、衛星 */
@@ -711,7 +720,7 @@ function onPos(p,rough){if(!rough)S.fixT=Date.now();
 
 /* ---------- 搜尋：輸入即出現建議 ---------- */
 let qT=0,qCtl=null;
-const CATS=[{t:'加油站',q:'node["amenity"="fuel"]'},{t:'停車場',q:'nwr["amenity"="parking"]["access"!="private"]'},{t:'便利商店',q:'node["shop"="convenience"]'},
+const CATS=[{t:'特斯拉超充',ev:true},{t:'加油站',q:'node["amenity"="fuel"]'},{t:'停車場',q:'nwr["amenity"="parking"]["access"!="private"]'},{t:'便利商店',q:'node["shop"="convenience"]'},
   {t:'休息站／服務區',q:'nwr["highway"="services"]'},{t:'充電站',q:'node["amenity"="charging_station"]'},{t:'廁所',q:'node["amenity"="toilets"]'}];
 const OSM_CAT={hotel:'飯店',fuel:'加油站',restaurant:'餐廳',cafe:'咖啡店',fast_food:'速食',parking:'停車場',hospital:'醫院',clinic:'診所',station:'車站',school:'學校',university:'大學',convenience:'便利商店',supermarket:'超市',mall:'購物中心',department_store:'百貨公司',bank:'銀行',police:'警察局',museum:'博物館',park:'公園',place_of_worship:'廟宇／教堂',services:'服務區',charging_station:'充電站',cinema:'電影院'};
 const provider=()=>S.gKey?'google':S.key?'tomtom':'osm';
@@ -761,6 +770,7 @@ async function suggest(q,final){
 }
 async function nearby(cat){
   if(!S.pos){toast('還沒取得 GPS 位置',true);return}
+  if(cat.ev)return evList();
   $('q').value='';if(qCtl)qCtl.abort();$('sstatus').textContent='尋找附近的'+cat.t+'…';$('results').innerHTML='';
   const q=`[out:json][timeout:20];${cat.q}(around:6000,${S.pos.lat},${S.pos.lon});out center 60;`;let j=null;
   for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},20000);break}catch(e){}}
@@ -886,7 +896,7 @@ async function planRoute(fresh){
     say(`開始導航，前往${p.dest.name}，全程${cnD(r.distance)}，約${Math.max(1,Math.round(r.duration/60))}分鐘${tr}`);S.follow=true;$('recenter').hidden=true}
   $('endBtn').hidden=false;$('navCard').hidden=false;document.documentElement.classList.add('navigating');$('searchBtn').textContent='改目的地';
   drawRoute();progress();updateHUD();follow(true);
-  routeSignals(S.route);wxForRoute(fresh);
+  routeSignals(S.route);wxForRoute(fresh);evAlongRoute(S.route);
 }
 function decodePoly(s){let i=0,lat=0,lng=0;const out=[];while(i<s.length){for(const k of[0,1]){let b,sh=0,res=0;do{b=s.charCodeAt(i++)-63;res|=(b&31)<<sh;sh+=5}while(b>=32);const d=(res&1)?~(res>>1):(res>>1);if(k)lng+=d;else lat+=d}out.push([lng/1e5,lat/1e5])}return out}
 const G_ICON=m=>!m?'straight':/UTURN/.test(m)?'uturn':/ROUNDABOUT/.test(m)?'round':/SLIGHT_LEFT|RAMP_LEFT|FORK_LEFT|MERGE/.test(m)&&/LEFT/.test(m)?'slightleft':/SLIGHT_RIGHT|RAMP_RIGHT|FORK_RIGHT/.test(m)?'slightright':/LEFT/.test(m)?'left':/RIGHT/.test(m)?'right':'straight';
@@ -1220,6 +1230,58 @@ async function wxForRoute(announce){const d=S.plan.dest;if(!d)return;
   if(S.plan.dest!==d)return;renderWx();
   if(announce){const w=wxAt(etaDate());if(w)setTimeout(()=>say(`目的地抵達時預報：${WX[w.code]||''}，${w.temp}度${w.rain!=null?`，降雨機率${w.rain}%`:''}`),3500)}}
 setInterval(()=>{if(S.route){if(S.wx&&Date.now()-S.wx.t>1800000)wxForRoute(false);else renderWx()}},60000);
+
+
+/* ---------- 特斯拉超充站：地圖標示、附近／沿路搜尋 ---------- */
+// 站點：有 Google 金鑰用 Google 地點（可帶出充電座數與功率，少數有即時空位），否則用 OpenStreetMap
+// 特斯拉沒有公開即時空位，Google 沒有空位資料時就不顯示
+S.showEV=LS.get('showEV',true);S.ev=[];
+function encPoly(pts){let o='',pl=0,pn=0;const e=v=>{v=v<0?~(v<<1):v<<1;let s='';while(v>=0x20){s+=String.fromCharCode((0x20|(v&0x1f))+63);v>>=5}return s+String.fromCharCode(v+63)};
+  for(const[lon,lat]of pts){const a=Math.round(lat*1e5),b=Math.round(lon*1e5);o+=e(a-pl)+e(b-pn);pl=a;pn=b}return o}
+function thinRoute(r,maxPts){const step=Math.max(60,r.L/maxPts);const out=[r.coords[0]];let last=0;
+  for(let i=1;i<r.cum.length;i++)if(r.cum[i]-r.cum[last]>=step){out.push(r.coords[i]);last=i}out.push(r.coords[r.coords.length-1]);return out}
+const isTesla=s=>/tesla|特斯拉|超級充電|supercharger/i.test(s||'');
+async function evGoogle(p,r){
+  const body={textQuery:'Tesla Supercharger 特斯拉超級充電站',languageCode:'zh-TW',regionCode:'TW',pageSize:20};
+  if(r)body.searchAlongRouteParameters={polyline:{encodedPolyline:encPoly(thinRoute(r,1500))}};
+  else body.locationBias={circle:{center:{latitude:p.lat,longitude:p.lon},radius:30000}};
+  const j=await getJSON('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':S.gKey,
+    'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.location,places.evChargeOptions'},body:JSON.stringify(body)},12000);
+  return(j.places||[]).filter(x=>isTesla(x.displayName?.text)).map(x=>{const ev=x.evChargeOptions||{},ag=ev.connectorAggregation||[];
+    const avail=ag.some(a=>a.availableCount!=null)?ag.reduce((s,a)=>s+(a.availableCount||0),0):null,kw=ag.reduce((m,a)=>Math.max(m,a.maxChargeRateKw||0),0);
+    return{name:x.displayName.text,addr:(x.formattedAddress||'').replace(/^\d{3,6}台灣/,'').replace(/^台灣/,''),lat:x.location.latitude,lon:x.location.longitude,ports:ev.connectorCount||null,kw:kw||null,avail}})}
+async function evOSM(p,r){
+  const area=r?`around:2500,${thinRoute(r,500).map(c=>c[1].toFixed(5)+','+c[0].toFixed(5)).join(',')}`:`around:30000,${p.lat},${p.lon}`;
+  const q=`[out:json][timeout:25];(nwr["amenity"="charging_station"]["brand"~"tesla",i](${area});nwr["amenity"="charging_station"]["operator"~"tesla|特斯拉",i](${area});nwr["amenity"="charging_station"]["name"~"tesla|特斯拉|超級充電",i](${area}););out center tags;`;
+  let j=null,last;for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},25000);break}catch(e){last=e}}
+  if(!j)throw last||new Error('overpass');
+  return(j.elements||[]).map(el=>{const tg=el.tags||{},lat=el.lat??el.center?.lat,lon=el.lon??el.center?.lon;if(lat==null)return null;
+    return{name:tg.name||'特斯拉超充站',addr:[tg['addr:city'],tg['addr:district'],tg['addr:street']].filter(Boolean).join(' '),lat,lon,ports:+tg.capacity||null,kw:null,avail:null}}).filter(Boolean)}
+async function evFetch(p,r){let list=null;
+  if(S.gKey){try{list=await evGoogle(p,r)}catch(e){console.warn('[ev] google',e.kind,e.status,e.detail||e.message)}}
+  if(!list||!list.length){try{list=await evOSM(p,r)}catch(e){if(!list)throw e}}
+  const out=[];for(const s of list)if(!out.some(o=>hav(o,s)<150))out.push(s);return out}
+function evMerge(list){for(const s of list){const o=S.ev.find(x=>hav(x,s)<150);if(o)Object.assign(o,s);else S.ev.push(s)}S.evDrawn=null;drawEV()}
+function evInfo(s){return[s.ports?s.ports+' 座':'',s.kw?Math.round(s.kw)+' kW':'',s.avail!=null?'可用 '+s.avail:''].filter(Boolean).join(' · ')}
+function drawEV(){if(!A||!A.setPois)return;const p=S.pos;let l=[];
+  if(S.showEV&&p)l=S.ev.filter(s=>hav(p,s)<40000).sort((a,b)=>hav(p,a)-hav(p,b)).slice(0,60);
+  const key=l.map(s=>s.lat.toFixed(4)+s.lon.toFixed(4)).join();if(key===S.evDrawn)return;S.evDrawn=key;A.setPois(l)}
+async function ensureEV(){const p=S.pos;if(!p||!S.showEV||S.evBusy)return;
+  if(S.evC&&hav(S.evC,p)<8000&&Date.now()-S.evT<1800000)return;if(S.evFail&&Date.now()-S.evFail<120000)return;
+  S.evBusy=true;try{evMerge(await evFetch(p,null));S.evC={lat:p.lat,lon:p.lon};S.evT=Date.now()}catch(e){S.evFail=Date.now()}finally{S.evBusy=false}}
+async function evAlongRoute(r){try{const l=await evFetch(S.pos,r);if(S.route===r){r.ev=l;evMerge(l)}}catch(e){}}
+setInterval(()=>{if(S.pos){ensureEV();drawEV()}},5000);
+async function evList(){
+  const r=S.route;$('q').value='';if(qCtl)qCtl.abort();$('results').innerHTML='';
+  $('sstatus').textContent=r?'尋找路線沿途的特斯拉超充站…':'尋找附近的特斯拉超充站…';
+  let list;try{list=r&&r.ev?r.ev:await evFetch(S.pos,r)}catch(e){$('sstatus').textContent='暫時找不到超充站：'+why(e);return}
+  list.forEach(s=>{s.dist=hav(S.pos,s);s.along=null;if(r){const b=snapRoute(r,s,3000);if(b)s.along=b.s-r.s}});
+  if(r)list=list.filter(s=>s.along==null||s.along>-200).sort((a,b)=>(a.along??1e9)-(b.along??1e9));else list.sort((a,b)=>a.dist-b.dist);
+  list=list.slice(0,20).map(s=>({...s,cat:[s.along!=null?'路線前方 '+fmtD(Math.max(0,s.along)):'',evInfo(s)].filter(Boolean).join(' · ')}));
+  $('sstatus').textContent=list.length?(r?'路線沿途的特斯拉超充站（依路線順序）':'附近 30 公里內的特斯拉超充站'):'找不到特斯拉超充站';
+  renderResults(list,'')}
+$('evBtn').addEventListener('click',()=>{S.showEV=!S.showEV;LS.set('showEV',S.showEV);$('evBtn').setAttribute('aria-pressed',S.showEV);$('evBtn').textContent='地圖顯示特斯拉超充站：'+(S.showEV?'開':'關');S.evDrawn=null;drawEV();if(S.showEV)ensureEV()});
+$('evBtn').setAttribute('aria-pressed',S.showEV);$('evBtn').textContent='地圖顯示特斯拉超充站：'+(S.showEV?'開':'關');
 
 /* ---------- 紅綠燈位置（OpenStreetMap）。台灣沒有公開即時燈號，這裡只提示位置 ---------- */
 S.sigVoice=LS.get('sigVoice',false);S.sigArea=[];
