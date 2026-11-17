@@ -225,7 +225,7 @@ mark{background:none;color:var(--accent);font-weight:700}
       <p class="msg">填入 Google 地點金鑰後，搜尋店家、地標會跟 Google 地圖一樣準。到 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 啟用「Places API (New)」並建立金鑰，記得把金鑰限制在這個網站使用。</p>
       <div class="field"><input id="gKeyIn" type="password" autocomplete="off" placeholder="Google 地點 API 金鑰"><button class="btn" id="gSave">儲存</button></div>
       <button class="btn" id="diagBtn">連線檢查</button>
-      <p class="msg" id="dataNote">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相與速限：OpenStreetMap，資料可能不完整。</p>
+      <p class="msg" id="dataNote">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相：警政署開放資料（每週更新），速限：OpenStreetMap。</p>
     </div>
   </section>
 </div>
@@ -769,22 +769,38 @@ function resetNavUI(){$('mArrow').className='arrow idle';$('mArrow').innerHTML=I
 $('endBtn').addEventListener('click',()=>{endNav(false);say('已結束導航')});
 
 /* ---------- 測速照相與速限（OpenStreetMap / Overpass） ---------- */
-const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+/* 官方測速點：警政署開放資料，由 GitHub 每週自動下載成 cameras.json */
+const DIRB={北:0,東:90,南:180,西:270};
+function parseDir(s){s=String(s||'');let m=s.match(/([東西南北])向([東西南北])/);if(m)return DIRB[m[2]];
+  if(/北上|往北|北行/.test(s))return 0;if(/南下|往南|南行/.test(s))return 180;if(/往東|東行/.test(s))return 90;if(/往西|西行/.test(s))return 270;return null}
+S.official=null;
+(async()=>{try{const j=await getJSON('cameras.json?d='+new Date().toISOString().slice(0,10),{},20000);
+  if(j&&Array.isArray(j.cameras)&&j.cameras.length){j.cams=j.cameras.map((c,i)=>({...c,id:'o'+i,db:parseDir(c.dir)}));S.official=j;S.camC=null;S.area=null;if(S.pos)ensureArea()}}
+  catch(e){console.warn('[cams] 沒有官方測速資料，改用 OpenStreetMap',e.kind||e.message)}})();
+function nearOfficial(p){const d=.05;return S.official.cams.filter(c=>Math.abs(c.lat-p.lat)<d&&Math.abs(c.lon-p.lon)<d*1.1)}
+function setArea(part){S.area={cams:[],ways:[],...(S.area||{}),...part,c:{lat:S.pos.lat,lon:S.pos.lon},t:Date.now()};snapCamsToRoute();drawCams();updateLimit();updateCam();updateHUD()}
 async function ensureArea(){
-  const a=S.area,p=S.pos;if(S.areaBusy)return;
-  if(a&&hav(a.c,p)<900&&Date.now()-a.t<600000)return;
-  if(S.areaFail&&Date.now()-S.areaFail<30000)return;
+  const p=S.pos;if(!p)return;
+  // 測速點：有官方資料就直接在手機上篩選附近的，不必等網路
+  if(S.official&&(!S.camC||hav(S.camC,p)>500)){S.camC={lat:p.lat,lon:p.lon};setArea({cams:nearOfficial(p)})}
+  // 速限（以及沒有官方資料時的測速點）：OpenStreetMap，伺服器忙時輪流試備用伺服器
+  if(S.areaBusy)return;
+  if(S.wayC&&hav(S.wayC,p)<900&&Date.now()-S.wayT<600000)return;
+  if(S.areaFail&&Date.now()-S.areaFail<45000)return;
   S.areaBusy=true;
-  const q=`[out:json][timeout:25];(node["highway"="speed_camera"](around:5000,${p.lat},${p.lon});way["highway"]["maxspeed"](around:1500,${p.lat},${p.lon}););out geom qt;`;
-  let j=null;for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},25000);break}catch(e){}}
+  const q=`[out:json][timeout:20];(${S.official?'':`node["highway"="speed_camera"](around:5000,${p.lat},${p.lon});`}way["highway"]["maxspeed"](around:1200,${p.lat},${p.lon}););out geom qt;`;
+  let j=null,last=null;
+  for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},15000);break}catch(e){last=e}}
   S.areaBusy=false;
-  if(!j){S.areaFail=Date.now();if(!S.area)$('eName').textContent='測速資料暫時載入失敗';return}
+  if(!j){S.areaFail=Date.now();S.areaErr=last;updateHUD();return}
+  S.areaErr=null;
   const cams=[],ways=[];
   for(const el of j.elements||[]){const tg=el.tags||{};
-    if(el.type==='node'){cams.push({lat:el.lat,lon:el.lon,lim:parseLim(tg.maxspeed),dir:tg.direction,id:el.id})}
+    if(el.type==='node'){cams.push({lat:el.lat,lon:el.lon,lim:parseLim(tg.maxspeed),dir:tg.direction,id:el.id,db:tg.direction&&!isNaN(+tg.direction)?+tg.direction:null})}
     else if(el.type==='way'&&el.geometry){const lim=parseLim(tg.maxspeed);if(lim)ways.push({lim,g:el.geometry,oneway:tg.oneway==='yes'||/motorway/.test(tg.highway),name:tg.name||tg.ref||''})}}
-  S.area={c:{lat:p.lat,lon:p.lon},t:Date.now(),cams,ways};
-  snapCamsToRoute();drawCams();updateLimit();updateCam();updateHUD();
+  S.wayC={lat:p.lat,lon:p.lon};S.wayT=Date.now();
+  setArea(S.official?{ways}:{cams,ways});
 }
 function parseLim(v){if(!v)return null;const m=String(v).match(/(\d+)\s*(mph)?/);if(!m)return null;return m[2]?Math.round(+m[1]*1.609):+m[1]}
 function drawCams(){if(!A)return;A.setCams(S.area?S.area.cams:[])}
@@ -801,7 +817,7 @@ function updateCam(){
   const a=S.area,p=S.pos;S.camAhead=null;if(!a||!p)return;let best=null;
   for(const c of a.cams){let d;
     if(S.route&&c.rs!=null){d=c.rs-S.route.s;if(d<-5||d>2500)continue}
-    else{d=hav(p,c);if(d>1600)continue;if(S.speed>5&&adiff(brg(p,c),S.heading)>30&&d>40)continue;if(c.dir&&!isNaN(+c.dir)&&adiff(+c.dir,S.heading)>60)continue}
+    else{d=hav(p,c);if(d>1600)continue;if(S.speed>5&&adiff(brg(p,c),S.heading)>30&&d>40)continue;if(c.db!=null&&S.speed>5&&adiff(c.db,S.heading)>60)continue}
     if(!best||d<best.d)best={c,d:Math.max(0,d)}}
   S.camAhead=best;
   if(best){const lim=best.c.lim||S.limit,fast=S.speed>80,ths=fast?[1000,500]:[500,200];
@@ -816,8 +832,8 @@ function updateHUD(){
   const cam=S.camAhead,lim=S.limit||(cam&&cam.d<600?cam.c.lim:null);
   $('limit').className='sign'+(lim?'':' unk');$('limit').textContent=lim||'速限';
   if(cam){const fast=S.speed>80,warn=fast?1000:500;$('eType').textContent='測速照相';$('eDist').innerHTML=cam.d>=1000?(cam.d/1000).toFixed(1)+'<small>km</small>':Math.round(cam.d)+'<small>m</small>';
-    $('eName').textContent=(cam.c.lim?'限速 '+cam.c.lim+' · ':'')+'OpenStreetMap';$('eBar').style.width=Math.max(0,Math.min(100,100*(1-cam.d/(warn*1.6))))+'%'}
-  else{$('eType').textContent='測速照相';$('eDist').textContent='—';$('eName').textContent=S.area?'前方無已知測速點':'載入測速資料中';$('eBar').style.width='0'}
+    $('eName').textContent=(cam.c.lim?'限速 '+cam.c.lim+' · ':'')+(cam.c.addr?cam.c.addr.replace(/^(..[縣市])/,''):'OpenStreetMap');$('eBar').style.width=Math.max(0,Math.min(100,100*(1-cam.d/(warn*1.6))))+'%'}
+  else{$('eType').textContent='測速照相';$('eDist').textContent='—';$('eName').textContent=S.area&&S.area.cams?(S.area.cams.length||S.official?'前方無測速點':'前方無已知測速點'):(S.areaErr?'測速資料暫時載入失敗':'載入測速資料中');$('eBar').style.width='0'}
   const over=lim&&S.speed>lim+1,near=cam&&cam.d<(S.speed>80?1000:500);
   $('hud').classList.toggle('over',!!over);$('hud').classList.toggle('near',!!(over&&near));
   if(over&&near&&performance.now()-S.overBeep>1400){S.overBeep=performance.now();beep(1500,.1);setTimeout(()=>beep(1500,.1),160)}
@@ -872,7 +888,8 @@ function diagTests(){const b=S.pos||{lat:24.89,lon:121.10},oq=`[out:json][timeou
   {n:'Google 即時路況路線',skip:!S.gKey&&'沒有填金鑰',run:()=>getJSON('https://routes.googleapis.com/directions/v2:computeRoutes',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':S.gKey,'X-Goog-FieldMask':'routes.duration'},body:JSON.stringify({origin:{location:{latLng:{latitude:25.0478,longitude:121.517}}},destination:{location:{latLng:{latitude:25.0446,longitude:121.544}}},travelMode:'DRIVE',routingPreference:'TRAFFIC_AWARE'})},10000)},
   {n:'TomTom 搜尋／路況',skip:!S.key&&'沒有填金鑰',run:()=>getJSON(`https://api.tomtom.com/search/2/search/${encodeURIComponent('台北車站')}.json?key=${encodeURIComponent(S.key)}&limit=1&countrySet=TW`,{},10000)},
   {n:'路線規劃（OSRM）',run:()=>getJSON('https://router.project-osrm.org/route/v1/driving/121.5170,25.0478;121.5440,25.0446?overview=false',{},10000)},
-  {n:'測速照相資料（Overpass）',run:async()=>{let last;for(const u of OVERPASS){try{return await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(oq),headers:{'Content-Type':'application/x-www-form-urlencoded'}},15000)}catch(e){last=e}}throw last}}]}
+  {n:'官方測速點（警政署）',run:async()=>{if(S.official)return`${S.official.cams.length} 個測速點，資料更新於 ${S.official.updated}`;const e=new Error('');e.kind='env';e.msg='還沒有官方資料（GitHub 每週自動下載，第一次要等它跑完）';throw e}},
+  {n:'速限資料（OpenStreetMap）',run:async()=>{let last;for(const u of OVERPASS){try{return await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(oq),headers:{'Content-Type':'application/x-www-form-urlencoded'}},15000)}catch(e){last=e}}throw last}}]}
 async function runDiag(){const tests=diagTests();
   $('diagList').innerHTML=tests.map((x,i)=>`<div class="dg" id="dg${i}"><span class="st wait">檢查中</span><span class="t">${esc(x.n)}</span></div>`).join('');
   await Promise.all(tests.map(async(x,i)=>{const el=$('dg'+i);
