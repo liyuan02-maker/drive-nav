@@ -818,7 +818,7 @@ $('searchBtn').addEventListener('click',openSheet);
 $('sheetClose').addEventListener('click',closeSheet);
 $('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))closeSheet()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('sheet').hidden)closeSheet()});
-$('go').addEventListener('click',async()=>{if(!S.pos){toast('還沒取得 GPS 位置，請稍候再試',true);return}closeSheet();await planRoute(true)});
+$('go').addEventListener('click',async()=>{keepAwake();if(!('wakeLock' in navigator))noSleepOn();if(!S.pos){toast('還沒取得 GPS 位置，請稍候再試',true);return}closeSheet();await planRoute(true)});
 
 /* ---------- 路線 ---------- */
 const OSRM_TXT={left:'左轉',right:'右轉','slight left':'靠左','slight right':'靠右','sharp left':'左急轉','sharp right':'右急轉',straight:'直行',uturn:'迴轉'};
@@ -1323,6 +1323,7 @@ $('ttSave').addEventListener('click',()=>{S.key=$('ttKey').value.trim();LS.set('
 function diagTests(){const b=S.pos||{lat:24.89,lon:121.10},oq=`[out:json][timeout:10];node["highway"="speed_camera"](around:300,${b.lat},${b.lon});out 1;`;
   return[
   {n:'程式狀態',run:async()=>{if(!S.jsErr)return'沒有錯誤';const e=new Error('');e.kind='env';e.msg='最近的錯誤（'+S.jsErr+'）';throw e}},
+  {n:'螢幕恆亮',run:async()=>{if(S.awake==='wakelock'&&wake&&!wake.released)return'已開啟（螢幕喚醒鎖定）';if(S.awake==='video')return'已開啟（備用方式）';const e=new Error('');e.kind='env';e.msg='還沒開啟：點一下畫面就會開啟';throw e}},
   {n:'網頁位址',run:async()=>{if(location.protocol==='https:'||location.hostname==='localhost')return location.origin;const e=new Error('');e.kind='env';e.msg=`目前是「${location.protocol==='file:'?'檔案':location.protocol}」打開。要用 https 網址打開，才能連到地圖、搜尋和路線服務`;throw e}},
   {n:'GPS 定位',run:async()=>{if(!('geolocation' in navigator)){const e=new Error('');e.kind='env';e.msg='這個瀏覽器不支援定位';throw e}
     if(S.pos)return`精度約 ${Math.round(S.pos.acc)} m`;let st='';try{st=(await navigator.permissions.query({name:'geolocation'})).state}catch(_){}
@@ -1355,8 +1356,26 @@ if(location.protocol!=='https:'&&location.hostname!=='localhost'){
   $('startDiag').addEventListener('click',openDiag)}
 
 /* ---------- 開始 ---------- */
-let wake=null;async function keepAwake(){try{wake=await navigator.wakeLock.request('screen')}catch(e){}}
+/* 螢幕恆亮：開著導航網頁時螢幕不會變暗或自動鎖定。
+   先用瀏覽器的「螢幕喚醒鎖定」，被系統放掉時自動再要一次；
+   不支援的情況（例如舊版 iOS 加入主畫面的 App）改用一段無聲、看不見的循環小影片讓螢幕保持亮著。 */
+let wake=null,nsVid=null;
+const NOSLEEP_MP4='data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAANCbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAD6AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAmx0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAD6AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAA+gAAAAAAABAAAAAAHkbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAABAABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABj21pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAU9zdGJsAAAAt3N0c2QAAAAAAAAAAQAAAKdhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALWF2Y0MBQsAK/+EAFWdCwAraewEQAAADABAAAAMAQPEiagEABWjOAZcgAAAAEHBhc3AAAAABAAAAAQAAABRidHJ0AAAAAAAABZgAAAWYAAAAGHN0dHMAAAAAAAAAAQAAAAgAACAAAAAAFHN0c3MAAAAAAAAAAQAAAAEAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAgAAAABAAAANHN0c3oAAAAAAAAAAAAAAAgAAAKGAAAACgAAAAoAAAAKAAAACgAAAAoAAAAKAAAACgAAABRzdGNvAAAAAAAAAAEAAANyAAAAYnVkdGEAAABabWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAtaWxzdAAAACWpdG9vAAAAHWRhdGEAAAABAAAAAExhdmY2MC4xNi4xMDAAAAAIZnJlZQAAAtRtZGF0AAACbwYF//9r3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE2NCByMzEwOCAzMWUxOWY5IC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAyMyAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTAgcmVmPTEgZGVibG9jaz0xOi0zOi0zIGFuYWx5c2U9MHgxOjB4MSBtZT1oZXggc3VibWU9MiBwc3k9MSBwc3lfcmQ9Mi4wMDowLjcwIG1peGVkX3JlZj0wIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MCA4eDhkY3Q9MCBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0wIHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTAgd2VpZ2h0cD0wIGtleWludD0yNTAga2V5aW50X21pbj0yIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9MTAgcmM9Y3JmIG1idHJlZT0xIGNyZj01MS4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4yMACAAAAAD2WIhAYzn///D0UAAQH/gAAAAAZBmiAYznUAAAAGQZpAGM51AAAABkGaYBjOdQAAAAZBmoAXznUAAAAGQZqgF851AAAABkGawBfOdQAAAAZBmuAVznU=';
+function noSleepOn(){try{if(!nsVid){nsVid=document.createElement('video');nsVid.src=NOSLEEP_MP4;nsVid.muted=true;nsVid.loop=true;nsVid.playsInline=true;
+    nsVid.setAttribute('playsinline','');nsVid.setAttribute('muted','');nsVid.setAttribute('aria-hidden','true');
+    nsVid.style.cssText='position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:.01;pointer-events:none;z-index:-1';document.body.appendChild(nsVid)}
+  const pr=nsVid.play();if(pr&&pr.catch)pr.catch(()=>{})}catch(e){}}
+async function keepAwake(){
+  if(document.hidden)return;
+  if('wakeLock' in navigator){try{if(!wake||wake.released){wake=await navigator.wakeLock.request('screen');
+        wake.addEventListener('release',()=>{wake=null;if(!document.hidden)setTimeout(keepAwake,800)})}
+      S.awake='wakelock';
+      // 舊版 iOS 加入主畫面的 App，喚醒鎖定會「成功」但其實沒作用，所以同時開備用方式
+      if(navigator.standalone)noSleepOn();return}catch(e){}}
+  noSleepOn();S.awake='video'}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')keepAwake()});
+// 保險：每 20 秒確認一次（有些情況系統會悄悄放掉）
+setInterval(()=>{if(!document.hidden&&S.audioOn&&(!wake||wake.released))keepAwake()},20000);
 // 直接進入導航畫面，不再顯示開始頁。iPhone 規定聲音要等使用者碰過畫面才能播放，
 // 所以第一次點畫面（任何地方）時才開啟語音與螢幕常亮。
 function unlockAudio(){if(S.audioOn)return;S.audioOn=true;
