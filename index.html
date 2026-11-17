@@ -1344,14 +1344,16 @@ function liveImage(v,c,u,next){
   open();
   S.coTimer=setInterval(()=>{if(gen!==S.coGen||document.hidden)return;const now=Date.now();
     if(snap){if(now-lastFrame>5000&&(!pending||now-opened>8000))open();return}          // 快照：每 5 秒換一張
-    // 串流：持續把最新畫面畫上去；畫面超過 4 秒沒更新、或圖已壞掉，就在背景重新連線
-    let ok=false;if(cur&&cur.complete&&cur.naturalWidth>0)ok=draw(cur);
-    if(pending&&pending.complete&&pending.naturalWidth>0&&draw(pending))adopt(pending);
-    if(ok&&cur&&!cur.complete)lastFrame=now;            // 仍在接收中
-    if(cur&&cur.complete&&cur.naturalWidth===0){cur.remove();cur=null}
-    const stale=now-lastFrame>4000;
-    if(stale&&got){st.textContent='重新連線中…';st.hidden=false}
-    if((stale||!cur)&&(!pending||now-opened>6000))open();
+    // 串流：持續把最新畫面畫上去。iPhone 沒辦法得知串流畫面有沒有在更新，
+    // 所以不再用「幾秒沒動靜」判斷斷線（那會造成每 5 秒重連、畫面一直從頭播），
+    // 改成每段完整播 20 秒再換新連線；只有畫面真的壞掉才提早重連。
+    if(cur&&cur.naturalWidth>0)draw(cur);
+    if(pending&&pending.naturalWidth>0&&draw(pending))adopt(pending);
+    const broken=!cur||(cur.complete&&cur.naturalWidth===0);
+    if(broken&&cur){cur.remove();cur=null}
+    if(broken&&got){st.textContent='重新連線中…';st.hidden=false}
+    const age=now-lastFrame;
+    if((broken||age>20000)&&(!pending||now-opened>8000))open();
     if(!got&&now-opened>12000&&fails>=1){clearInterval(S.coTimer);v.innerHTML='';next()}},500)}
 function stopStream(){clearInterval(S.coTimer);S.coGen=(S.coGen||0)+1;$('cctvView').innerHTML='';S.coCur=null}
 function updateCo(force){
