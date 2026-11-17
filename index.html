@@ -234,6 +234,9 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
       <p class="msg" id="mapSrcNote"></p>
       <div class="field" id="gMapIdRow" hidden><input id="gMapId" autocomplete="off" placeholder="Google Map ID（選填）"><button class="btn" id="gMapIdSave">儲存</button></div>
       <div class="field" id="appleRow" hidden><input id="appleTok" type="password" autocomplete="off" placeholder="Apple MapKit JS 權杖"><button class="btn" id="appleSave">儲存</button></div>
+      <div class="label">交通方式</div>
+      <div class="seg" id="travelSeg" role="group" aria-label="交通方式"><button data-tr="car">汽車</button><button data-tr="moto">機車</button><button data-tr="bike">自行車</button><button data-tr="walk">步行</button></div>
+      <p class="msg" id="travelNote"></p>
       <div class="label">地圖顏色</div>
       <div class="seg" id="themeSeg" role="group" aria-label="地圖顏色"><button data-t="auto">自動</button><button data-t="day">白天</button><button data-t="night">夜間</button></div>
       <p class="msg" id="themeNote"></p>
@@ -431,7 +434,12 @@ function loadScript(src,attrs={}){return new Promise((res,rej)=>{const s=documen
   for(const[k,v]of Object.entries(attrs))s.setAttribute(k,v);s.onload=()=>res();s.onerror=()=>{const e=new Error('script');e.kind='blocked';rej(e)};document.head.appendChild(s)})}
 const errOf=(msg,kind)=>{const e=new Error(msg);e.kind=kind;return e};
 const ZOOM_UP=0;
-const zoomFor=()=>{const v=S.speed;return ZOOM_UP+(S.route?(v<25?17:v<55?16.2:v<85?15.4:14.7):(v<25?16.5:v<60?15.8:15))};
+/* 交通方式：汽車、機車、自行車、步行 */
+const TRAVEL={car:{t:'汽車',g:'DRIVE',tt:'car',traffic:true},moto:{t:'機車',g:'TWO_WHEELER',tt:'motorcycle',traffic:true},
+  bike:{t:'自行車',g:'BICYCLE',tt:'bicycle',traffic:false},walk:{t:'步行',g:'WALK',tt:'pedestrian',traffic:false}};
+S.travel=LS.get('travel','car');if(!TRAVEL[S.travel])S.travel='car';
+const motorized=()=>TRAVEL[S.travel].traffic;
+const zoomFor=()=>{const v=S.speed;return ZOOM_UP+(S.travel==='walk'?1:S.travel==='bike'?.5:0)+(S.route?(v<25?17:v<55?16.2:v<85?15.4:14.7):(v<25?16.5:v<60?15.8:15))};
 const mpp=(lat,z)=>156543.03392*Math.cos(rad(lat))/2**z;
 function ahead(lat,lon,hdg,m){const d=m/R,b=rad(hdg),la=rad(lat),lo=rad(lon);const la2=Math.asin(Math.sin(la)*Math.cos(d)+Math.cos(la)*Math.sin(d)*Math.cos(b));
   const lo2=lo+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la),Math.cos(d)-Math.sin(la)*Math.sin(la2));return{lat:deg(la2),lon:deg(lo2)}}
@@ -765,7 +773,8 @@ function osrmText(st){const m=st.maneuver,road=st.name||st.ref||'',dir=OSRM_TXT[
 const TT_ICON=m=>/UTURN/.test(m)?'uturn':/ARRIVE/.test(m)?'arrive':/WAYPOINT/.test(m)?'stop':/ROUNDABOUT/.test(m)?'round':/(BEAR|KEEP|EXIT).*LEFT/.test(m)?'slightleft':/(BEAR|KEEP|EXIT|TAKE_EXIT).*RIGHT|TAKE_EXIT/.test(m)?'slightright':/LEFT/.test(m)?'left':/RIGHT/.test(m)?'right':'straight';
 
 /* 路線來源：有 Google 金鑰用 Google Routes（含即時路況），有 TomTom 金鑰用 TomTom，否則 OSRM（不含路況） */
-const TRAFFIC_SRC=new Set(['Google','TomTom']);
+const TRAFFIC_SRC_BASE=new Set(['Google','TomTom']);
+const TRAFFIC_SRC={has:s=>TRAFFIC_SRC_BASE.has(s)&&motorized()};
 function routers(){const l=[];if(S.gKey&&!S.gRoutesBad)l.push(['Google',routeGoogle]);if(S.key&&!S.ttBad)l.push(['TomTom',routeTomTom]);l.push(['OSRM',routeOSRM]);return l}
 async function getRoute(pts,stops,only){
   let fail=[];
@@ -794,11 +803,17 @@ function decodePoly(s){let i=0,lat=0,lng=0;const out=[];while(i<s.length){for(co
 const G_ICON=m=>!m?'straight':/UTURN/.test(m)?'uturn':/ROUNDABOUT/.test(m)?'round':/SLIGHT_LEFT|RAMP_LEFT|FORK_LEFT|MERGE/.test(m)&&/LEFT/.test(m)?'slightleft':/SLIGHT_RIGHT|RAMP_RIGHT|FORK_RIGHT/.test(m)?'slightright':/LEFT/.test(m)?'left':/RIGHT/.test(m)?'right':'straight';
 async function routeGoogle(pts,stops){
   const ll=p=>({location:{latLng:{latitude:p.lat,longitude:p.lon}}});
-  const body={origin:ll(pts[0]),destination:ll(pts[pts.length-1]),intermediates:pts.slice(1,-1).map(ll),travelMode:'DRIVE',routingPreference:'TRAFFIC_AWARE',
-    extraComputations:['TRAFFIC_ON_POLYLINE'],languageCode:'zh-TW',regionCode:'TW',units:'METRIC',polylineQuality:'HIGH_QUALITY'};
-  if(S.speed>8)body.origin.location.heading=Math.round(S.heading);
+  const tm=TRAVEL[S.travel];
+  const body={origin:ll(pts[0]),destination:ll(pts[pts.length-1]),intermediates:pts.slice(1,-1).map(ll),travelMode:tm.g,languageCode:'zh-TW',regionCode:'TW',units:'METRIC',polylineQuality:'HIGH_QUALITY'};
+  // 即時路況只適用汽車、機車；步行、自行車不能帶這兩個參數
+  if(tm.traffic){body.routingPreference='TRAFFIC_AWARE';body.extraComputations=['TRAFFIC_ON_POLYLINE'];if(S.speed>8)body.origin.location.heading=Math.round(S.heading)}
+  // 機車：一般機車不能上國道，避開高速公路
+  if(S.travel==='moto')body.routeModifiers={avoidHighways:true};
   const fm='routes.duration,routes.staticDuration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.travelAdvisory.speedReadingIntervals,routes.legs.steps.navigationInstruction,routes.legs.steps.startLocation,routes.legs.endLocation';
-  const j=await getJSON('https://routes.googleapis.com/directions/v2:computeRoutes',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':S.gKey,'X-Goog-FieldMask':fm},body:JSON.stringify(body)},15000);
+  const call=b=>getJSON('https://routes.googleapis.com/directions/v2:computeRoutes',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':S.gKey,'X-Goog-FieldMask':fm},body:JSON.stringify(b)},15000);
+  let j;try{j=await call(body)}catch(e){
+    // 有些地區不支援機車模式：改用汽車路線並避開高速公路
+    if(S.travel==='moto'&&e.kind==='http'&&e.status===400){body.travelMode='DRIVE';j=await call(body)}else throw e}
   const rt=j.routes&&j.routes[0];if(!rt||!rt.polyline)throw errOf('找不到路線','none');
   const coords=decodePoly(rt.polyline.encodedPolyline),dur=parseFloat(rt.duration)||0,sdur=parseFloat(rt.staticDuration||rt.duration)||dur;
   const steps=[];rt.legs.forEach((leg,li)=>{(leg.steps||[]).forEach((st,k)=>{if(li===0&&k===0)return;const ni=st.navigationInstruction||{},loc=st.startLocation?.latLng;if(!loc||!ni.instructions)return;
@@ -811,10 +826,12 @@ async function routeGoogle(pts,stops){
   const segLen=(a,b)=>{let l=0;for(let k=a;k<b&&k<coords.length-1;k++)l+=hav({lon:coords[k][0],lat:coords[k][1]},{lon:coords[k+1][0],lat:coords[k+1][1]});return l};
   iv.forEach(x=>x.w=segLen(x.i0,x.i1)*(x.cat==='JAM'?3:1));const W=iv.reduce((a,x)=>a+x.w,0)||1,delay=Math.max(0,dur-sdur);
   const traffic=iv.map(x=>({i0:x.i0,i1:x.i1,cat:x.cat,delay:delay*x.w/W}));
-  return{coords,steps,distance:rt.distanceMeters||0,duration:dur,delay,traffic,src:'Google'};
+  return{coords,steps,distance:rt.distanceMeters||0,duration:dur,delay:tm.traffic?delay:0,traffic:tm.traffic?traffic:[],src:'Google',mode:S.travel};
 }
 async function routeOSRM(pts,stops=S.plan.stops){
-  const j=await getJSON(`https://router.project-osrm.org/route/v1/driving/${pts.map(p=>p.lon.toFixed(6)+','+p.lat.toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true`,{},15000);
+  const base={car:'https://router.project-osrm.org/route/v1/driving',moto:'https://router.project-osrm.org/route/v1/driving',
+    bike:'https://routing.openstreetmap.de/routed-bike/route/v1/driving',walk:'https://routing.openstreetmap.de/routed-foot/route/v1/driving'}[S.travel];
+  const j=await getJSON(`${base}/${pts.map(p=>p.lon.toFixed(6)+','+p.lat.toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true${S.travel==='moto'?'&exclude=motorway':''}`,{},15000);
   if(j.code!=='Ok'||!j.routes||!j.routes.length)throw new Error(j.code||'no route');
   const rt=j.routes[0],coords=rt.geometry.coordinates;
   const steps=[];rt.legs.forEach((leg,li)=>leg.steps.forEach(st=>{const m=st.maneuver;if(m.type==='depart')return;
@@ -822,10 +839,10 @@ async function routeOSRM(pts,stops=S.plan.stops){
     if(isArr&&!last){steps.push({lon:m.location[0],lat:m.location[1],icon:'stop',text:'中途點 '+(stops[li]?.name||''),stop:li});return}
     if(isArr){steps.push({lon:m.location[0],lat:m.location[1],icon:'arrive',text:'抵達 '+S.plan.dest.name,arrive:true});return}
     steps.push({lon:m.location[0],lat:m.location[1],icon:osrmIcon(m),text:osrmText(st)})}));
-  return{coords,steps,distance:rt.distance,duration:rt.duration,traffic:[],src:'OSRM'};
+  return{coords,steps,distance:rt.distance,duration:rt.duration,traffic:[],src:'OSRM',mode:S.travel};
 }
 async function routeTomTom(pts,stops=S.plan.stops){
-  const url=`https://api.tomtom.com/routing/1/calculateRoute/${pts.map(p=>p.lat.toFixed(6)+','+p.lon.toFixed(6)).join(':')}/json?key=${encodeURIComponent(S.key)}&traffic=true&travelMode=car&routeType=fastest&instructionsType=text&language=zh-TW&sectionType=traffic&computeTravelTimeFor=all`;
+  const url=`https://api.tomtom.com/routing/1/calculateRoute/${pts.map(p=>p.lat.toFixed(6)+','+p.lon.toFixed(6)).join(':')}/json?key=${encodeURIComponent(S.key)}&traffic=${motorized()}&travelMode=${TRAVEL[S.travel].tt}${S.travel==='moto'?'&avoid=motorways':''}&routeType=fastest&instructionsType=text&language=zh-TW&sectionType=traffic&computeTravelTimeFor=all`;
   const j=await getJSON(url,{},15000);const rt=j.routes&&j.routes[0];if(!rt)throw new Error('no route');
   const all=rt.legs.flatMap(l=>l.points.map(p=>[p.longitude,p.latitude]));
   let wp=0;const steps=(rt.guidance?.instructions||[]).filter(i=>i.maneuver!=='DEPART').map(i=>{
@@ -965,7 +982,7 @@ function updateCam(){
     if(!best||d<best.d)best={c,d:Math.max(0,d)}}
   S.camAhead=best;
   if(best){const lim=best.c.lim||S.limit,fast=S.speed>80,ths=fast?[1000,500]:[500,200];
-    for(const th of ths){const k=best.c.id+'@'+th;if(best.d<=th&&best.d>th*.45&&!S.said.has(k)){S.said.add(k);say(`前方${cnD(th)}，測速照相${lim?'，限速'+lim:''}`);beep(880,.18)}}}
+    for(const th of ths){const k=best.c.id+'@'+th;if(best.d<=th&&best.d>th*.45&&!S.said.has(k)&&motorized()){S.said.add(k);say(`前方${cnD(th)}，測速照相${lim?'，限速'+lim:''}`);beep(880,.18)}}}
   // 通過後清掉提醒紀錄以免累積
   if(S.said.size>400)S.said=new Set([...S.said].slice(-200));
 }
@@ -980,7 +997,7 @@ function updateHUD(){
   else{$('eType').textContent='測速';$('eDist').textContent='—';$('eName').textContent=S.area&&S.area.cams?(S.area.cams.length||S.official?'前方無測速點':'前方無已知測速點'):(S.areaErr?'測速資料暫時載入失敗':'載入測速資料中');$('eBar').style.width='0'}
   const over=lim&&S.speed>lim+1,near=cam&&cam.d<(S.speed>80?1000:500);
   $('hud').classList.toggle('over',!!over);$('hud').classList.toggle('near',!!(over&&near));
-  if(over&&near&&performance.now()-S.overBeep>1400){S.overBeep=performance.now();beep(1500,.1);setTimeout(()=>beep(1500,.1),160)}
+  if(motorized()&&over&&near&&performance.now()-S.overBeep>1400){S.overBeep=performance.now();beep(1500,.1);setTimeout(()=>beep(1500,.1),160)}
   // 導航
   const r=S.route;if(!r)return;
   const nx=nextStep();const rem=Math.max(0,r.L-r.s);
@@ -990,7 +1007,7 @@ function updateHUD(){
   $('etaClock').textContent=new Date(Date.now()+sec*1000).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false});
   $('etaRest').textContent=`剩 ${fmtD(rem)} · ${Math.max(1,Math.round(sec/60))} 分`;
   const left=S.plan.stops.filter((s,i)=>!r.visited.has('s'+i)).length;
-  $('mDest').hidden=false;$('mDest').textContent='→ '+S.plan.dest.name+(left?` · 途經 ${left} 站`:'')+(TRAFFIC_SRC.has(r.src)?' · 即時路況（'+r.src+'）':' · 未含路況');
+  $('mDest').hidden=false;$('mDest').textContent='→ '+S.plan.dest.name+(left?` · 途經 ${left} 站`:'')+' · '+TRAVEL[S.travel].t+(motorized()?(TRAFFIC_SRC.has(r.src)?' · 即時路況（'+r.src+'）':' · 未含路況'):'');
 }
 setInterval(()=>{if(S.pos)updateHUD()},1000);
 
@@ -1142,6 +1159,12 @@ $('voice').setAttribute('aria-pressed',S.voice);
 $('voice').addEventListener('click',()=>{S.voice=!S.voice;LS.set('voice',S.voice);$('voice').setAttribute('aria-pressed',S.voice);if(S.voice)say('語音已開啟');else try{speechSynthesis.cancel()}catch(e){}});
 $('gKeyIn').value=S.gKey===BUILTIN_GKEY?'':S.gKey;$('gSave').addEventListener('click',()=>{const own=$('gKeyIn').value.trim();LS.set('gKey',own);S.gKey=own||BUILTIN_GKEY;S.gSess=null;S.gAuthBad=false;S.gRoutesBad=null;toast(own?'已改用你自己的 Google 金鑰':'使用內建的 Google 金鑰');
   if(S.mapSrc==='google'&&$('start').hidden&&S.gKey&&S.mapNow!=='google')mountMap('google')});
+const TRAVEL_NOTE={car:'依即時路況規劃，有測速照相提醒。',moto:'避開國道等高速公路，有即時路況與測速照相提醒。機車路線目前是 Google 的測試版。',
+  bike:'走適合自行車的路，不含路況與測速提醒。自行車路線目前是 Google 的測試版，可能缺少部分自行車道資訊。',walk:'走人行路線，不含路況與測速提醒。步行路線目前是 Google 的測試版，可能缺少部分人行道資訊。'};
+function renderTravel(){[...$('travelSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.tr===S.travel));$('travelNote').textContent=TRAVEL_NOTE[S.travel]}
+$('travelSeg').addEventListener('click',e=>{const b=e.target.closest('[data-tr]');if(!b||b.dataset.tr===S.travel)return;S.travel=b.dataset.tr;LS.set('travel',S.travel);renderTravel();
+  toast('交通方式：'+TRAVEL[S.travel].t+(S.route?'，重新規劃路線':''));if(S.route&&S.pos)planRoute(false);updateHUD()});
+renderTravel();
 function renderTheme(){[...$('themeSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.t===S.theme));
   $('themeNote').textContent=S.theme==='auto'?'依你所在位置的日出日落自動切換。'+themeLabel():S.theme==='day'?'固定用白色地圖。':'固定用黑色地圖。'}
 $('themeSeg').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.theme=b.dataset.t;LS.set('mapTheme',S.theme);checkTheme();renderTheme()});
