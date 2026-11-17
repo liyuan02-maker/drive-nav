@@ -279,6 +279,8 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
 .hud .sign.est::after{margin-top:-24px;font-size:8px}
 @media (max-width:370px){.hud .num{font-size:58px}.hud .num.three{font-size:44px}}
 @media (min-width:900px) and (min-height:521px){.hud .num{font-size:76px}.hud .num.three{font-size:62px}}
+html[lang=en] .hud .sign.est::after{content:"~"}
+html[lang=en] .sign.est::after{content:"~"}
 </style>
 </head>
 <body>
@@ -292,6 +294,8 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
       <button class="btn" id="more" aria-expanded="false">設定</button>
     </div>
     <div class="extra">
+      <div class="label" data-en="Language">介面語言 Language</div>
+      <div class="seg" id="langSeg" role="group" aria-label="Language"><button data-l="zh">中文</button><button data-l="en">English</button></div>
       <div class="label">地圖來源</div>
       <div class="seg" id="mapSrc" role="group" aria-label="地圖來源"><button data-src="free">免費地圖</button><button data-src="google">Google 地圖</button><button data-src="apple">Apple 地圖</button></div>
       <p class="msg" id="mapSrcNote"></p>
@@ -305,18 +309,18 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
       <p class="msg" id="themeNote"></p>
       <div class="label">電動車</div>
       <button class="btn" id="evBtn" aria-pressed="true">地圖顯示特斯拉超充站：開</button>
-      <p class="msg">搜尋時點「特斯拉超充」可以列出附近或路線沿途的站點。特斯拉沒有公開即時空位，所以通常看不到現在有幾座空著。</p>
+      <p class="msg" data-en="Tap “Tesla Supercharger” in search to list stations nearby or along your route. Tesla doesn’t publish live stall availability, so free stalls usually can’t be shown.">搜尋時點「特斯拉超充」可以列出附近或路線沿途的站點。特斯拉沒有公開即時空位，所以通常看不到現在有幾座空著。</p>
       <div class="label">紅綠燈</div>
-      <p class="msg">地圖會標出紅綠燈位置，畫面左上角顯示前方紅綠燈的距離。台灣沒有公開即時燈號，所以無法顯示紅燈或綠燈。</p>
+      <p class="msg" data-en="Traffic lights are marked on the map, and the top-left shows the distance to the next one. Taiwan doesn’t publish live signal phases, so red or green can’t be shown.">地圖會標出紅綠燈位置，畫面左上角顯示前方紅綠燈的距離。台灣沒有公開即時燈號，所以無法顯示紅燈或綠燈。</p>
       <button class="btn" id="sigVoiceBtn" aria-pressed="false">紅綠燈語音提醒：關</button>
       <div class="label">即時路況</div>
-      <p class="msg">有 Google 金鑰（並在 Google Cloud 啟用「Routes API」）時，路線會依 Google 即時路況規劃、避開塞車；選 Google 地圖還能看到整片路況。也可以改用 TomTom 金鑰，免費申請：<a href="https://developer.tomtom.com/" target="_blank" rel="noopener">developer.tomtom.com</a></p>
+      <p class="msg" data-en="With a Google key (and the “Routes API” enabled in Google Cloud), routes use Google live traffic to avoid jams; the Google map also shows the traffic layer. You can use a TomTom key instead, free at <a href=&quot;https://developer.tomtom.com/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>developer.tomtom.com</a>">有 Google 金鑰（並在 Google Cloud 啟用「Routes API」）時，路線會依 Google 即時路況規劃、避開塞車；選 Google 地圖還能看到整片路況。也可以改用 TomTom 金鑰，免費申請：<a href="https://developer.tomtom.com/" target="_blank" rel="noopener">developer.tomtom.com</a></p>
       <div class="field"><input id="ttKey" type="password" autocomplete="off" placeholder="TomTom API 金鑰"><button class="btn" id="ttSave">儲存</button></div>
       <div class="label">搜尋更準確（選填）</div>
-      <p class="msg">填入 Google 地點金鑰後，搜尋店家、地標會跟 Google 地圖一樣準。到 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 啟用「Places API (New)」並建立金鑰，記得把金鑰限制在這個網站使用。</p>
+      <p class="msg" data-en="With a Google Places key, searching for shops and landmarks is as accurate as Google Maps. In <a href=&quot;https://console.cloud.google.com/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>Google Cloud</a> enable “Places API (New)”, create a key, and restrict it to this website.">填入 Google 地點金鑰後，搜尋店家、地標會跟 Google 地圖一樣準。到 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 啟用「Places API (New)」並建立金鑰，記得把金鑰限制在這個網站使用。</p>
       <div class="field"><input id="gKeyIn" type="password" autocomplete="off" placeholder="已內建金鑰；要用自己的再貼上"><button class="btn" id="gSave">儲存</button></div>
       <button class="btn" id="diagBtn">連線檢查</button>
-      <p class="msg" id="dataNote">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相：警政署開放資料（每週更新），速限：OpenStreetMap。免費地圖的衛星影像：Esri。</p>
+      <p class="msg" id="dataNote" data-en="Map: OpenFreeMap / OpenStreetMap. Search: Google or TomTom (with a key), otherwise Photon and Nominatim. Routes: OSRM (no live traffic). Speed cameras: National Police Agency open data (updated weekly). Speed limits: OpenStreetMap. Satellite imagery on the free map: Esri.">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相：警政署開放資料（每週更新），速限：OpenStreetMap。免費地圖的衛星影像：Esri。</p>
     </div>
   </section>
 
@@ -415,6 +419,121 @@ if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches))doc
 (()=>{
 const $=id=>document.getElementById(id);
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const LANG=LS.get('lang','zh');
+/* ---------- 介面語言：中文／English ---------- */
+// 切到英文時：畫面上出現的中文即時換成英文（含之後動態產生的提示），語音改英文，Google 路線、搜尋、地名也要英文版
+const EN=LANG==='en',L=(zh,en)=>EN?en:zh;
+const I18N={'這個頁面不是從 https 網址打開，地圖和搜尋會連不上':'This page wasn’t opened from an https address, so maps and search can’t connect','Google Map ID（選填）':'Google Map ID (optional)','Apple MapKit JS 權杖':'Apple MapKit JS token','TomTom API 金鑰':'TomTom API key','已內建金鑰；要用自己的再貼上':'Built-in key in use; paste your own to replace it','這段路沒有速限資料':'No speed limit data for this road',
+'操作':'Controls','搜尋目的地':'Search','改目的地':'Destination','結束':'End','語音':'Voice','攝影機':'Camera','設定':'Settings','收起':'Close',
+'地圖來源':'Map source','免費地圖':'Free map','Google 地圖':'Google Maps','Apple 地圖':'Apple Maps','儲存':'Save','交通方式':'Travel mode',
+'汽車':'Car','機車':'Scooter','自行車':'Bicycle','步行':'Walking','地圖顏色':'Map colors','自動':'Auto','白天':'Day','夜間':'Night',
+'電動車':'Electric vehicle','紅綠燈':'Traffic lights','即時路況':'Live traffic','搜尋更準確（選填）':'Better search (optional)','連線檢查':'Connection check',
+'介面語言 Language':'Language 介面語言',
+'車速與測速提醒':'Speed and camera alerts','目前路段速限':'Speed limit here','速限':'Limit','定位中':'Locating','測速':'Camera','載入中':'Loading',
+'路口攝影機':'Traffic camera','放大或縮小畫面':'Enlarge or shrink','在新分頁打開這支攝影機':'Open this camera in a new tab','導航地圖':'Navigation map',
+'轉彎指示，點一下看接下來的路線':'Next turn; tap to see the route ahead','要去哪裡？':'Where to?','點這裡搜尋':'Tap to search',
+'改目的地／中途點':'Change destination / stops','地圖顯示方式':'Map view','地圖方向：車頭朝上':'Map: heading up','車頭朝上':'Heading up','北方朝上':'North up',
+'路況':'Traffic','2D 平面':'2D flat','3D 立體':'3D','衛星':'Satellite','回到目前位置':'Back to my location','關閉':'Close',
+'輸入地點、地址，例如：國賓飯店':'Place or address, e.g. Ambassador Hotel','選到的地點：':'Selected place:','設為目的地':'Set as destination','加為中途點':'Add as stop',
+'用目前位置':'Use current location','取消':'Cancel','附近搜尋':'Nearby','開始導航':'Start navigation','行車導航':'Drive Nav',
+'逐一測試導航用到的每個服務，看是哪一個連不上、為什麼。':'Tests every service the app uses and shows which one fails and why.','重新檢查':'Check again',
+'家':'Home','公司':'Work','點一下設定':'Tap to set','更改：':'Change:','上移':'Move up','移除':'Remove','路線':'Route','目前位置':'Current location',
+'還沒有目的地，搜尋後選「設為目的地」。':'No destination yet. Search, then choose “Set as destination”.','最近去過':'Recent',
+'特斯拉超充':'Tesla Supercharger','加油站':'Gas station','停車場':'Parking','便利商店':'Convenience store','休息站／服務區':'Rest / service area','充電站':'EV charging','廁所':'Restroom',
+'飯店':'Hotel','餐廳':'Restaurant','咖啡店':'Café','速食':'Fast food','醫院':'Hospital','診所':'Clinic','車站':'Station','學校':'School','大學':'University','超市':'Supermarket',
+'購物中心':'Mall','百貨公司':'Department store','銀行':'Bank','警察局':'Police','博物館':'Museum','公園':'Park','廟宇／教堂':'Temple / church','服務區':'Service area','電影院':'Cinema',
+'搜尋中…':'Searching…','來源：Google 地點':'Source: Google Places','來源：TomTom':'Source: TomTom','來源：OpenStreetMap（免費）':'Source: OpenStreetMap (free)',
+'規劃路線中…':'Planning route…','取得目前位置…':'Getting your location…','LIVE':'LIVE','重新連線中…':'Reconnecting…','你選的':'Your pick','前方壅塞':'Jam ahead',
+'即將上國道':'Freeway ahead','前方國道':'Freeway ahead','路線前方':'On route','正前方':'Straight ahead','前方路口':'Next junction',
+'等待 GPS 定位…':'Waiting for GPS…','在新分頁打開':'Open in a new tab','前方無測速點':'No speed camera ahead','前方無已知測速點':'No known speed camera ahead',
+'載入測速資料中':'Loading speed cameras','測速資料暫時載入失敗':'Speed camera data unavailable','到目的地前沒有紅綠燈了':'No more traffic lights before your destination',
+'有更快的路線':'Faster route available','改走':'Switch','已抵達中途點':'Stop reached','沿目前道路直行到目的地':'Continue straight to your destination',
+'GPS':'GPS','無定位':'No GPS','GPS 訊號弱':'Weak GPS','正常':'OK','失敗':'Failed','略過':'Skipped','檢查中':'Checking','沒有錯誤':'No errors','沒有填金鑰':'No key set',
+'程式狀態':'App status','螢幕恆亮':'Keep screen on','網頁位址':'Page address','GPS 定位':'GPS location','地圖（OpenFreeMap）':'Map (OpenFreeMap)',
+'免費搜尋（Photon）':'Free search (Photon)','免費搜尋（Nominatim）':'Free search (Nominatim)','Google 地點搜尋':'Google Places search','Google 即時路況路線':'Google live-traffic routing',
+'TomTom 搜尋／路況':'TomTom search / traffic','路線規劃（OSRM）':'Routing (OSRM)','路口攝影機清單（TDX）':'Traffic camera list (TDX)','天氣預報（Open-Meteo）':'Weather (Open-Meteo)',
+'官方測速點（警政署）':'Official speed cameras (NPA)','速限資料（OpenStreetMap）':'Speed limits (OpenStreetMap)',
+'晴':'Clear','晴時多雲':'Mostly clear','多雲':'Cloudy','陰':'Overcast','霧':'Fog','毛毛雨':'Drizzle','凍雨':'Freezing rain','小雨':'Light rain','雨':'Rain','大雨':'Heavy rain',
+'小雪':'Light snow','雪':'Snow','大雪':'Heavy snow','陣雨':'Showers','大陣雨':'Heavy showers','陣雪':'Snow showers','雷雨':'Thunderstorm','雷雨冰雹':'Thunderstorm with hail',
+'北上':'northbound','南下':'southbound','東向':'eastbound','西向':'westbound','東北向':'NE-bound','西北向':'NW-bound','東南向':'SE-bound','西南向':'SW-bound',
+'左轉':'Turn left','右轉':'Turn right','靠左':'Keep left','靠右':'Keep right','直行':'Straight','國道':'Freeway','出口':'Exit',
+'超速':'Over','語音已開啟':'Voice on','已結束導航':'Navigation ended','重新規劃路線':'Rerouting','前方紅綠燈':'Traffic light ahead','已改走更快的路線':'Switched to the faster route',
+'偏離路線，重新規劃中':'Off route, rerouting','已移除 Google 金鑰':'Google key removed','使用內建的 Google 金鑰':'Using the built-in Google key','已改用你自己的 Google 金鑰':'Using your own Google key',
+'暫時取不到 GPS 訊號':'No GPS signal right now','這個瀏覽器不支援定位':'This browser has no location support','還沒取得 GPS 位置':'No GPS position yet',
+'中途點最多 5 個':'Up to 5 stops','已儲存 Map ID':'Map ID saved','已儲存 Apple 權杖':'Apple token saved','已移除 Apple 權杖':'Apple token removed','已儲存，重新整理頁面後生效':'Saved; reload the page to apply',
+'找不到特斯拉超充站':'No Tesla Superchargers found','附近 30 公里內的特斯拉超充站':'Tesla Superchargers within 30 km','路線沿途的特斯拉超充站（依路線順序）':'Tesla Superchargers along your route (in order)',
+'尋找路線沿途的特斯拉超充站…':'Finding Superchargers along your route…','尋找附近的特斯拉超充站…':'Finding nearby Superchargers…','特斯拉超充站':'Tesla Supercharger',
+'取得地點位置失敗，請再試一次':'Couldn’t get that place’s location. Try again.','搜尋失敗，請檢查網路':'Search failed. Check your connection.',
+'地圖載入失敗：':'Map failed to load: ','還沒有攝影機清單（GitHub 每週自動下載）':'No camera list yet (GitHub downloads it weekly)',
+'還沒有官方資料（GitHub 每週自動下載，第一次要等它跑完）':'No official data yet (GitHub downloads it weekly)',
+'已開啟（螢幕喚醒鎖定）':'On (screen wake lock)','已開啟（備用方式）':'On (fallback)','還沒開啟：點一下畫面就會開啟':'Not yet: tap the screen to turn it on',
+};
+const WX_EN=k=>I18N[k]||k;
+const tm=s=>s.replace(/(\d+(?:\.\d+)?)\s*公里/g,'$1 kilometers').replace(/(\d+)\s*公尺/g,'$1 meters');
+// 動態產生的句子（提示與語音）
+const I18N_RX=[[/^這個頁面不是從 https 網址打開，瀏覽器不讓它連外(.*)$/,'This page wasn’t opened from an https address, so the browser blocks connections$1'],[/^抵達 (?!\d\d:|·)(.+)$/,'Arrive at $1'],
+ [/^(.+?)後，(.+)$/,(m,a,b)=>`In ${tm(a)}, ${tr(b)}`],
+ [/^前方(.+?)，測速照相(?:，限速(\d+))?$/,(m,a,b)=>`Speed camera in ${tm(a)}${b?', limit '+b:''}`],
+ [/^超速，限速(\d+)$/,'Speeding, limit $1'],
+ [/^(\d)公里後(左|右)側出口(?:，往(.+?))?，請開始靠(左|右)$/,(m,n,s,to)=>`Exit on the ${s==='左'?'left':'right'} in ${n} kilometer${n>1?'s':''}${to?' toward '+to:''}. Move ${s==='左'?'left':'right'}.`],
+ [/^(\d)公里後道路分岔，請靠(左|右)(?:，往(.+))?$/,(m,n,s,to)=>`Road splits in ${n} kilometer${n>1?'s':''}. Keep ${s==='左'?'left':'right'}${to?' toward '+to:''}.`],
+ [/^前方(.+?)壅塞，約多(\d+)分鐘$/,(m,a,n)=>`Traffic jam in ${tm(a)}, about ${n} minutes delay`],
+ [/^前方(.+?)，(.+?)壅塞$/,(m,a,b)=>`Traffic jam in ${tm(a)} on ${b}`],
+ [/^找到更快的路線，可以省(\d+)分鐘$/,'Found a faster route that saves $1 minutes'],
+ [/^開始導航，前往(.+?)，全程(.+?)，約(\d+)分鐘(?:，目前路況會多(\d+)分鐘|，目前路況順暢)?$/,(m,d,len,n,x)=>`Starting navigation to ${d}. ${tm(len)}, about ${n} minutes${x?`, traffic adds ${x} minutes`:m.endsWith('順暢')?', traffic is light':''}.`],
+ [/^開始導航，前往(.+)$/,'Starting navigation to $1'],
+ [/^已抵達中途點，(.+)$/,'Arrived at stop: $1'],[/^已抵達目的地，(.+)$/,'You have arrived at $1'],[/^已抵達 (.+)$/,'Arrived at $1'],
+ [/^目的地抵達時預報：(.+?)，(-?\d+)度(?:，降雨機率(\d+)%)?$/,(m,w,t,r)=>`Forecast at arrival: ${WX_EN(w)}, ${t} degrees${r?`, ${r}% chance of rain`:''}`],
+ [/^進入區間測速，限速(\d+)$/,'Entering average speed zone, limit $1'],
+ [/^抵達 (\d\d:\d\d)：(\S+) (-?\d+)°(?: · 降雨 (\d+)%)?$/,(m,h,w,t,r)=>`Arrive ${h}: ${WX_EN(w)} ${t}°${r?` · rain ${r}%`:''}`],
+ [/^抵達時 (\S+) (-?\d+)°(?: · 降雨 (\d+)%)?$/,(m,w,t,r)=>`At arrival: ${WX_EN(w)} ${t}°${r?` · rain ${r}%`:''}`],
+ [/^(\d\d:\d\d)$/,'$1'],
+ [/^抵達 · 剩 (.+?) · (\d+) 分$/,'arrival · $1 left · $2 min'],[/^剩 (.+?) · (\d+) 分$/,'$1 left · $2 min'],
+ [/^前方 (.+?) 壅塞$/,'Traffic jam in $1'],[/^長約 (.+?)，約多 (\d+) 分鐘$/,'$1 long, about $2 min delay'],
+ [/^可省約 (\d+) 分鐘$/,'Saves about $1 min'],
+ [/^(.+?) 紅綠燈$/,'Traffic light in $1'],[/^· 剩 (\d+) 個$/,'· $1 left'],
+ [/^超速 \+(\d+)$/,'Over +$1'],[/^限速 (\d+) · (.*)$/,'Limit $1 · $2'],
+ [/^(\d+(?:\.\d+)? (?:k?m)) 後(左|右)側出口$/,(m,d,s)=>`Exit ${s==='左'?'left':'right'} in ${d}`],[/^(.+?) 後(左|右)側出口$/,(m,d,s)=>`exit ${s==='左'?'left':'right'} in ${d}`],
+ [/^(.+?) 後分岔$/,'split in $1'],[/^，往 (.+)$/,', toward $1'],[/^，請走往$/,', take the way to'],
+ [/^直行(?: (.+))?$/,(m,r)=>'Straight'+(r?' '+r:'')],
+ [/^→ (.+?)((?: · .+)*)$/,(m,d,rest)=>'→ '+d+rest.replace(/ · 途經 (\d+) 站/,' · via $1 stops').replace(/ · 即時路況（(.+?)）/,' · live traffic ($1)').replace(/ · 未含路況/,' · no traffic data').replace(/ · (汽車|機車|自行車|步行)/,(x,k)=>' · '+I18N[k])],
+ [/^(.+?)(?: · 途經 (\d+) 站)? · (汽車|機車|自行車|步行)(?: · (含即時路況|未含路況))?$/,(m,d,n,k,t)=>`${d}${n?` · via ${n} stops`:''} · ${I18N[k]}${t?(t==='含即時路況'?' · live traffic':' · no traffic data'):''}`],
+ [/^附近的(.+?)（6 公里內，由近到遠）$/,(m,c)=>`${I18N[c]||c} within 6 km, nearest first`],[/^6 公里內沒有找到(.+)$/,(m,c)=>`No ${I18N[c]||c} within 6 km`],[/^尋找附近的(.+?)…$/,(m,c)=>`Finding ${I18N[c]||c}…`],
+ [/^路線前方 (.+)$/,'$1 ahead on route'],[/^(\d+) 座$/,'$1 stalls'],[/^可用 (\d+)$/,'$1 free'],
+ [/^(.+?) · 前方國道 · (.+)$/,'$1 · freeway ahead · $2'],
+ [/^(路線前方 3 公里|行進方向 2\.5 公里)內沒有攝影機$/,m=>m.startsWith('路線')?'No camera in the next 3 km of the route':'No camera within 2.5 km ahead'],
+ [/^正在載入攝影機清單…$/,'Loading the camera list…'],[/^（第一次使用要等 GitHub 下載完成）$/,'(first use waits for GitHub to download it)'],
+ [/^(\d+) 毫秒$/,'$1 ms'],[/^精度約 (\d+) m$/,'Accuracy about $1 m'],
+ [/^(\d+) 個測速點，資料更新於 (.+)$/,'$1 speed cameras, updated $2'],[/^(\d+) 支攝影機，資料更新於 (.+)$/,'$1 cameras, updated $2'],
+ [/^地圖：(.+)$/,(m,x)=>'Map: '+(I18N[x]||x)],[/^交通方式：(.+?)(，重新規劃路線)?$/,(m,x,r)=>'Travel mode: '+(I18N[x]||x)+(r?', rerouting':'')],
+ [/^目的地：(.+)$/,'Destination: $1'],[/^已加入中途點：(.+)$/,'Stop added: $1'],[/^開始導航：前往 (.+?)(，途經 (.+))?$/,(m,d,x,s)=>`Navigating to ${d}${s?', via '+s:''}`],
+ [/^開始導航：(.+?)(（途經 (\d+) 站）)?$/,(m,d,x,n)=>`Start navigation: ${d}${n?` (via ${n} stops)`:''}`],
+ [/^離開 (.+?)，繼續導航$/,'Leaving $1, continuing'],[/^已把「(.+?)」設為(家|公司)$/,(m,n,k)=>`Saved “${n}” as ${k==='家'?'Home':'Work'}`],
+ [/^搜尋要設為「(家|公司)」的地點，或用目前位置$/,(m,k)=>`Search for your ${k==='家'?'Home':'Work'} address, or use your current location`],
+ [/^找不到「(.+?)」。.*$/,'Nothing found for “$1”. Press Search on the keyboard, add a city, or type an address.'],
+ [/^搜尋失敗：(.+?)。$/,'Search failed: $1.'],
+ [/^通過測速點時 (\d+) km\/h，超過速限 (\d+)$/,'Passed the camera at $1 km/h, over the $2 limit'],[/^通過測速點 (\d+) km\/h，未超速$/,'Passed the camera at $1 km/h, within the limit'],
+ [/^依你所在位置的日出日落自動切換。今天 (\d\d:\d\d) 日出、(\d\d:\d\d) 日落，目前是(夜間|白天)（(黑色|白色)）地圖$/,(m,a,b,n)=>`Switches at local sunrise and sunset. Today: sunrise ${a}, sunset ${b}. Now showing the ${n==='夜間'?'night (dark)':'day (light)'} map.`],
+ [/^固定用白色地圖。$/,'Always the light map.'],[/^固定用黑色地圖。$/,'Always the dark map.'],
+ [/^地圖顯示特斯拉超充站：(開|關)$/,(m,x)=>'Show Tesla Superchargers on map: '+(x==='開'?'on':'off')],[/^紅綠燈語音提醒：(開|關)$/,(m,x)=>'Traffic light voice alert: '+(x==='開'?'on':'off')],
+ [/^攝影機：自動顯示前方路口畫面，點畫面可放大$/,'Camera: shows the camera ahead automatically; tap to enlarge'],
+];
+const I18N_PHRASE=[[/(\d+(?:\.\d+)?)\s*公里/g,'$1 km'],[/(\d+)\s*公尺/g,'$1 m'],[/ · /g,' · ']];
+function tr(s){if(!EN||s==null)return s;const raw=String(s);if(!/[\u3400-\u9fff]/.test(raw))return raw;
+  const lead=raw.match(/^\s*/)[0],trail=raw.match(/\s*$/)[0],k=raw.trim();
+  if(I18N[k])return lead+I18N[k]+trail;
+  for(const[re,rep]of I18N_RX){if(re.test(k))return lead+k.replace(re,rep)+trail}
+  let out=k;for(const[re,rep]of I18N_PHRASE)out=out.replace(re,rep);return lead+out+trail}
+// 畫面上的文字：初次載入全部翻一次，之後有新文字出現就即時翻
+const NOTR='.opt .t b,.pl .nm,#cctvName';
+function trNode(n){if(n.nodeType===3){if(!/[\u3400-\u9fff]/.test(n.data))return;const p=n.parentElement;if(!p||p.closest('script,style')||p.closest(NOTR)&&!I18N[n.data.trim()])return;
+    const v=tr(n.data);if(v!==n.data)n.data=v;return}
+  if(n.nodeType===1){for(const a of['placeholder','title','aria-label']){const v=n.getAttribute&&n.getAttribute(a);if(v&&/[\u3400-\u9fff]/.test(v)){const w=tr(v);if(w!==v)n.setAttribute(a,w)}}
+    if(n.dataset&&n.dataset.en&&!n.dataset.enDone){n.innerHTML=n.dataset.en;n.dataset.enDone='1'}
+    for(const c of n.childNodes)trNode(c)}}
+if(EN){document.documentElement.lang='en';document.title='Drive Nav';trNode(document.body);
+  new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')trNode(m.target);else if(m.type==='attributes')trNode(m.target);else m.addedNodes.forEach(trNode)}})
+    .observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']})}
 
 /* ---------- 狀態 ---------- */
 // 內建的 Google 金鑰：已在 Google Cloud 限制只能在 liyuan02-maker.github.io 使用，且只開放地圖、地點、路線三個 API
@@ -451,9 +570,9 @@ function why(e){if(!e)return'未知錯誤';
 
 /* ---------- 聲音 ---------- */
 let actx=null,zhVoice=null;
-function pickVoice(){try{const vs=speechSynthesis.getVoices();zhVoice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/zh[-_]HK/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null}catch(e){}}
+function pickVoice(){try{const vs=speechSynthesis.getVoices();if(EN){zhVoice=vs.find(v=>/en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;return}zhVoice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/zh[-_]HK/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null}catch(e){}}
 try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}catch(e){}
-function say(t){if(!S.voice)return;try{const u=new SpeechSynthesisUtterance(t);u.lang='zh-TW';if(zhVoice)u.voice=zhVoice;u.rate=1.05;speechSynthesis.speak(u)}catch(e){}}
+function say(t){if(!S.voice)return;try{const u=new SpeechSynthesisUtterance(EN?tr(t):t);u.lang=EN?'en-US':'zh-TW';if(zhVoice)u.voice=zhVoice;u.rate=1.05;speechSynthesis.speak(u)}catch(e){}}
 function beep(f=1400,d=.1){if(!actx||!S.voice)return;try{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.09,actx.currentTime);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
 
 /* ---------- 箭頭 ---------- */
@@ -473,7 +592,7 @@ $('mArrow').innerHTML=ICON.search;
 
 /* ---------- 地圖（可切換：免費／Google／Apple） ---------- */
 const MAP_NAME={free:'免費地圖',google:'Google 地圖',apple:'Apple 地圖'};
-const MAP_NOTE={free:'OpenFreeMap／OpenStreetMap，不需要金鑰。',
+const MAP_NOTE=EN?{free:'OpenFreeMap / OpenStreetMap, no key needed.',google:'Uses the Google key under “More accurate search”; also enable “Maps JavaScript API” in Google Cloud to get live Google traffic. Map ID is optional; if the map doesn’t rotate with your heading, create a “Vector” Map ID in Google Cloud and enter it here.',apple:'Requires an Apple Developer Program membership (paid yearly). Create a “MapKit JS” token on the Maps tokens page at developer.apple.com with the domain liyuan02-maker.github.io.'}:{free:'OpenFreeMap／OpenStreetMap，不需要金鑰。',
   google:'使用下面「搜尋更準確」那組 Google 金鑰，在 Google Cloud 多啟用「Maps JavaScript API」即可，還能直接顯示 Google 即時路況。Map ID 可以不填；如果地圖不會跟著車頭轉，到 Google Cloud 建一個「向量（Vector）」Map ID 填進來。',
   apple:'需要 Apple Developer Program 會員（每年付費）。到 developer.apple.com 的 Maps 權杖頁面建立「MapKit JS」權杖，網域填 liyuan02-maker.github.io。'};
 /* 白天白色地圖、晚上黑色地圖：依目前位置的日出日落自動切換 */
@@ -529,7 +648,7 @@ function FreeMap(){let map,car,pins=[];const self={trafficOK:()=>!!S.key,
     map=new maplibregl.Map({container:box,style,center:S.pos?[S.pos.lon,S.pos.lat]:[120.97,23.97],zoom:S.pos?15:7,attributionControl:{compact:true},pitchWithRotate:true,dragRotate:true});
     await new Promise((res,rej)=>{const tm=setTimeout(()=>rej(errOf('地圖載入太久','timeout')),20000);map.on('load',()=>{clearTimeout(tm);res()})});
     try{for(const l of map.getStyle().layers){const tf=l.layout&&l.layout['text-field'];if(l.type==='symbol'&&tf&&JSON.stringify(tf).includes('name'))
-      map.setLayoutProperty(l.id,'text-field',['coalesce',['get','name:zh-Hant'],['get','name:zh'],['get','name']])}}catch(e){}
+      map.setLayoutProperty(l.id,'text-field',(EN?['coalesce',['get','name:en'],['get','name_en'],['get','name']]:['coalesce',['get','name:zh-Hant'],['get','name:zh'],['get','name']]))}}catch(e){}
     map.addSource('route',{type:'geojson',data:EMPTY});
     map.addLayer({id:'route-case',type:'line',source:'route',layout:{'line-join':'round','line-cap':'round'},paint:{'line-color':'#06121d','line-width':['interpolate',['linear'],['zoom'],8,5,16,14]}});
     map.addLayer({id:'route-line',type:'line',source:'route',layout:{'line-join':'round','line-cap':'round'},paint:{'line-color':['get','c'],'line-width':['interpolate',['linear'],['zoom'],8,3,16,9]}});
@@ -572,7 +691,7 @@ function GoogleMap(){let map,car,carEl,lines=[],cams=[],pins=[],traffic=null;
     if(!(window.google&&google.maps&&google.maps.Map)){
       if(S.gLoadedKey&&S.gLoadedKey!==S.gKey)throw errOf('換了金鑰，請重新整理頁面','env');
       await new Promise((res,rej)=>{window.__gmReady=()=>res();window.gm_authFailure=()=>{S.gAuthBad=true;self.authFail&&self.authFail()};
-        loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(S.gKey)}&v=weekly&language=zh-TW&region=TW&loading=async&callback=__gmReady`).catch(rej);
+        loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(S.gKey)}&v=weekly&language=${EN?'en':'zh-TW'}&region=TW&loading=async&callback=__gmReady`).catch(rej);
         setTimeout(()=>rej(errOf('Google 地圖載入太久','timeout')),15000)});S.gLoadedKey=S.gKey}
     if(S.gAuthBad)throw errOf('Google 金鑰無效，或沒有啟用 Maps JavaScript API','env');
     const {AdvancedMarkerElement}=await google.maps.importLibrary('marker');self.AME=AdvancedMarkerElement;
@@ -615,7 +734,7 @@ function AppleMap(){let map,car,carEl,lines=[],cams=[],pins=[],sign=1;
       await new Promise((res,rej)=>{window.__mkReady=()=>res();
         loadScript('https://cdn.apple-mapkit.com/mk/6/mapkit.core.js',{crossorigin:'anonymous','data-callback':'__mkReady','data-libraries':'map,annotations,overlays','data-token':S.appleTok}).catch(rej);
         setTimeout(()=>rej(errOf('Apple 地圖載入太久','timeout')),15000)});S.mkLoadedTok=S.appleTok;
-      try{mapkit.language='zh-Hant'}catch(e){}
+      try{mapkit.language=EN?'en':'zh-Hant'}catch(e){}
       try{mapkit.addEventListener('error',ev=>{console.warn('[mapkit]',ev&&ev.status);self.authFail&&self.authFail()})}catch(e){}}
     else if(S.mkLoadedTok&&S.mkLoadedTok!==S.appleTok)throw errOf('換了權杖，請重新整理頁面','env');
     const CS=mapkit.ColorScheme||mapkit.Map.ColorSchemes,FV=mapkit.FeatureVisibility;
@@ -745,23 +864,23 @@ function score(r,q){const n=r.name||'';let s=0;if(n===q)s-=3;else if(n.startsWit
   return s+Math.log10(1+(r.dist||0)/1000)*.35}
 async function sugGoogle(q,sig){const b=S.pos||{lat:23.97,lon:120.97};
   if(!S.gSess)S.gSess=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2));
-  const body={input:q,languageCode:'zh-TW',regionCode:'tw',includedRegionCodes:['tw'],sessionToken:S.gSess,locationBias:{circle:{center:{latitude:b.lat,longitude:b.lon},radius:50000}}};
+  const body={input:q,languageCode:EN?'en':'zh-TW',regionCode:'tw',includedRegionCodes:['tw'],sessionToken:S.gSess,locationBias:{circle:{center:{latitude:b.lat,longitude:b.lon},radius:50000}}};
   if(S.pos)body.origin={latitude:b.lat,longitude:b.lon};
   const j=await getJSON('https://places.googleapis.com/v1/places:autocomplete',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':S.gKey},body:JSON.stringify(body)},8000,sig);
   return(j.suggestions||[]).filter(s=>s.placePrediction).map(s=>{const p=s.placePrediction,sf=p.structuredFormat||{};
     return{name:sf.mainText?.text||p.text?.text||'',addr:sf.secondaryText?.text||'',placeId:p.placeId,dist:p.distanceMeters}})}
-async function googleDetails(id){const j=await getJSON(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=zh-TW${S.gSess?'&sessionToken='+S.gSess:''}`,
+async function googleDetails(id){const j=await getJSON(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=${EN?'en':'zh-TW'}${S.gSess?'&sessionToken='+S.gSess:''}`,
   {headers:{'X-Goog-Api-Key':S.gKey,'X-Goog-FieldMask':'location,displayName,formattedAddress'}});S.gSess=null;
   return{lat:j.location.latitude,lon:j.location.longitude,addr:j.formattedAddress||''}}
 async function sugTomTom(q,sig){const b=S.pos;
-  const j=await getJSON(`https://api.tomtom.com/search/2/search/${encodeURIComponent(q)}.json?key=${encodeURIComponent(S.key)}&typeahead=true&limit=10&countrySet=TW&language=zh-TW${b?`&lat=${b.lat}&lon=${b.lon}`:''}`,{},8000,sig);
+  const j=await getJSON(`https://api.tomtom.com/search/2/search/${encodeURIComponent(q)}.json?key=${encodeURIComponent(S.key)}&typeahead=true&limit=10&countrySet=TW&language=${EN?'en-US':'zh-TW'}${b?`&lat=${b.lat}&lon=${b.lon}`:''}`,{},8000,sig);
   return(j.results||[]).map(r=>({name:r.poi?.name||r.address?.streetName||r.address?.freeformAddress||q,addr:r.address?.freeformAddress||'',lat:r.position.lat,lon:r.position.lon,dist:r.dist,cat:r.poi?.categories?.[0]||''}))}
 async function sugOSM(q,sig,final){const b=S.pos||{lat:23.97,lon:120.97};
   const vs=[q];if(/飯店$/.test(q)&&!/大飯店$/.test(q))vs.push(q.replace(/飯店$/,'大飯店'));
-  const reqs=vs.map(v=>getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(v)}&limit=12&lat=${b.lat}&lon=${b.lon}`,{},8000,sig).then(j=>(j.features||[]).filter(f=>!f.properties.countrycode||f.properties.countrycode==='TW').map(f=>{const pr=f.properties;
+  const reqs=vs.map(v=>getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(v)}${EN?'&lang=en':''}&limit=12&lat=${b.lat}&lon=${b.lon}`,{},8000,sig).then(j=>(j.features||[]).filter(f=>!f.properties.countrycode||f.properties.countrycode==='TW').map(f=>{const pr=f.properties;
     return{name:pr.name||addrOf(pr)||v,addr:addrOf(pr),lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],cat:OSM_CAT[pr.osm_value]||''}})));
   // Nominatim 不允許邊打字邊查，只在按下搜尋（Enter）時使用
-  if(final)reqs.push(getJSON(`https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=tw&accept-language=zh-TW&limit=8&q=${encodeURIComponent(q)}`,{},8000,sig).then(j=>j.map(r=>({name:r.name||r.display_name.split(',')[0],addr:r.display_name.split(',').slice(1,4).join(' ').trim(),lat:+r.lat,lon:+r.lon}))));
+  if(final)reqs.push(getJSON(`https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=tw&accept-language=${EN?'en':'zh-TW'}&limit=8&q=${encodeURIComponent(q)}`,{},8000,sig).then(j=>j.map(r=>({name:r.name||r.display_name.split(',')[0],addr:r.display_name.split(',').slice(1,4).join(' ').trim(),lat:+r.lat,lon:+r.lon}))));
   const rs=await Promise.allSettled(reqs);if(sig.aborted)throw new DOMException('aborted','AbortError');
   const out=rs.flatMap(r=>r.status==='fulfilled'?r.value:[]);if(!out.length&&rs.every(r=>r.status==='rejected'))throw rs[0].reason;return out}
 async function suggest(q,final){
@@ -869,7 +988,13 @@ $('go').addEventListener('click',async()=>{keepAwake();if(!('wakeLock' in naviga
 const OSRM_TXT={left:'左轉',right:'右轉','slight left':'靠左','slight right':'靠右','sharp left':'左急轉','sharp right':'右急轉',straight:'直行',uturn:'迴轉'};
 function osrmIcon(m){const mo=(m.modifier||'').replace(' ','');if(m.type==='arrive')return'arrive';if(m.type&&m.type.startsWith('roundabout')||m.type==='rotary')return'round';
   if(mo==='uturn')return'uturn';if(mo==='left'||mo==='sharpleft')return'left';if(mo==='right'||mo==='sharpright')return'right';if(mo==='slightleft')return'slightleft';if(mo==='slightright')return'slightright';return'straight'}
-function osrmText(st){const m=st.maneuver,road=st.name||st.ref||'',dir=OSRM_TXT[m.modifier]||'';
+function osrmTextEn(st){const m=st.maneuver,road=st.name||st.ref||'',mo=m.modifier||'',to=road?' onto '+road:'';
+  const dir={left:'Turn left','right':'Turn right','slight left':'Bear left','slight right':'Bear right','sharp left':'Turn sharp left','sharp right':'Turn sharp right',straight:'Continue',uturn:'Make a U-turn'}[mo]||'Continue';
+  switch(m.type){case'on ramp':return'Take the ramp'+(road?' to '+road:'');case'off ramp':return(/left/.test(mo)?'Keep left':'Keep right')+' to exit'+(road?' toward '+road:'');
+    case'fork':return(/left/.test(mo)?'Keep left':'Keep right')+(road?' toward '+road:'');case'merge':return'Merge'+to;
+    case'roundabout':case'rotary':return`At the roundabout, take exit ${m.exit||1}`+(road?' onto '+road:'');
+    case'continue':case'new name':return(mo&&mo!=='straight'?dir:'Continue')+to;default:return dir+to}}
+function osrmText(st){if(EN)return osrmTextEn(st);const m=st.maneuver,road=st.name||st.ref||'',dir=OSRM_TXT[m.modifier]||'';
   switch(m.type){
     case'arrive':return null;
     case'on ramp':return(dir&&dir!=='直行'?dir+' ':'')+'上匝道'+(road?'，往 '+road:'');
@@ -914,7 +1039,7 @@ const G_ICON=m=>!m?'straight':/UTURN/.test(m)?'uturn':/ROUNDABOUT/.test(m)?'roun
 async function routeGoogle(pts,stops){
   const ll=p=>({location:{latLng:{latitude:p.lat,longitude:p.lon}}});
   const tm=TRAVEL[S.travel];
-  const body={origin:ll(pts[0]),destination:ll(pts[pts.length-1]),intermediates:pts.slice(1,-1).map(ll),travelMode:tm.g,languageCode:'zh-TW',regionCode:'TW',units:'METRIC',polylineQuality:'HIGH_QUALITY'};
+  const body={origin:ll(pts[0]),destination:ll(pts[pts.length-1]),intermediates:pts.slice(1,-1).map(ll),travelMode:tm.g,languageCode:EN?'en-US':'zh-TW',regionCode:'TW',units:'METRIC',polylineQuality:'HIGH_QUALITY'};
   // 即時路況只適用汽車、機車；步行、自行車不能帶這兩個參數
   if(tm.traffic){body.routingPreference='TRAFFIC_AWARE';body.extraComputations=['TRAFFIC_ON_POLYLINE'];if(S.speed>8)body.origin.location.heading=Math.round(S.heading)}
   // 機車：一般機車不能上國道，避開高速公路
@@ -960,7 +1085,7 @@ async function routeOSRM(pts,stops=S.plan.stops){
   return{coords,steps,distance:rt.distance,duration:rt.duration,traffic:[],src:'OSRM',mode:S.travel,firstRoad};
 }
 async function routeTomTom(pts,stops=S.plan.stops){
-  const url=`https://api.tomtom.com/routing/1/calculateRoute/${pts.map(p=>p.lat.toFixed(6)+','+p.lon.toFixed(6)).join(':')}/json?key=${encodeURIComponent(S.key)}&traffic=${motorized()}&travelMode=${TRAVEL[S.travel].tt}${S.travel==='moto'?'&avoid=motorways':''}&routeType=fastest&instructionsType=text&language=zh-TW&sectionType=traffic&computeTravelTimeFor=all`;
+  const url=`https://api.tomtom.com/routing/1/calculateRoute/${pts.map(p=>p.lat.toFixed(6)+','+p.lon.toFixed(6)).join(':')}/json?key=${encodeURIComponent(S.key)}&traffic=${motorized()}&travelMode=${TRAVEL[S.travel].tt}${S.travel==='moto'?'&avoid=motorways':''}&routeType=fastest&instructionsType=text&language=${EN?'en-US':'zh-TW'}&sectionType=traffic&computeTravelTimeFor=all`;
   const j=await getJSON(url,{},15000);const rt=j.routes&&j.routes[0];if(!rt)throw new Error('no route');
   const all=rt.legs.flatMap(l=>l.points.map(p=>[p.longitude,p.latitude]));
   let wp=0;const steps=(rt.guidance?.instructions||[]).filter(i=>i.maneuver!=='DEPART').map(i=>{
@@ -1253,7 +1378,7 @@ function thinRoute(r,maxPts){const step=Math.max(60,r.L/maxPts);const out=[r.coo
   for(let i=1;i<r.cum.length;i++)if(r.cum[i]-r.cum[last]>=step){out.push(r.coords[i]);last=i}out.push(r.coords[r.coords.length-1]);return out}
 const isTesla=s=>/tesla|特斯拉|超級充電|supercharger/i.test(s||'');
 async function evGoogle(p,r){
-  const body={textQuery:'Tesla Supercharger 特斯拉超級充電站',languageCode:'zh-TW',regionCode:'TW',pageSize:20};
+  const body={textQuery:'Tesla Supercharger 特斯拉超級充電站',languageCode:EN?'en':'zh-TW',regionCode:'TW',pageSize:20};
   if(r)body.searchAlongRouteParameters={polyline:{encodedPolyline:encPoly(thinRoute(r,1500))}};
   else body.locationBias={circle:{center:{latitude:p.lat,longitude:p.lon},radius:30000}};
   const j=await getJSON('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':S.gKey,
@@ -1458,7 +1583,7 @@ $('voice').setAttribute('aria-pressed',S.voice);
 $('voice').addEventListener('click',()=>{S.voice=!S.voice;LS.set('voice',S.voice);$('voice').setAttribute('aria-pressed',S.voice);if(S.voice)say('語音已開啟');else try{speechSynthesis.cancel()}catch(e){}});
 $('gKeyIn').value=S.gKey===BUILTIN_GKEY?'':S.gKey;$('gSave').addEventListener('click',()=>{const own=$('gKeyIn').value.trim();LS.set('gKey',own);S.gKey=own||BUILTIN_GKEY;S.gSess=null;S.gAuthBad=false;S.gRoutesBad=null;toast(own?'已改用你自己的 Google 金鑰':'使用內建的 Google 金鑰');
   if(S.mapSrc==='google'&&$('start').hidden&&S.gKey&&S.mapNow!=='google')mountMap('google')});
-const TRAVEL_NOTE={car:'依即時路況規劃，有測速照相提醒。',moto:'避開國道等高速公路，有即時路況與測速照相提醒。機車路線目前是 Google 的測試版。',
+const TRAVEL_NOTE=EN?{car:'Routes use live traffic, with speed camera alerts.',moto:'Avoids freeways, with live traffic and speed camera alerts. Scooter routing is a Google beta.',bike:'Uses bike-friendly roads, without traffic or camera alerts. Bike routing is a Google beta and may miss some bike lanes.',walk:'Walking routes, without traffic or camera alerts. Walking routing is a Google beta and may miss some sidewalks.'}:{car:'依即時路況規劃，有測速照相提醒。',moto:'避開國道等高速公路，有即時路況與測速照相提醒。機車路線目前是 Google 的測試版。',
   bike:'走適合自行車的路，不含路況與測速提醒。自行車路線目前是 Google 的測試版，可能缺少部分自行車道資訊。',walk:'走人行路線，不含路況與測速提醒。步行路線目前是 Google 的測試版，可能缺少部分人行道資訊。'};
 function renderTravel(){[...$('travelSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.tr===S.travel));$('travelNote').textContent=TRAVEL_NOTE[S.travel]}
 $('travelSeg').addEventListener('click',e=>{const b=e.target.closest('[data-tr]');if(!b||b.dataset.tr===S.travel)return;S.travel=b.dataset.tr;LS.set('travel',S.travel);renderTravel();
@@ -1468,8 +1593,10 @@ function renderTheme(){[...$('themeSeg').children].forEach(b=>b.classList.toggle
   $('themeNote').textContent=S.theme==='auto'?'依你所在位置的日出日落自動切換。'+themeLabel():S.theme==='day'?'固定用白色地圖。':'固定用黑色地圖。'}
 $('themeSeg').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.theme=b.dataset.t;LS.set('mapTheme',S.theme);checkTheme();renderTheme()});
 renderTheme();
+[...$('langSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.l===LANG));
+$('langSeg').addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(!b||b.dataset.l===LANG)return;LS.set('lang',b.dataset.l);location.reload()});
 function renderMapSrc(){const s=S.mapSrc;$('gMapIdRow').hidden=s!=='google';$('appleRow').hidden=s!=='apple';
-  $('mapSrcNote').textContent=MAP_NOTE[s]+(S.mapNow&&S.mapNow!==s?`（目前顯示：${MAP_NAME[S.mapNow]}）`:'');
+  $('mapSrcNote').textContent=MAP_NOTE[s]+(S.mapNow&&S.mapNow!==s?(EN?` (now showing: ${tr(MAP_NAME[S.mapNow])})`:`（目前顯示：${MAP_NAME[S.mapNow]}）`):'');
   [...$('mapSrc').children].forEach(b=>b.classList.toggle('on',b.dataset.src===s))}
 $('gMapId').value=S.gMapId;$('appleTok').value=S.appleTok;renderMapSrc();
 $('mapSrc').addEventListener('click',e=>{const b=e.target.closest('[data-src]');if(!b)return;const s=b.dataset.src;S.mapSrc=s;LS.set('mapSrc',s);renderMapSrc();
