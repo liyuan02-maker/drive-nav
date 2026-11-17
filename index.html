@@ -235,7 +235,7 @@ mark{background:none;color:var(--accent);font-weight:700}
   <div class="mapwrap">
     <div id="map" aria-label="導航地圖"></div>
     <div class="sigpill" id="sigPill" hidden><svg viewBox="0 0 12 24" width="10" height="20" aria-hidden="true"><rect x="1" y="1" width="10" height="22" rx="3" fill="#0B1116" stroke="#F2B33D" stroke-width="1.2"/><circle cx="6" cy="6" r="2.3" fill="#E5484D"/><circle cx="6" cy="12" r="2.3" fill="#F2B33D"/><circle cx="6" cy="18" r="2.3" fill="#36C276"/></svg><span id="sigText"></span></div>
-    <div class="cctv" id="cctv" hidden aria-label="路口攝影機（副駕模式）">
+    <div class="cctv" id="cctv" hidden aria-label="路口攝影機">
       <div class="cctvview" id="cctvView" role="button" tabindex="0" aria-label="放大或縮小畫面"></div>
       <div class="cctvbar" id="cctvBar"><b id="cctvName">路口攝影機</b><span id="cctvDist"></span><a id="cctvOpen" href="#" target="_blank" rel="noopener" hidden aria-label="在新分頁打開這支攝影機">↗</a></div>
       <div class="cctvchips" id="cctvChips"></div>
@@ -256,7 +256,7 @@ mark{background:none;color:var(--accent);font-weight:700}
       <button class="btn primary grow" id="searchBtn">搜尋目的地</button>
       <button class="btn danger" id="endBtn" hidden>結束導航</button>
       <button class="btn" id="voice" aria-pressed="true">語音</button>
-      <button class="btn" id="coBtn" aria-pressed="false">副駕</button>
+      <button class="btn" id="coBtn" aria-pressed="false">攝影機</button>
       <button class="btn" id="more" aria-expanded="false">設定</button>
     </div>
     <div class="extra">
@@ -1057,7 +1057,7 @@ function updateCo(force){
   $('cctvName').textContent=pick.c.name||'路口攝影機';$('cctvDist').textContent=`${pick.why} · ${fmtD(pick.d)}`;
   const html=list.slice(0,6).map((x,i)=>`<button data-i="${i}" class="${x.c===pick.c?'on':''}">${esc((x.c.name||'').slice(0,14))} · ${fmtD(x.d)}</button>`).join('');
   if($('cctvChips').dataset.h!==html){$('cctvChips').innerHTML=html;$('cctvChips').dataset.h=html;S.coListNow=list}}
-$('coBtn').addEventListener('click',()=>{S.co=!S.co;LS.set('co',S.co);updateCo(true);if(S.co)toast('副駕模式：自動顯示前方路口畫面，點畫面可放大')});
+$('coBtn').addEventListener('click',()=>{S.co=!S.co;LS.set('co',S.co);updateCo(true);if(S.co)toast('攝影機：自動顯示前方路口畫面，點畫面可放大')});
 $('cctvView').addEventListener('click',e=>{if(e.target.closest('a'))return;$('cctv').classList.toggle('big')});
 $('cctvBar').addEventListener('click',e=>{if(e.target.closest('a'))return;$('cctv').classList.toggle('big')});
 $('cctvView').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('cctv').classList.toggle('big')}});
