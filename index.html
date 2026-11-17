@@ -1095,27 +1095,37 @@ function camTravel(c){if(c._tb!==undefined)return c._tb;const nom=CAM_DIR[c.dir]
     let lo=null,hi=null;for(const x of same){const kx=kmOf(x);if(!lo||kx<kmOf(lo))lo=x;if(!hi||kx>kmOf(hi))hi=x}
     if(lo&&hi&&hav(lo,hi)>300){const inc=brg(lo,hi),dec=(inc+180)%360;tb=adiff(nom,inc)<=adiff(nom,dec)?inc:dec}}
   return c._tb=tb}
-function cctvNear(p){const d=.06;return S.cctvAll.cctv.filter(c=>Math.abs(c.lat-p.lat)<d&&Math.abs(c.lon-p.lon)<d*1.1)}
+function cctvNear(p){const d=.09;return S.cctvAll.cctv.filter(c=>Math.abs(c.lat-p.lat)<d&&Math.abs(c.lon-p.lon)<d*1.1)}
+const isFwy=c=>c.src==='國道';
 function coList(){
   const p=S.pos;if(!p||!S.cctvAll)return[];
   if(!S.cctvC||hav(S.cctvC,p)>400){S.cctvC={lat:p.lat,lon:p.lon};S.cctvNearL=cctvNear(p)}
-  const r=S.route,out=[],fast=S.speed>70,reach=r?(fast?6000:3000):(fast?5000:2500);let snap=null;
+  const r=S.route,out=[],fast=S.speed>70;let snap=null;
   if(r){snap=routeSnap.get(r);if(!snap){snap=new Map();routeSnap.set(r,snap)}}
-  for(const c of S.cctvNearL){let d,travel=S.heading;
+  for(const c of S.cctvNearL){let d,travel=S.heading,ang=0;
     if(r){let sn=snap.get(c);if(sn===undefined){const q=r.pj(c);let best={d:1e9,s:0,i:0};for(let i=0;i<r.xy.length-1;i++){const g=segDist(q,r.xy[i],r.xy[i+1]);if(g.d<best.d)best={d:g.d,s:r.cum[i]+g.t*g.l,i}}
-        const a=r.xy[best.i],b=r.xy[best.i+1];sn=best.d<60?{s:best.s,b:(deg(Math.atan2(b.x-a.x,b.y-a.y))+360)%360}:null;snap.set(c,sn)}
-      if(!sn)continue;d=sn.s-r.s;if(d<-30||d>reach)continue;c._s=sn.s;travel=sn.b}
-    else{d=hav(p,c);if(d>reach)continue;if(S.headingKnown&&d>60&&adiff(brg(p,c),S.heading)>35)continue}
+        // 有標方向的（國道、省道）路邊攝影機可離路線 60 m；市區路口攝影機要更貼近路線，免得挑到旁邊巷子的
+        const a=r.xy[best.i],b=r.xy[best.i+1],tol=CAM_DIR[c.dir]!=null?60:35;
+        sn=best.d<tol?{s:best.s,b:(deg(Math.atan2(b.x-a.x,b.y-a.y))+360)%360}:null;snap.set(c,sn)}
+      if(!sn)continue;d=sn.s-r.s;
+      // 國道攝影機看遠一點（8 公里），好讓快上國道時先看到國道上的路況
+      const reach=isFwy(c)?8000:(fast?6000:3000);if(d<-30||d>reach)continue;c._s=sn.s;travel=sn.b}
+    else{d=hav(p,c);const reach=isFwy(c)?6000:(fast?5000:2500);if(d>reach)continue;
+      if(S.headingKnown&&d>60){ang=adiff(brg(p,c),S.heading);if(ang>30)continue}}
     // 只留跟自己同方向的那一組（高速公路兩個方向各有一支攝影機）；停在車陣裡也沿用最後的行進方向
     const cd=camTravel(c);if(cd!=null&&(r||S.headingKnown)&&adiff(travel,cd)>=90)continue;
-    out.push({c,d:Math.max(0,d)})}
-  return out.sort((a,b)=>a.d-b.d)}
+    // 沒設目的地時：越偏離正前方，排得越後面
+    out.push({c,d:Math.max(0,d),score:Math.max(0,d)*(1+ang/15)})}
+  return out.sort((a,b)=>r?a.d-b.d:a.score-b.score)}
 function coPick(list){
   if(S.coPin&&Date.now()<S.coPinT){const f=list.find(x=>x.c===S.coPin)||{c:S.coPin,d:S.pos?hav(S.pos,S.coPin):0};return{...f,why:'你選的'}}
   S.coPin=null;const r=S.route;
   if(r){const jam=r.tr.find(t=>t.cat==='JAM'&&t.s2>r.s&&t.s1-r.s<3000);
-    if(jam){const f=list.find(x=>x.c._s>=jam.s1-200&&x.c._s<=jam.s2);if(f)return{...f,why:'前方壅塞'}}}
-  return list[0]?{...list[0],why:'前方路口'}:null}
+    if(jam){const f=list.find(x=>x.c._s>=jam.s1-200&&x.c._s<=jam.s2);if(f)return{...f,why:'前方壅塞'}}
+    // 還沒上國道、但路線前方會上國道：先顯示上國道後同方向的第一支國道攝影機
+    const first=list[0];if(first&&!isFwy(first.c)){const f=list.find(x=>isFwy(x.c));if(f)return{...f,why:'即將上國道'}}
+    return first?{...first,why:isFwy(first.c)?'前方國道':'路線前方'}:null}
+  return list[0]?{...list[0],why:isFwy(list[0].c)?'前方國道':'正前方'}:null}
 function streamOf(c){let u=c.url||c.img||'';if(location.protocol==='https:')u=u.replace(/^http:\/\//i,'https://');return u}
 const up=u=>location.protocol==='https:'?String(u||'').replace(/^http:\/\//i,'https://'):String(u||'');
 // 各縣市格式不同：國道、省道是影像串流（MJPEG／快照），很多縣市是播放網頁，用內嵌網頁顯示
@@ -1139,10 +1149,11 @@ function updateCo(force){
   const box=$('cctv');$('coBtn').setAttribute('aria-pressed',S.co);box.hidden=!S.co;if(!S.co){if(S.coCur)stopStream();return}
   if(!S.cctvAll){$('cctvView').innerHTML='<div class="note">正在載入攝影機清單…<br>（第一次使用要等 GitHub 下載完成）</div>';$('cctvName').textContent='路口攝影機';$('cctvDist').textContent='';return}
   if(!S.pos){$('cctvView').innerHTML='<div class="note">等待 GPS 定位…</div>';return}
-  const list=coList(),pick=coPick(list);
+  let list=coList();const pick=coPick(list);
   if(!pick){if(S.coCur||force){stopStream();$('cctvView').innerHTML=`<div class="note">${S.route?'路線前方 3 公里':'行進方向 2.5 公里'}內沒有攝影機</div>`}$('cctvName').textContent='路口攝影機';$('cctvDist').textContent='';$('cctvChips').innerHTML='';return}
   if(pick.c!==S.coCur){S.coCur=pick.c;showStream(pick.c)}
   $('cctvName').textContent=(pick.c.name||'路口攝影機').replace(/\((?:N|S|E|W|NE|NW|SE|SW)\)$/,'')+(CAM_DIR_TXT[pick.c.dir]?' '+CAM_DIR_TXT[pick.c.dir]:'');$('cctvDist').textContent=`${pick.why} · ${fmtD(pick.d)}`;
+  list=[list.find(x=>x.c===pick.c),...list.filter(x=>x.c!==pick.c)].filter(Boolean);
   const html=list.slice(0,6).map((x,i)=>`<button data-i="${i}" class="${x.c===pick.c?'on':''}">${esc((x.c.name||'').slice(0,14))} · ${fmtD(x.d)}</button>`).join('');
   if($('cctvChips').dataset.h!==html){$('cctvChips').innerHTML=html;$('cctvChips').dataset.h=html;S.coListNow=list}}
 $('coBtn').addEventListener('click',()=>{S.co=!S.co;LS.set('co',S.co);updateCo(true);if(S.co)toast('攝影機：自動顯示前方路口畫面，點畫面可放大')});
