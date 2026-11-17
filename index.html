@@ -281,6 +281,9 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
 @media (min-width:900px) and (min-height:521px){.hud .num{font-size:76px}.hud .num.three{font-size:62px}}
 html[lang=en] .hud .sign.est::after{content:"~"}
 html[lang=en] .sign.est::after{content:"~"}
+html[lang=en].navigating .controls>.row .btn{padding-inline:6px;font-size:13px}
+html[lang=en].navigating .controls .langbtn{min-width:0}
+.langbtn{padding-inline:10px;min-width:44px;font-weight:600;letter-spacing:.02em}
 </style>
 </head>
 <body>
@@ -291,6 +294,7 @@ html[lang=en] .sign.est::after{content:"~"}
       <button class="btn danger" id="endBtn" hidden>結束</button>
       <button class="btn" id="voice" aria-pressed="true">語音</button>
       <button class="btn" id="coBtn" aria-pressed="false">攝影機</button>
+      <button class="btn langbtn" id="langBtn" aria-label="Switch to English / 切換成中文"></button>
       <button class="btn" id="more" aria-expanded="false">設定</button>
     </div>
     <div class="extra">
@@ -424,7 +428,7 @@ const LANG=LS.get('lang','zh');
 // 切到英文時：畫面上出現的中文即時換成英文（含之後動態產生的提示），語音改英文，Google 路線、搜尋、地名也要英文版
 const EN=LANG==='en',L=(zh,en)=>EN?en:zh;
 const I18N={'這個頁面不是從 https 網址打開，地圖和搜尋會連不上':'This page wasn’t opened from an https address, so maps and search can’t connect','Google Map ID（選填）':'Google Map ID (optional)','Apple MapKit JS 權杖':'Apple MapKit JS token','TomTom API 金鑰':'TomTom API key','已內建金鑰；要用自己的再貼上':'Built-in key in use; paste your own to replace it','這段路沒有速限資料':'No speed limit data for this road',
-'操作':'Controls','搜尋目的地':'Search','改目的地':'Destination','結束':'End','語音':'Voice','攝影機':'Camera','設定':'Settings','收起':'Close',
+'操作':'Controls','搜尋目的地':'Search','改目的地':'Route','結束':'End','語音':'Voice','攝影機':'Camera','設定':'Settings','收起':'Close',
 '地圖來源':'Map source','免費地圖':'Free map','Google 地圖':'Google Maps','Apple 地圖':'Apple Maps','儲存':'Save','交通方式':'Travel mode',
 '汽車':'Car','機車':'Scooter','自行車':'Bicycle','步行':'Walking','地圖顏色':'Map colors','自動':'Auto','白天':'Day','夜間':'Night',
 '電動車':'Electric vehicle','紅綠燈':'Traffic lights','即時路況':'Live traffic','搜尋更準確（選填）':'Better search (optional)','連線檢查':'Connection check',
@@ -525,7 +529,7 @@ function tr(s){if(!EN||s==null)return s;const raw=String(s);if(!/[\u3400-\u9fff]
   for(const[re,rep]of I18N_RX){if(re.test(k))return lead+k.replace(re,rep)+trail}
   let out=k;for(const[re,rep]of I18N_PHRASE)out=out.replace(re,rep);return lead+out+trail}
 // 畫面上的文字：初次載入全部翻一次，之後有新文字出現就即時翻
-const NOTR='.opt .t b,.pl .nm,#cctvName';
+const NOTR='.opt .t b,.pl .nm,#cctvName,#langBtn';
 function trNode(n){if(n.nodeType===3){if(!/[\u3400-\u9fff]/.test(n.data))return;const p=n.parentElement;if(!p||p.closest('script,style')||p.closest(NOTR)&&!I18N[n.data.trim()])return;
     const v=tr(n.data);if(v!==n.data)n.data=v;return}
   if(n.nodeType===1){for(const a of['placeholder','title','aria-label']){const v=n.getAttribute&&n.getAttribute(a);if(v&&/[\u3400-\u9fff]/.test(v)){const w=tr(v);if(w!==v)n.setAttribute(a,w)}}
@@ -1594,6 +1598,8 @@ function renderTheme(){[...$('themeSeg').children].forEach(b=>b.classList.toggle
 $('themeSeg').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.theme=b.dataset.t;LS.set('mapTheme',S.theme);checkTheme();renderTheme()});
 renderTheme();
 [...$('langSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.l===LANG));
+$('langBtn').textContent=EN?'中文':'EN';$('langBtn').setAttribute('aria-label',EN?'切換成中文':'Switch to English');
+$('langBtn').addEventListener('click',()=>{LS.set('lang',EN?'zh':'en');location.reload()});
 $('langSeg').addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(!b||b.dataset.l===LANG)return;LS.set('lang',b.dataset.l);location.reload()});
 function renderMapSrc(){const s=S.mapSrc;$('gMapIdRow').hidden=s!=='google';$('appleRow').hidden=s!=='apple';
   $('mapSrcNote').textContent=MAP_NOTE[s]+(S.mapNow&&S.mapNow!==s?(EN?` (now showing: ${tr(MAP_NAME[S.mapNow])})`:`（目前顯示：${MAP_NAME[S.mapNow]}）`):'');
