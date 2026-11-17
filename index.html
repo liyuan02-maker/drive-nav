@@ -237,7 +237,7 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
       <div class="field"><input id="ttKey" type="password" autocomplete="off" placeholder="TomTom API 金鑰"><button class="btn" id="ttSave">儲存</button></div>
       <div class="label">搜尋更準確（選填）</div>
       <p class="msg">填入 Google 地點金鑰後，搜尋店家、地標會跟 Google 地圖一樣準。到 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 啟用「Places API (New)」並建立金鑰，記得把金鑰限制在這個網站使用。</p>
-      <div class="field"><input id="gKeyIn" type="password" autocomplete="off" placeholder="Google 地點 API 金鑰"><button class="btn" id="gSave">儲存</button></div>
+      <div class="field"><input id="gKeyIn" type="password" autocomplete="off" placeholder="已內建金鑰；要用自己的再貼上"><button class="btn" id="gSave">儲存</button></div>
       <button class="btn" id="diagBtn">連線檢查</button>
       <p class="msg" id="dataNote">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相：警政署開放資料（每週更新），速限：OpenStreetMap。免費地圖的衛星影像：Esri。</p>
     </div>
@@ -330,7 +330,9 @@ const $=id=>document.getElementById(id);
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 /* ---------- 狀態 ---------- */
-const S={gKey:LS.get('gKey',''),pos:null,last:null,heading:0,speed:0,follow:true,headUp:true,voice:LS.get('voice',true),key:LS.get('ttKey',''),traffic:false,
+// 內建的 Google 金鑰：已在 Google Cloud 限制只能在 liyuan02-maker.github.io 使用，且只開放地圖、地點、路線三個 API
+const BUILTIN_GKEY='AIzaSyBgtHDCyFcMT2aXLL5m0mIrW87XgPukeag';
+const S={gKey:LS.get('gKey','')||BUILTIN_GKEY,pos:null,last:null,heading:0,speed:0,follow:true,headUp:true,voice:LS.get('voice',true),key:LS.get('ttKey',''),traffic:false,
   route:null,plan:{dest:null,stops:[]},mode:'dest',area:null,areaBusy:false,limit:null,camAhead:null,said:new Set(),
   offCount:0,lastReroute:0,lastCheck:0,overBeep:0,limitWay:null};
 
@@ -1126,7 +1128,7 @@ setInterval(()=>updateCo(),2000);
 $('more').addEventListener('click',()=>{const o=$('controls').classList.toggle('open');$('more').setAttribute('aria-expanded',o);$('more').textContent=o?'收起':'設定'});
 $('voice').setAttribute('aria-pressed',S.voice);
 $('voice').addEventListener('click',()=>{S.voice=!S.voice;LS.set('voice',S.voice);$('voice').setAttribute('aria-pressed',S.voice);if(S.voice)say('語音已開啟');else try{speechSynthesis.cancel()}catch(e){}});
-$('gKeyIn').value=S.gKey;$('gSave').addEventListener('click',()=>{S.gKey=$('gKeyIn').value.trim();LS.set('gKey',S.gKey);S.gSess=null;S.gAuthBad=false;S.gRoutesBad=null;toast(S.gKey?'已儲存：搜尋改用 Google 地點':'已移除 Google 金鑰');
+$('gKeyIn').value=S.gKey===BUILTIN_GKEY?'':S.gKey;$('gSave').addEventListener('click',()=>{const own=$('gKeyIn').value.trim();LS.set('gKey',own);S.gKey=own||BUILTIN_GKEY;S.gSess=null;S.gAuthBad=false;S.gRoutesBad=null;toast(own?'已改用你自己的 Google 金鑰':'使用內建的 Google 金鑰');
   if(S.mapSrc==='google'&&$('start').hidden&&S.gKey&&S.mapNow!=='google')mountMap('google')});
 function renderTheme(){[...$('themeSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.t===S.theme));
   $('themeNote').textContent=S.theme==='auto'?'依你所在位置的日出日落自動切換。'+themeLabel():S.theme==='day'?'固定用白色地圖。':'固定用黑色地圖。'}
