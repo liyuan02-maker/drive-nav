@@ -88,11 +88,13 @@ button{cursor:pointer}
 .cctv.big{left:10px;width:auto;max-width:720px}
 .cctvview{position:relative;aspect-ratio:16/9;background:#0b0f12;display:grid;place-items:center;cursor:zoom-in;overflow:hidden}
 .cctv.big .cctvview{cursor:zoom-out}
+.cctvview iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.cctvbar a{flex:none;color:var(--route);text-decoration:none;padding:0 2px}
 .cctvview img,.cctvview video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#000}
 .cctvview .note{font-size:12px;color:var(--muted);padding:10px;text-align:center;line-height:1.4}
 .cctvview .note a{color:var(--route)}
 .cctvview .live{position:absolute;left:6px;top:6px;font:700 10px var(--display);background:#E5484D;color:#fff;padding:1px 6px;border-radius:4px;z-index:1}
-.cctvbar{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;font-size:12px;background:rgba(11,17,22,.94)}
+.cctvbar{cursor:pointer;display:flex;justify-content:space-between;gap:8px;padding:5px 8px;font-size:12px;background:rgba(11,17,22,.94)}
 .cctvbar b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cctvbar span{flex:none;color:var(--muted);font-variant-numeric:tabular-nums}
 .cctvchips{display:none;gap:6px;overflow-x:auto;padding:6px 8px;background:rgba(11,17,22,.94)}
@@ -214,7 +216,7 @@ mark{background:none;color:var(--accent);font-weight:700}
     <div id="map" aria-label="導航地圖"></div>
     <div class="cctv" id="cctv" hidden aria-label="路口攝影機（副駕模式）">
       <div class="cctvview" id="cctvView" role="button" tabindex="0" aria-label="放大或縮小畫面"></div>
-      <div class="cctvbar"><b id="cctvName">路口攝影機</b><span id="cctvDist"></span></div>
+      <div class="cctvbar" id="cctvBar"><b id="cctvName">路口攝影機</b><span id="cctvDist"></span><a id="cctvOpen" href="#" target="_blank" rel="noopener" hidden aria-label="在新分頁打開這支攝影機">↗</a></div>
       <div class="cctvchips" id="cctvChips"></div>
     </div>
     <div class="banner" id="banner" hidden><div id="bannerText"></div><button class="btn primary" id="bannerBtn" hidden></button></div>
@@ -897,17 +899,22 @@ function coPick(list){
     if(jam){const f=list.find(x=>x.c._s>=jam.s1-200&&x.c._s<=jam.s2);if(f)return{...f,why:'前方壅塞'}}}
   return list[0]?{...list[0],why:'前方路口'}:null}
 function streamOf(c){let u=c.url||c.img||'';if(location.protocol==='https:')u=u.replace(/^http:\/\//i,'https://');return u}
+const up=u=>location.protocol==='https:'?String(u||'').replace(/^http:\/\//i,'https://'):String(u||'');
+// 各縣市格式不同：國道、省道是影像串流（MJPEG／快照），很多縣市是播放網頁，用內嵌網頁顯示
+const isPage=u=>/\.html?(\?|#|$)|showcctv|showframe|showcctvwebm|\/play\/|\/live\/|\/cctv\/device|\/cctv\/c\d|\?controls=/i.test(u);
+const isSnap=u=>/(\.(jpe?g|png)|\/jpe?g)(\?|$)|snapshot|getimage/i.test(u)&&!/mjpe?g|stream/i.test(u);
 function showStream(c){
   const v=$('cctvView');clearInterval(S.coTimer);v.innerHTML='<span class="live">LIVE</span>';
-  const orig=c.url||c.img||'',u=streamOf(c),fail=()=>{clearInterval(S.coTimer);
-    v.innerHTML=`<div class="note">這支攝影機的畫面無法在這裡播放${/^http:/i.test(orig)?'（只提供不加密的 http，手機瀏覽器會擋下）':''}。<br><a href="${esc(orig)}" target="_blank" rel="noopener">在新分頁打開</a></div>`};
-  if(!u){fail();return}
-  if(/\.m3u8(\?|$)/i.test(u)){const vd=document.createElement('video');vd.muted=true;vd.autoplay=true;vd.playsInline=true;vd.setAttribute('playsinline','');vd.src=u;vd.onerror=fail;v.appendChild(vd);vd.play&&vd.play().catch(()=>{});return}
-  const im=document.createElement('img');im.alt=c.name;im.referrerPolicy='no-referrer';let tried=false;
-  im.onerror=()=>{if(!tried&&c.img&&c.url&&u!==streamOf({img:c.img})){tried=true;im.src=streamOf({img:c.img});startSnap(im,streamOf({img:c.img}));return}fail()};
-  im.src=u;v.appendChild(im);
-  if(/\.(jpe?g|png)(\?|$)|snapshot|getimage|image/i.test(u)&&!/mjpe?g|stream/i.test(u))startSnap(im,u)}
-function startSnap(im,u){clearInterval(S.coTimer);S.coTimer=setInterval(()=>{if(!document.hidden)im.src=u+(u.includes('?')?'&':'?')+'_t='+Date.now()},5000)}
+  const orig=c.url||c.img||'',url=up(c.url),img=up(c.img);
+  $('cctvOpen').href=orig||'#';$('cctvOpen').hidden=!orig;
+  const fail=()=>{clearInterval(S.coTimer);v.innerHTML=`<div class="note">這支攝影機的畫面無法在這裡播放${/^http:/i.test(orig)?'（只提供不加密的 http，手機瀏覽器會擋下）':''}。<br><a href="${esc(orig)}" target="_blank" rel="noopener">在新分頁打開</a></div>`};
+  const frame=u=>{if(!/^https:/i.test(u)&&location.protocol==='https:'){fail();return}clearInterval(S.coTimer);
+    const f=document.createElement('iframe');f.src=u;f.title=c.name||'路口攝影機';f.setAttribute('allow','autoplay; fullscreen');f.referrerPolicy='no-referrer';v.appendChild(f)};
+  const image=(u,next)=>{const im=document.createElement('img');im.alt=c.name||'';im.referrerPolicy='no-referrer';im.onerror=()=>{im.remove();clearInterval(S.coTimer);next()};im.src=u;v.appendChild(im);if(isSnap(u))startSnap(im,u)};
+  if(!url&&!img){fail();return}
+  if(url&&/\.m3u8(\?|$)/i.test(url)){const vd=document.createElement('video');vd.muted=true;vd.autoplay=true;vd.playsInline=true;vd.setAttribute('playsinline','');vd.src=url;vd.onerror=()=>img?image(img,fail):fail();v.appendChild(vd);vd.play&&vd.play().catch(()=>{});return}
+  if(url&&isPage(url)){img?image(img,()=>frame(url)):frame(url);return}
+  if(url)image(url,()=>img?image(img,()=>frame(url)):frame(url));else image(img,fail)}
 function stopStream(){clearInterval(S.coTimer);$('cctvView').innerHTML='';S.coCur=null}
 function updateCo(force){
   const box=$('cctv');$('coBtn').setAttribute('aria-pressed',S.co);box.hidden=!S.co;if(!S.co){if(S.coCur)stopStream();return}
@@ -921,6 +928,7 @@ function updateCo(force){
   if($('cctvChips').dataset.h!==html){$('cctvChips').innerHTML=html;$('cctvChips').dataset.h=html;S.coListNow=list}}
 $('coBtn').addEventListener('click',()=>{S.co=!S.co;LS.set('co',S.co);updateCo(true);if(S.co)toast('副駕模式：自動顯示前方路口畫面，點畫面可放大')});
 $('cctvView').addEventListener('click',e=>{if(e.target.closest('a'))return;$('cctv').classList.toggle('big')});
+$('cctvBar').addEventListener('click',e=>{if(e.target.closest('a'))return;$('cctv').classList.toggle('big')});
 $('cctvView').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('cctv').classList.toggle('big')}});
 $('cctvChips').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;const x=S.coListNow[+b.dataset.i];if(!x)return;S.coPin=x.c;S.coPinT=Date.now()+30000;updateCo(true)});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.coCur)stopStream();else if(!document.hidden)updateCo(true)});
