@@ -202,6 +202,9 @@ mark{background:none;color:var(--accent);font-weight:700}
   .controls{align-self:start}
   .hud .num{font-size:52px}.hud .num.three{font-size:42px}
 }
+/* Safari 瀏覽器裡（不是主畫面 App）最上緣有一條模糊帶，把畫面往下挪避開 */
+html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
+@media (orientation:landscape) and (max-height:520px){html.in-browser body{padding-top:max(8px,env(safe-area-inset-top,0px))}}
 </style>
 </head>
 <body>
@@ -313,6 +316,7 @@ mark{background:none;color:var(--accent);font-weight:700}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"></script>
 <script>
+if(!(navigator.standalone||matchMedia('(display-mode: standalone)').matches))document.documentElement.classList.add('in-browser');
 (()=>{
 const $=id=>document.getElementById(id);
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -386,7 +390,7 @@ const pinEl=(cls,txt)=>mkEl('pin '+cls,`<span>${txt}</span>`);
 function loadScript(src,attrs={}){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.async=true;
   for(const[k,v]of Object.entries(attrs))s.setAttribute(k,v);s.onload=()=>res();s.onerror=()=>{const e=new Error('script');e.kind='blocked';rej(e)};document.head.appendChild(s)})}
 const errOf=(msg,kind)=>{const e=new Error(msg);e.kind=kind;return e};
-const ZOOM_UP=Math.log2(1.25); // 地圖再放大 25%
+const ZOOM_UP=0;
 const zoomFor=()=>{const v=S.speed;return ZOOM_UP+(S.route?(v<25?17:v<55?16.2:v<85?15.4:14.7):(v<25?16.5:v<60?15.8:15))};
 const mpp=(lat,z)=>156543.03392*Math.cos(rad(lat))/2**z;
 function ahead(lat,lon,hdg,m){const d=m/R,b=rad(hdg),la=rad(lat),lo=rad(lon);const la2=Math.asin(Math.sin(la)*Math.cos(d)+Math.cos(la)*Math.sin(d)*Math.cos(b));
