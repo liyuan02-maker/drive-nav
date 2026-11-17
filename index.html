@@ -30,13 +30,13 @@ button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .app{height:100%;display:grid;gap:8px;max-width:1400px;margin:0 auto;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"controls controls" "hud nav" "cam cam" "map map"}
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"controls controls" "hud cam" "map map"}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .label{font-size:11px;letter-spacing:.08em;color:var(--muted)}
 .msg{font-size:12.5px;color:var(--muted);margin:0}
 
 /* 轉彎指示（在車速右邊） */
-.nav{grid-area:nav;display:flex;align-items:center;gap:9px;background:var(--raise);cursor:pointer;min-width:0;padding:8px 10px}
+.nav{display:flex;align-items:center;gap:9px;background:rgba(24,36,45,.96);cursor:pointer;min-width:0;padding:8px 10px;width:100%;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .nav .arrow{width:42px;height:42px;flex:none;border-radius:11px;background:var(--route);display:grid;place-items:center;color:#06121d}
 .nav .arrow.idle{background:var(--line);color:var(--muted)}
 .nav .arrow.stop{background:var(--stop)}
@@ -88,7 +88,9 @@ html.mapday .mapwrap{background:#E9EEF1}
 .layers button[aria-pressed="true"]{background:var(--line);color:var(--accent)}
 .mapbtns .layerbtn{font:700 12px var(--display)}
 .mapbtns button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0;font-size:13px}
-.tl{position:absolute;left:10px;top:10px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:calc(100% - 20px)}
+.maptop{position:absolute;left:10px;right:10px;top:10px;z-index:4;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.maptop>*{pointer-events:auto}
+.tl{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%}
 .sigpill,.wxpill{display:flex;align-items:center;gap:7px;max-width:100%;background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px 5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
 .wxpill{background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:13px;font-variant-numeric:tabular-nums}
 .wxpill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -98,9 +100,9 @@ html.mapday .mapwrap{background:#E9EEF1}
 .sigdot{width:12px;height:22px;display:grid;place-items:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
 /* 攝影機有自己的位置（不再疊在地圖上）；點畫面放大成全螢幕 */
 .cctv{grid-area:cam;position:relative;min-width:0;background:#000;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.cctv .cctvview{aspect-ratio:auto;height:min(24vh,210px)}
-@media (orientation:landscape) and (max-height:520px){.cctv .cctvview{height:auto;aspect-ratio:16/9}}
-@media (min-width:900px) and (min-height:521px){.cctv .cctvview{height:auto;aspect-ratio:16/9}}
+.cctv .cctvview{aspect-ratio:16/9;height:auto}
+/* 攝影機關掉時，車速卡片占滿整排 */
+.app:has(#cctv[hidden]) .hud{grid-column:1/-1}
 .cctv.big{position:fixed;z-index:35;inset:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;border-color:#3a4a56;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 .cctv.big .cctvview{flex:1;height:auto;aspect-ratio:auto}
 .cctv.big .cctvview img,.cctv.big .cctvview video{object-fit:contain}
@@ -201,12 +203,12 @@ mark{background:none;color:var(--accent);font-weight:700}
 @media (max-width:370px){.hud .num{font-size:40px}.hud .num.three{font-size:32px}.sign{width:40px;height:40px;font-size:16px;border-width:4px}.nav .arrow{width:36px;height:36px}.nav .dist{font-size:19px}}
 /* 傳統 iPhone 橫拿：地圖在左，右側上面是按鈕，下面車速與轉彎並排 */
 @media (orientation:landscape) and (max-height:520px){
-  .app{grid-template-columns:minmax(0,1fr) 170px 170px;grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud nav" "map cam cam" "map . ."}
+  .app{grid-template-columns:minmax(0,1fr) 170px 170px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud cam" "map . ."}
   .controls{align-self:start}
 }
 /* iPhone Duo 展開橫拿、平板、電腦 */
 @media (min-width:900px) and (min-height:521px){
-  .app{gap:10px;grid-template-columns:minmax(0,1fr) 200px 200px;grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud nav" "map cam cam" "map . ."}
+  .app{gap:10px;grid-template-columns:minmax(0,1fr) 200px 200px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud cam" "map . ."}
   .controls{align-self:start}
   .hud .num{font-size:52px}.hud .num.three{font-size:42px}
 }
@@ -248,15 +250,6 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
     </div>
   </section>
 
-  <section class="card nav" id="navCard" role="button" tabindex="0" aria-label="搜尋目的地與中途點">
-    <div class="arrow idle" id="mArrow"></div>
-    <div class="what">
-      <div class="dist" id="mDist">要去哪裡？</div>
-      <div class="road" id="mRoad">點這裡搜尋</div>
-      <div class="eta" id="eta" hidden><b id="etaClock">--:--</b><span id="etaRest"></span></div>
-      <div class="dest" id="mDest" hidden></div>
-    </div>
-  </section>
 
   <section class="card hud" id="hud" aria-label="車速與測速提醒">
     <div class="num" id="spd">--</div>
@@ -278,9 +271,20 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
 
   <div class="mapwrap">
     <div id="map" aria-label="導航地圖"></div>
-    <div class="tl">
-    <div class="sigpill" id="sigPill" hidden><svg viewBox="0 0 12 24" width="10" height="20" aria-hidden="true"><rect x="1" y="1" width="10" height="22" rx="3" fill="#0B1116" stroke="#F2B33D" stroke-width="1.2"/><circle cx="6" cy="6" r="2.3" fill="#E5484D"/><circle cx="6" cy="12" r="2.3" fill="#F2B33D"/><circle cx="6" cy="18" r="2.3" fill="#36C276"/></svg><span id="sigText"></span></div>
-    <div class="wxpill" id="wxPill" hidden><span id="wxIcon"></span><span id="wxText"></span></div>
+    <div class="maptop">
+      <section class="card nav" id="navCard" hidden role="button" tabindex="0" aria-label="搜尋目的地與中途點">
+        <div class="arrow idle" id="mArrow"></div>
+        <div class="what">
+          <div class="dist" id="mDist">要去哪裡？</div>
+          <div class="road" id="mRoad">點這裡搜尋</div>
+          <div class="eta" id="eta" hidden><b id="etaClock">--:--</b><span id="etaRest"></span></div>
+          <div class="dest" id="mDest" hidden></div>
+        </div>
+      </section>
+      <div class="tl">
+      <div class="sigpill" id="sigPill" hidden><svg viewBox="0 0 12 24" width="10" height="20" aria-hidden="true"><rect x="1" y="1" width="10" height="22" rx="3" fill="#0B1116" stroke="#F2B33D" stroke-width="1.2"/><circle cx="6" cy="6" r="2.3" fill="#E5484D"/><circle cx="6" cy="12" r="2.3" fill="#F2B33D"/><circle cx="6" cy="18" r="2.3" fill="#36C276"/></svg><span id="sigText"></span></div>
+      <div class="wxpill" id="wxPill" hidden><span id="wxIcon"></span><span id="wxText"></span></div>
+      </div>
     </div>
     <div class="banner" id="banner" hidden><div id="bannerText"></div><button class="btn primary" id="bannerBtn" hidden></button></div>
     <div class="mapbtns">
@@ -781,7 +785,7 @@ async function planRoute(fresh){
   S.said.clear();S.offCount=0;S.lastReroute=Date.now();S.lastCheck=Date.now();
   if(fresh){const tr=TRAFFIC_SRC.has(r.src)?(r.delay>=60?`，目前路況會多${Math.round(r.delay/60)}分鐘`:'，目前路況順暢'):'';
     say(`開始導航，前往${p.dest.name}，全程${cnD(r.distance)}，約${Math.max(1,Math.round(r.duration/60))}分鐘${tr}`);S.follow=true;$('recenter').hidden=true}
-  $('endBtn').hidden=false;$('searchBtn').textContent='改目的地';
+  $('endBtn').hidden=false;$('navCard').hidden=false;$('searchBtn').textContent='改目的地';
   drawRoute();progress();updateHUD();follow(true);
   routeSignals(S.route);wxForRoute(fresh);
 }
@@ -902,7 +906,7 @@ function showBanner(kind,html,btn,ms,fn){const b=$('banner');b.className='banner
   const bb=$('bannerBtn');bb.hidden=!btn;if(btn){bb.textContent=btn;bb.onclick=()=>{b.hidden=true;S.bannerHold=false;fn&&fn()}}
   clearTimeout(bannerT);if(ms){S.bannerHold=true;bannerT=setTimeout(()=>{b.hidden=true;S.bannerHold=false},ms)}}
 function endNav(arrived){S.route=null;$('wxPill').hidden=true;S.plan.stops=[];if(!arrived)S.plan.dest=null;drawPins();drawRoute();resetNavUI();$('banner').hidden=true;S.bannerHold=false;follow(true);if(arrived)S.plan.dest=null}
-function resetNavUI(){$('mArrow').className='arrow idle';$('mArrow').innerHTML=ICON.search;$('mDist').textContent='要去哪裡？';$('mRoad').textContent='點這裡搜尋';$('mDest').hidden=true;$('eta').hidden=true;$('endBtn').hidden=true;$('searchBtn').textContent='搜尋目的地';$('trafficBtn').hidden=!(A&&A.trafficOK())}
+function resetNavUI(){$('navCard').hidden=true;$('mArrow').className='arrow idle';$('mArrow').innerHTML=ICON.search;$('mDist').textContent='要去哪裡？';$('mRoad').textContent='點這裡搜尋';$('mDest').hidden=true;$('eta').hidden=true;$('endBtn').hidden=true;$('searchBtn').textContent='搜尋目的地';$('trafficBtn').hidden=!(A&&A.trafficOK())}
 $('endBtn').addEventListener('click',()=>{endNav(false);say('已結束導航')});
 
 /* ---------- 測速照相與速限（OpenStreetMap / Overpass） ---------- */
