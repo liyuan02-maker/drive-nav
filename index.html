@@ -124,8 +124,16 @@ html.overspeed .mapwrap{box-shadow:inset 0 0 0 4px var(--danger)}
 @media (prefers-reduced-motion:no-preference){html.overspeed .mapwrap,html.overspeed .hud{animation:alarm 1s ease-in-out infinite}@keyframes alarm{50%{box-shadow:inset 0 0 0 4px rgba(255,74,79,.2)}}}
 html.navigating .wxpill{display:none!important}
 .tl{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%}
-.lanepill{display:flex;align-items:center;gap:10px;align-self:flex-start;background:rgba(42,34,16,.96);border:1px solid var(--accent);border-radius:12px;padding:6px 12px 6px 8px;font-size:14px}
+.lanepill{display:flex;flex-direction:column;align-items:stretch;gap:6px;align-self:stretch;max-width:100%;background:rgba(42,34,16,.96);border:1px solid var(--accent);border-radius:12px;padding:6px 12px 6px 8px;font-size:14px}
 .lanepill b{color:var(--accent);font-size:16px;margin-right:4px}
+.lanepill b.go{font-size:15px;margin:0 2px}
+.laneline{display:flex;align-items:center;gap:10px}
+/* 綠色指示牌：要走的那一邊亮起來 */
+.hwsign{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.hwsign .br{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:6px 8px;border-radius:8px;background:#0B5D33;border:2px solid #E8EEF2;color:#fff;font-weight:700;font-size:15px;opacity:.38;position:relative;min-width:0}
+.hwsign .br.on{opacity:1;box-shadow:0 0 0 3px var(--accent)}
+.hwsign .to{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hwsign .exno{position:absolute;top:-9px;left:6px;background:#F2D33D;color:#111;font:700 11px var(--display);border-radius:4px;padding:0 5px}
 .sigpill,.wxpill{display:flex;align-items:center;gap:7px;max-width:100%;background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px 5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
 .wxpill{background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:13px;font-variant-numeric:tabular-nums}
 .wxpill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -329,7 +337,7 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
         <ol class="stlist" id="stList"></ol>
         <div class="stbtns"><button class="btn" id="stEdit">改目的地／中途點</button><button class="btn" id="stClose">收起</button></div>
       </div>
-      <div class="lanepill" id="lanePill" hidden><span id="laneIcon"></span><span id="laneText"></span></div>
+      <div class="lanepill" id="lanePill" hidden><div class="hwsign" id="laneSign" hidden></div><div class="laneline"><span id="laneIcon"></span><span id="laneText"></span></div></div>
       <div class="tl">
       <div class="sigpill" id="sigPill" hidden><svg viewBox="0 0 12 24" width="10" height="20" aria-hidden="true"><rect x="1" y="1" width="10" height="22" rx="3" fill="#0B1116" stroke="#F2B33D" stroke-width="1.2"/><circle cx="6" cy="6" r="2.3" fill="#E5484D"/><circle cx="6" cy="12" r="2.3" fill="#F2B33D"/><circle cx="6" cy="18" r="2.3" fill="#36C276"/></svg><span id="sigText"></span></div>
       <div class="wxpill" id="wxPill" hidden><span id="wxIcon"></span><span id="wxText"></span></div>
@@ -892,8 +900,12 @@ async function routeGoogle(pts,stops){
     if(S.travel==='moto'&&e.kind==='http'&&e.status===400){body.travelMode='DRIVE';j=await call(body)}else throw e}
   const rt=j.routes&&j.routes[0];if(!rt||!rt.polyline)throw errOf('找不到路線','none');
   const coords=decodePoly(rt.polyline.encodedPolyline),dur=parseFloat(rt.duration)||0,sdur=parseFloat(rt.staticDuration||rt.duration)||dur;
-  const steps=[];rt.legs.forEach((leg,li)=>{(leg.steps||[]).forEach((st,k)=>{if(li===0&&k===0)return;const ni=st.navigationInstruction||{},loc=st.startLocation?.latLng;if(!loc||!ni.instructions)return;
-      const tx=ni.instructions.replace(/\s*\n\s*/g,'，');steps.push({lat:loc.latitude,lon:loc.longitude,icon:G_ICON(ni.maneuver),text:tx,exit:/RAMP|FORK/.test(ni.maneuver||'')&&/出口|交流道/.test(tx)&&!/入口|上國道|上快速/.test(tx)?(/LEFT/.test(ni.maneuver)?'left':'right'):null})});
+  let road='';const steps=[];rt.legs.forEach((leg,li)=>{(leg.steps||[]).forEach((st,k)=>{const ni=st.navigationInstruction||{},loc=st.startLocation?.latLng;
+      const tx0=(ni.instructions||'').replace(/\s*\n\s*/g,'，');if(li===0&&k===0){road=roadIn(tx0)||road;return}if(!loc||!tx0)return;
+      const mv=ni.maneuver||'',side=/LEFT/.test(mv)?'left':'right',isExit=/RAMP/.test(mv)&&/出口|交流道/.test(tx0)&&!/入口|上國道|上快速/.test(tx0),isFork=/FORK/.test(mv);
+      const sg=(isExit||isFork)?{to:towardOf(tx0)||exitNameOf(tx0),exitNo:exitNoOf(tx0),other:road}:null;
+      steps.push({lat:loc.latitude,lon:loc.longitude,icon:G_ICON(mv),text:tx0,exit:isExit?side:null,fork:isFork&&!isExit?side:null,sign:sg});
+      road=roadIn(tx0)||road});
     const e=leg.endLocation?.latLng||{latitude:pts[li+1].lat,longitude:pts[li+1].lon};
     if(li<rt.legs.length-1)steps.push({lat:e.latitude,lon:e.longitude,icon:'stop',text:'中途點 '+(stops[li]?.name||''),stop:li});
     else steps.push({lat:e.latitude,lon:e.longitude,icon:'arrive',text:'抵達 '+S.plan.dest.name,arrive:true})});
@@ -910,11 +922,15 @@ async function routeOSRM(pts,stops=S.plan.stops){
   const j=await getJSON(`${base}/${pts.map(p=>p.lon.toFixed(6)+','+p.lat.toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true${S.travel==='moto'?'&exclude=motorway':''}`,{},15000);
   if(j.code!=='Ok'||!j.routes||!j.routes.length)throw new Error(j.code||'no route');
   const rt=j.routes[0],coords=rt.geometry.coordinates;
-  const steps=[];rt.legs.forEach((leg,li)=>leg.steps.forEach(st=>{const m=st.maneuver;if(m.type==='depart')return;
+  let road='';const steps=[];rt.legs.forEach((leg,li)=>leg.steps.forEach(st=>{const m=st.maneuver;const here=st.name||st.ref||'';if(m.type==='depart'){road=here;return}
     const isArr=m.type==='arrive',last=li===rt.legs.length-1;
     if(isArr&&!last){steps.push({lon:m.location[0],lat:m.location[1],icon:'stop',text:'中途點 '+(stops[li]?.name||''),stop:li});return}
     if(isArr){steps.push({lon:m.location[0],lat:m.location[1],icon:'arrive',text:'抵達 '+S.plan.dest.name,arrive:true});return}
-    steps.push({lon:m.location[0],lat:m.location[1],icon:osrmIcon(m),text:osrmText(st),exit:m.type==='off ramp'?(/left/.test(m.modifier||'')?'left':'right'):null})}));
+    const side=/left/.test(m.modifier||'')?'left':'right',isExit=m.type==='off ramp',isFork=m.type==='fork';
+    const to=(st.destinations||'').replace(/^[A-Z0-9 ,;]+:\s*/,'').split(/[;,]/).map(x=>x.trim()).filter(Boolean).slice(0,2).join('、')||(isFork?here:'');
+    steps.push({lon:m.location[0],lat:m.location[1],icon:osrmIcon(m),text:osrmText(st)+(to&&isExit?'，往'+to:''),exit:isExit?side:null,fork:isFork?side:null,
+      sign:(isExit||isFork)?{to,exitNo:(st.exits||'').split(';')[0],other:road}:null});
+    road=here||road}));
   return{coords,steps,distance:rt.distance,duration:rt.duration,traffic:[],src:'OSRM',mode:S.travel};
 }
 async function routeTomTom(pts,stops=S.plan.stops){
@@ -922,7 +938,9 @@ async function routeTomTom(pts,stops=S.plan.stops){
   const j=await getJSON(url,{},15000);const rt=j.routes&&j.routes[0];if(!rt)throw new Error('no route');
   const all=rt.legs.flatMap(l=>l.points.map(p=>[p.longitude,p.latitude]));
   let wp=0;const steps=(rt.guidance?.instructions||[]).filter(i=>i.maneuver!=='DEPART').map(i=>{
-    const icon=TT_ICON(i.maneuver);const st={lon:i.point.longitude,lat:i.point.latitude,icon,text:i.message||i.street||'',exit:/MOTORWAY_EXIT|TAKE_EXIT/.test(i.maneuver)?(/LEFT/.test(i.maneuver)?'left':'right'):null};
+    const icon=TT_ICON(i.maneuver),side=/LEFT/.test(i.maneuver)?'left':'right',isExit=/MOTORWAY_EXIT|TAKE_EXIT/.test(i.maneuver),isFork=/^KEEP_(LEFT|RIGHT)$/.test(i.maneuver)&&!!i.signpostText;
+    const st={lon:i.point.longitude,lat:i.point.latitude,icon,text:i.message||i.street||'',exit:isExit?side:null,fork:isFork?side:null,
+      sign:(isExit||isFork)?{to:i.signpostText||i.towardsRoadName||'',exitNo:i.exitNumber||'',other:i.street||''}:null};
     if(i.maneuver==='WAYPOINT_REACHED'||/WAYPOINT/.test(i.maneuver)){st.icon='stop';st.stop=wp;st.text='中途點 '+(stops[wp]?.name||'');wp++}
     if(i.maneuver==='ARRIVE'){st.arrive=true;st.text='抵達 '+S.plan.dest.name}return st});
   const traffic=(rt.sections||[]).filter(s=>s.sectionType==='TRAFFIC').map(s=>({i0:s.startPointIndex,i1:s.endPointIndex,cat:s.simpleCategory,delay:s.delayInSeconds||0,kmh:s.effectiveSpeedInKmh}));
@@ -968,9 +986,23 @@ function snapRoute(r,pt,tol){const p=r.pj(pt),G=r.G,gx=Math.floor(p.x/G),gy=Math
   for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){const l=r.grid.get((gx+dx)+','+(gy+dy));if(!l)continue;
     for(const i of l){if(seen.has(i))continue;seen.add(i);const g=segDist(p,r.xy[i],r.xy[i+1]);if(g.d<=tol&&(!best||g.d<best.d))best={d:g.d,s:r.cum[i]+g.t*g.l,i}}}
   return best}
+/* ---------- 方向指標（像高速公路的綠色指示牌） ---------- */
+// 從 Google 的中文指示裡找「往哪裡」「幾號出口」「目前在哪條路」
+function towardOf(tx){const m=tx.match(/朝\s*([^，。]+?)\s*(?:前進|行駛|方向)/)||tx.match(/往\s*([^，。]+?)\s*(?:方向|前進|$|，)/)||tx.match(/前往\s*([^，。]+)/);
+  return m?m[1].replace(/\/+/g,'、').trim().slice(0,14):''}
+function exitNoOf(tx){const m=tx.match(/(\d{1,3}[A-Za-z]?)\s*[-－]\s*[^\s，]*\s*出口/)||tx.match(/(\d{1,3}[A-Za-z]?)\s*號?出口/);return m?m[1]:''}
+// 出口名稱（例如「62-中壢出口」的中壢、「竹北交流道出口」的竹北），沒有寫「往哪裡」時拿來當方向
+function exitNameOf(tx){const m=tx.match(/\d{1,3}[A-Za-z]?\s*[-－]\s*([^\s，\d]{1,8})\s*出口/)||tx.match(/([^\s，從]{1,6})交流道出口/);return m?m[1]:''}
+function roadIn(tx){const m=tx.match(/(國道\s*\d+\s*號(?:甲|乙)?線?|國\d+|台\s*\d+\s*[甲乙丙]?\s*線|[^\s，]{2,6}快速(?:道路|公路))/);return m?m[1].replace(/\s+/g,''):''}
+const ARW={left:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20 7 8"/><path d="M7 15V8h7"/></svg>',
+  right:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20 17 8"/><path d="M10 8h7v7"/></svg>'};
+function signHTML(st,side){const sg=st.sign||{},go=sg.to||(st.exit?'出口':'');
+  const other=sg.other||'直行';
+  const box=(s,label,on,no)=>`<div class="br${on?' on':''}">${no?`<span class="exno">${esc(no)}</span>`:''}${s==='left'?ARW.left:''}<span class="to">${esc(label)}</span>${s==='right'?ARW.right:''}</div>`;
+  return side==='left'?box('left',go,true,sg.exitNo)+box('right',other,false,''):box('left',other,false,'')+box('right',go,true,sg.exitNo)}
 /* ---------- 下交流道車道提醒 ---------- */
 // 台灣公開資料沒有分車道的即時車速，所以不建議開第幾道；只在快下交流道時提醒提早換到出口那一側
-const exitSide=st=>st&&(st.exit||(/出口|下交流道/.test(st.text||'')&&!/入口|上匝道|上國道/.test(st.text||'')?(/靠左|左側/.test(st.text)?'left':'right'):null));
+const exitSide=st=>st&&(st.exit||st.fork||(/出口|下交流道/.test(st.text||'')&&!/入口|上匝道|上國道/.test(st.text||'')?(/靠左|左側/.test(st.text)?'left':'right'):null));
 function laneSVG(side){const hi=side==='left'?0:2;let s='<svg viewBox="0 0 54 30" width="54" height="30" aria-hidden="true">';
   for(let i=0;i<3;i++){const x=2+i*17;s+=`<rect x="${x}" y="2" width="15" height="26" rx="3" fill="${i===hi?'#F2B33D':'#24323D'}"/>`}
   const cx=2+hi*17+7.5,dir=side==='left'?-1:1;
@@ -979,11 +1011,16 @@ function laneSVG(side){const hi=side==='left'?0:2;let s='<svg viewBox="0 0 54 30
 function laneHint(r){const pill=$('lanePill');
   const ex=motorized()?r.steps.find(st=>st.s>r.s+3&&exitSide(st)):null;
   if(!ex||S.speed<45){pill.hidden=true;return}
-  const d=ex.s-r.s,side=exitSide(ex),zh=side==='left'?'左':'右';
+  const d=ex.s-r.s,side=exitSide(ex),zh=side==='left'?'左':'右',to=ex.sign&&ex.sign.to,isExit=!!(ex.exit||!ex.fork);
   if(d>2300){pill.hidden=true;return}
   for(const th of[2000,1000]){const k='lane'+ex.s.toFixed(0)+'@'+th;
-    if(d<=th&&d>th*.55&&!S.said.has(k)){S.said.add(k);say(`${th/1000}公里後${zh}側出口，請開始靠${zh}`)}}
-  $('laneIcon').innerHTML=laneSVG(side);$('laneText').innerHTML=`<b>靠${zh}</b> ${fmtD(d)} 後${zh}側出口`;pill.hidden=false}
+    if(d<=th&&d>th*.55&&!S.said.has(k)){S.said.add(k);
+      say(isExit?`${th/1000}公里後${zh}側出口${to?'，往'+to:''}，請開始靠${zh}`:`${th/1000}公里後道路分岔，請靠${zh}${to?'，往'+to:''}`)}}
+  // 有方向名稱就畫成綠色指示牌，沒有就只畫車道
+  if(to||ex.sign&&ex.sign.exitNo){$('laneIcon').innerHTML='';$('laneSign').innerHTML=signHTML(ex,side);$('laneSign').hidden=false}
+  else{$('laneSign').hidden=true;$('laneIcon').innerHTML=laneSVG(side)}
+  const signed=!$('laneSign').hidden;
+  $('laneText').innerHTML=`<b>靠${zh}</b> ${fmtD(d)}`+(isExit?` 後${zh}側出口`:' 後分岔')+(to&&!signed?`，請走往<b class="go">${esc(to)}</b>`:'');pill.hidden=false}
 /* ---------- 導航進度 ---------- */
 let lastDraw=0;
 function progress(){
