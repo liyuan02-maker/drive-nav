@@ -72,6 +72,7 @@ button{cursor:pointer}
 
 /* 地圖 */
 .mapwrap{grid-area:map;position:relative;min-height:0;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0E161C}
+html.mapday .mapwrap{background:#E9EEF1}
 #map{position:absolute;inset:0}
 .mapbox{position:absolute;inset:0}
 .camdot{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid #D62828;display:grid;place-items:center;font:700 10px var(--display);color:#111;box-sizing:border-box}
@@ -220,6 +221,9 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
       <p class="msg" id="mapSrcNote"></p>
       <div class="field" id="gMapIdRow" hidden><input id="gMapId" autocomplete="off" placeholder="Google Map ID（選填）"><button class="btn" id="gMapIdSave">儲存</button></div>
       <div class="field" id="appleRow" hidden><input id="appleTok" type="password" autocomplete="off" placeholder="Apple MapKit JS 權杖"><button class="btn" id="appleSave">儲存</button></div>
+      <div class="label">地圖顏色</div>
+      <div class="seg" id="themeSeg" role="group" aria-label="地圖顏色"><button data-t="auto">自動</button><button data-t="day">白天</button><button data-t="night">夜間</button></div>
+      <p class="msg" id="themeNote"></p>
       <div class="label">紅綠燈</div>
       <p class="msg">地圖會標出紅綠燈位置，畫面左上角顯示前方紅綠燈的距離。台灣沒有公開即時燈號，所以無法顯示紅燈或綠燈。</p>
       <button class="btn" id="sigVoiceBtn" aria-pressed="false">紅綠燈語音提醒：關</button>
@@ -375,6 +379,23 @@ const MAP_NAME={free:'免費地圖',google:'Google 地圖',apple:'Apple 地圖'}
 const MAP_NOTE={free:'OpenFreeMap／OpenStreetMap，不需要金鑰。',
   google:'使用下面「搜尋更準確」那組 Google 金鑰，在 Google Cloud 多啟用「Maps JavaScript API」即可，還能直接顯示 Google 即時路況。Map ID 可以不填；如果地圖不會跟著車頭轉，到 Google Cloud 建一個「向量（Vector）」Map ID 填進來。',
   apple:'需要 Apple Developer Program 會員（每年付費）。到 developer.apple.com 的 Maps 權杖頁面建立「MapKit JS」權杖，網域填 liyuan02-maker.github.io。'};
+/* 白天白色地圖、晚上黑色地圖：依目前位置的日出日落自動切換 */
+function sunTimes(lat,lon,d=new Date()){
+  const r=Math.PI/180,J0=d.getTime()/864e5+2440587.5,n=Math.round(J0-2451545+lon/360-0.5);
+  const calc=n=>{const Js=n-lon/360,M=(357.5291+0.98560028*Js)%360,C=1.9148*Math.sin(M*r)+0.02*Math.sin(2*M*r)+0.0003*Math.sin(3*M*r),
+    L=(M+C+282.9372)%360,Jt=2451545+Js+0.0053*Math.sin(M*r)-0.0069*Math.sin(2*L*r),sd=Math.sin(L*r)*Math.sin(23.4397*r),cd=Math.cos(Math.asin(sd)),
+    cw=(Math.sin(-0.833*r)-Math.sin(lat*r)*sd)/(Math.cos(lat*r)*cd),w=Math.acos(Math.max(-1,Math.min(1,cw)))/r,toD=J=>new Date((J-2440587.5)*864e5);
+    return{noon:toD(Jt),rise:toD(Jt-w/360),set:toD(Jt+w/360)}};
+  let s=calc(n);if(d-s.noon>432e5)s=calc(n+1);else if(s.noon-d>432e5)s=calc(n-1);return s}
+S.theme=LS.get('mapTheme','auto');
+function wantDark(){if(S.theme==='day')return false;if(S.theme==='night')return true;
+  const p=S.pos||{lat:23.97,lon:120.97},s=sunTimes(p.lat,p.lon),now=new Date();return now<s.rise||now>s.set}
+S.dark=wantDark();
+function themeLabel(){const p=S.pos||{lat:23.97,lon:120.97},s=sunTimes(p.lat,p.lon),hm=x=>x.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false});
+  return`今天 ${hm(s.rise)} 日出、${hm(s.set)} 日落，目前是${S.dark?'夜間（黑色）':'白天（白色）'}地圖`}
+function checkTheme(){const d=wantDark();if(d!==S.dark){S.dark=d;document.documentElement.classList.toggle('mapday',!d);if(A&&$('start').hidden)mountMap(S.mapNow,true)}renderTheme()}
+document.documentElement.classList.toggle('mapday',!S.dark);
+setInterval(checkTheme,60000);
 S.mapSrc=LS.get('mapSrc','free');S.gMapId=LS.get('gMapId','');S.appleTok=LS.get('appleTok','');
 let A=null;
 const CAR_SVG='<svg viewBox="0 0 24 24"><path d="M12 2l7 19-7-4-7 4z" fill="#fff" stroke="#0B1116" stroke-width="1.6" stroke-linejoin="round"/></svg>';
@@ -398,7 +419,7 @@ function FreeMap(){let map,car,pins=[];const self={trafficOK:()=>!!S.key,
   async init(box){
     if(typeof maplibregl==='undefined')throw errOf('地圖元件沒有載入','blocked');
     let style='https://tiles.openfreemap.org/styles/liberty';
-    try{const st=await getJSON('https://tiles.openfreemap.org/styles/dark',{},6000);if(st&&st.layers)style=st}catch(e){}
+    if(S.dark){try{const st=await getJSON('https://tiles.openfreemap.org/styles/dark',{},6000);if(st&&st.layers)style=st}catch(e){}}
     map=new maplibregl.Map({container:box,style,center:S.pos?[S.pos.lon,S.pos.lat]:[120.97,23.97],zoom:S.pos?15:7,attributionControl:{compact:true},pitchWithRotate:true,dragRotate:true});
     await new Promise((res,rej)=>{const tm=setTimeout(()=>rej(errOf('地圖載入太久','timeout')),20000);map.on('load',()=>{clearTimeout(tm);res()})});
     try{for(const l of map.getStyle().layers){const tf=l.layout&&l.layout['text-field'];if(l.type==='symbol'&&tf&&JSON.stringify(tf).includes('name'))
@@ -451,7 +472,7 @@ function GoogleMap(){let map,car,carEl,lines=[],cams=[],pins=[],traffic=null;
     const opt={center:{lat:S.pos?.lat??23.97,lng:S.pos?.lon??120.97},zoom:S.pos?15:7,mapId:S.gMapId||'DEMO_MAP_ID',disableDefaultUI:true,gestureHandling:'greedy',
       clickableIcons:false,headingInteractionEnabled:true,tiltInteractionEnabled:true};
     if(google.maps.RenderingType)opt.renderingType=google.maps.RenderingType.VECTOR;
-    if(google.maps.ColorScheme)opt.colorScheme=google.maps.ColorScheme.DARK;
+    if(google.maps.ColorScheme)opt.colorScheme=S.dark?google.maps.ColorScheme.DARK:google.maps.ColorScheme.LIGHT;
     map=new google.maps.Map(box,opt);
     map.addListener('dragstart',()=>self.onDrag&&self.onDrag());
     map.addListener('heading_changed',()=>self.updCar());
@@ -490,7 +511,7 @@ function AppleMap(){let map,car,carEl,lines=[],cams=[],pins=[],sign=1;
       try{mapkit.addEventListener('error',ev=>{console.warn('[mapkit]',ev&&ev.status);self.authFail&&self.authFail()})}catch(e){}}
     else if(S.mkLoadedTok&&S.mkLoadedTok!==S.appleTok)throw errOf('換了權杖，請重新整理頁面','env');
     const CS=mapkit.ColorScheme||mapkit.Map.ColorSchemes,FV=mapkit.FeatureVisibility;
-    map=new mapkit.Map(box,{colorScheme:CS.Dark,showsCompass:FV.Hidden,showsScale:FV.Hidden,showsZoomControl:false,showsMapTypeControl:false,isRotationEnabled:true,
+    map=new mapkit.Map(box,{colorScheme:S.dark?CS.Dark:CS.Light,showsCompass:FV.Hidden,showsScale:FV.Hidden,showsZoomControl:false,showsMapTypeControl:false,isRotationEnabled:true,
       center:C(S.pos?.lat??23.97,S.pos?.lon??120.97),cameraDistance:S.pos?1500:600000});
     map.addEventListener('scroll-start',()=>self.onDrag&&self.onDrag());
     carEl=mkEl('car',CAR_SVG);
@@ -1055,6 +1076,10 @@ $('voice').setAttribute('aria-pressed',S.voice);
 $('voice').addEventListener('click',()=>{S.voice=!S.voice;LS.set('voice',S.voice);$('voice').setAttribute('aria-pressed',S.voice);if(S.voice)say('語音已開啟');else try{speechSynthesis.cancel()}catch(e){}});
 $('gKeyIn').value=S.gKey;$('gSave').addEventListener('click',()=>{S.gKey=$('gKeyIn').value.trim();LS.set('gKey',S.gKey);S.gSess=null;S.gAuthBad=false;S.gRoutesBad=null;toast(S.gKey?'已儲存：搜尋改用 Google 地點':'已移除 Google 金鑰');
   if(S.mapSrc==='google'&&$('start').hidden&&S.gKey&&S.mapNow!=='google')mountMap('google')});
+function renderTheme(){[...$('themeSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.t===S.theme));
+  $('themeNote').textContent=S.theme==='auto'?'依你所在位置的日出日落自動切換。'+themeLabel():S.theme==='day'?'固定用白色地圖。':'固定用黑色地圖。'}
+$('themeSeg').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.theme=b.dataset.t;LS.set('mapTheme',S.theme);checkTheme();renderTheme()});
+renderTheme();
 function renderMapSrc(){const s=S.mapSrc;$('gMapIdRow').hidden=s!=='google';$('appleRow').hidden=s!=='apple';
   $('mapSrcNote').textContent=MAP_NOTE[s]+(S.mapNow&&S.mapNow!==s?`（目前顯示：${MAP_NAME[S.mapNow]}）`:'');
   [...$('mapSrc').children].forEach(b=>b.classList.toggle('on',b.dataset.src===s))}
