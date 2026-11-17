@@ -268,6 +268,17 @@ mark{background:none;color:var(--accent);font-weight:700}
 /* Safari 瀏覽器裡（不是主畫面 App）最上緣有一條模糊帶，把畫面往下挪避開 */
 html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
 @media (orientation:landscape) and (max-height:520px){html.in-browser body{padding-top:max(8px,env(safe-area-inset-top,0px))}}
+/* 時速置中、放大；速限牌縮小放右上角 */
+.hud{grid-template-columns:minmax(0,1fr);grid-template-areas:"num" "unit" "enf";position:relative;row-gap:0}
+.hud .num{text-align:center;font-size:68px;line-height:.95;padding-top:2px}
+.hud .num.three{font-size:50px}
+.hud .unit{justify-content:center;margin-top:0}
+.hud .sign{position:absolute;top:5px;right:5px;width:36px;height:36px;border-width:4px;font-size:15px}
+.hud .sign.d3{font-size:12px}
+.hud .sign.unk{font-size:10px}
+.hud .sign.est::after{margin-top:-24px;font-size:8px}
+@media (max-width:370px){.hud .num{font-size:58px}.hud .num.three{font-size:44px}}
+@media (min-width:900px) and (min-height:521px){.hud .num{font-size:76px}.hud .num.three{font-size:62px}}
 </style>
 </head>
 <body>
