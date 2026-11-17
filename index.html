@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B1116">
+<title>行車導航</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* 車用 HUD：手機直拿＝上導航、車速，中地圖，下按鈕；橫拿／iPhone Duo 展開＝地圖左、資訊右 */
+:root{
+  --bg:#0B1116; --panel:#111A21; --raise:#18242D; --line:#24323D;
+  --fg:#E8EEF2; --muted:#8C9DA8; --accent:#F2B33D; --route:#4DA3F0;
+  --ok:#36C276; --slow:#F2B33D; --jam:#E5484D; --danger:#FF4A4F; --stop:#C9A7FF;
+  --display:"Chakra Petch","Noto Sans TC",system-ui,sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;overflow:hidden;box-sizing:border-box;
+  padding:max(8px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));
+  -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{height:100%;display:grid;gap:8px;max-width:1400px;margin:0 auto;
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"nav" "hud" "map" "controls"}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.label{font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.msg{font-size:12.5px;color:var(--muted);margin:0}
+
+/* 導航 */
+.nav{grid-area:nav;display:flex;align-items:center;gap:12px;background:var(--raise);cursor:pointer;min-width:0}
+.nav .arrow{width:50px;height:50px;flex:none;border-radius:12px;background:var(--route);display:grid;place-items:center;color:#06121d}
+.nav .arrow.idle{background:var(--line);color:var(--muted)}
+.nav .arrow.stop{background:var(--stop)}
+.nav .arrow svg{width:32px;height:32px}
+.nav .what{min-width:0;flex:1}
+.nav .dist{font-family:var(--display);font-size:26px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nav .road{font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .dest{font-size:12px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .eta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;flex:none}
+.nav .eta b{display:block;font-family:var(--display);font-size:20px;color:var(--fg);font-weight:600}
+
+/* 車速 */
+.hud{grid-area:hud;display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:12px;align-items:center;transition:background .3s,border-color .3s}
+.speed{display:flex;flex-direction:column;min-width:96px}
+.speed .num{font-family:var(--display);font-weight:700;font-size:60px;line-height:.9;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.speed .num.three{font-size:48px}
+.speed .unit{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.src{font-size:10.5px;padding:1px 7px;border-radius:99px;border:1px solid var(--line)}
+.src.on{border-color:var(--ok);color:var(--ok)}
+.sign{width:60px;height:60px;border-radius:50%;background:#fff;border:6px solid #D62828;display:grid;place-items:center;color:#111;
+  font-family:var(--display);font-weight:700;font-size:24px;font-variant-numeric:tabular-nums;flex:none}
+.sign.unk{background:var(--raise);border-color:var(--line);color:var(--muted);font-size:13px;font-family:var(--body)}
+.enf{min-width:0;border-left:1px solid var(--line);padding-left:12px}
+.enf .type{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:6px;background:var(--line)}
+.enf .d{font-family:var(--display);font-size:26px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.enf .d small{font-size:13px;color:var(--muted);font-weight:500;margin-left:2px}
+.enf .n{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:4px;border-radius:2px;background:var(--line);margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent)}
+.hud.over{background:#2a0f12;border-color:var(--danger)}
+.hud.over .speed .num{color:var(--danger)}
+.hud.over .bar i{background:var(--danger)}
+@media (prefers-reduced-motion:no-preference){.hud.over.near{animation:pulse 1s ease-in-out infinite}@keyframes pulse{50%{background:#45121a}}}
+
+/* 地圖 */
+.mapwrap{grid-area:map;position:relative;min-height:0;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0E161C}
+#map{position:absolute;inset:0}
+.maplibregl-ctrl-attrib{font-size:10px}
+.banner{position:absolute;left:10px;right:60px;bottom:10px;z-index:3;border-radius:12px;padding:9px 12px;font-size:13.5px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.banner.jam{background:#2b1215;border:1px solid var(--jam)}
+.banner.stop{background:#1d1630;border:1px solid var(--stop)}
+.banner.info{background:var(--raise);border:1px solid var(--line)}
+.banner b{display:block}
+.mapbtns{position:absolute;right:10px;bottom:34px;display:flex;flex-direction:column;gap:6px;z-index:2}
+.mapbtns button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0;font-size:13px}
+.recenter{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;z-index:3}
+.car{width:40px;height:40px;display:grid;place-items:center}
+.car svg{width:34px;height:34px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.pin{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #0B1116;display:grid;place-items:center}
+.pin span{transform:rotate(45deg);font:700 11px var(--display);color:#160d26}
+.pin.dest{background:var(--accent)}.pin.stopm{background:var(--stop)}
+
+/* 控制 */
+.controls{grid-area:controls;display:grid;gap:8px;padding:8px}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--raise);border-radius:10px;padding:9px 12px;font-size:14px}
+.btn.primary{background:var(--accent);color:#1b1305;border-color:var(--accent);font-weight:700}
+.btn.danger{border-color:var(--danger);color:#ffb3b5}
+.btn[aria-pressed="true"]{border-color:var(--ok);color:var(--ok)}
+.grow{flex:1}
+.extra{display:none;gap:10px}
+.controls.open .extra{display:grid}
+.field{display:flex;gap:6px}
+.field input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:16px}
+.extra a{color:var(--route)}
+
+/* 搜尋 */
+.sheet{position:fixed;inset:0;z-index:30;background:rgba(4,8,11,.72);display:flex;align-items:flex-end;justify-content:center;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}
+.sheetin{width:100%;max-width:560px;height:min(92%,760px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px 18px 0 0;
+  padding:14px max(14px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px}
+@media (min-width:600px){.sheet{align-items:center;padding:16px}.sheetin{border-radius:18px}}
+.sheethead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sheethead h2{margin:0;font-size:18px}
+#q{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:17px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--raise);padding:7px 12px;font-size:13.5px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--line);color:var(--accent)}
+.list{display:grid;gap:6px}
+.linkbtn{background:none;border:0;padding:0;color:var(--route);text-decoration:underline;font-size:inherit}
+.dg{display:flex;gap:10px;align-items:flex-start;background:var(--raise);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.dg .st{flex:none;width:44px;font-weight:700}
+.dg .st.ok{color:var(--ok)}.dg .st.bad{color:var(--danger)}.dg .st.wait{color:var(--muted)}.dg .st.skip{color:var(--muted)}
+.dg .t{flex:1;min-width:0}.dg .t span{display:block;color:var(--muted);font-size:12.5px;word-break:break-all}
+.sstatus{font-size:12px;color:var(--muted);min-height:1em}
+.sstatus:empty{display:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--raise);border-radius:99px;padding:7px 12px;font-size:13.5px}
+mark{background:none;color:var(--accent);font-weight:700}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;width:100%;background:var(--raise);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.opt .t{flex:1;min-width:0}.opt .t b{display:block;font-weight:500}.opt .t span{font-size:12.5px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opt .k{font-family:var(--display);font-size:13px;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.plan{display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+.pl{display:flex;align-items:center;gap:8px;font-size:14px}
+.pl .dot{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;font:700 11px var(--display);color:#160d26}
+.pl .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl button{border:1px solid var(--line);background:var(--raise);border-radius:8px;padding:4px 8px;font-size:12.5px}
+.go{padding:13px;font-size:16px}
+
+/* 開始畫面 */
+.start{position:fixed;inset:0;z-index:40;background:var(--bg);display:grid;place-items:center;padding:24px}
+.start .box{max-width:420px;display:grid;gap:14px}
+.start h1{font-family:var(--display);font-size:30px;margin:0}
+.start p{margin:0;color:var(--muted)}
+.start .warn{color:var(--accent)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--raise);border:1px solid var(--line);padding:9px 14px;border-radius:10px;font-size:13.5px;z-index:50;max-width:calc(100% - 32px)}
+.toast.bad{border-color:var(--danger);color:#ffc9ca}
+
+/* 小手機 */
+@media (max-width:380px){.speed .num{font-size:50px}.speed .num.three{font-size:40px}.sign{width:52px;height:52px;font-size:21px}.enf .d{font-size:22px}}
+/* 傳統 iPhone 橫拿 */
+@media (orientation:landscape) and (max-height:520px){
+  .app{grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"map nav" "map hud" "map controls" "map ."}
+  .controls{align-self:start}
+  .nav{padding:8px 10px}.nav .arrow{width:42px;height:42px}.nav .dist{font-size:22px}
+  .hud{padding:8px 10px}.speed .num{font-size:48px}.speed .num.three{font-size:40px}.sign{width:50px;height:50px;font-size:20px}
+}
+/* iPhone Duo 展開直拿 */
+@media (min-width:600px) and (orientation:portrait){
+  .app{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"nav hud" "map map" "controls controls"}
+  .speed .num{font-size:52px}.speed .num.three{font-size:42px}.sign{width:54px;height:54px;font-size:21px}
+}
+/* iPhone Duo 展開橫拿、平板、電腦 */
+@media (min-width:900px) and (min-height:521px){
+  .app{gap:10px;grid-template-columns:minmax(0,1fr) 380px;grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"map nav" "map hud" "map controls" "map ."}
+  .controls{align-self:start;padding:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="card nav" id="navCard" role="button" tabindex="0" aria-label="搜尋目的地與中途點">
+    <div class="arrow idle" id="mArrow"></div>
+    <div class="what">
+      <div class="dist" id="mDist">要去哪裡？</div>
+      <div class="road" id="mRoad">點這裡搜尋目的地</div>
+      <div class="dest" id="mDest" hidden></div>
+    </div>
+    <div class="eta" id="eta" hidden><b id="etaClock">--:--</b><span id="etaRest"></span></div>
+  </section>
+
+  <section class="card hud" id="hud" aria-label="車速與測速提醒">
+    <div class="speed">
+      <div class="num" id="spd">--</div>
+      <div class="unit">km/h <span class="src" id="src">定位中</span></div>
+    </div>
+    <div class="sign unk" id="limit" title="目前路段速限">速限</div>
+    <div class="enf">
+      <span class="type" id="eType">測速照相</span>
+      <div class="d" id="eDist">—</div>
+      <div class="n" id="eName">載入中</div>
+      <div class="bar"><i id="eBar"></i></div>
+    </div>
+  </section>
+
+  <div class="mapwrap">
+    <div id="map" aria-label="導航地圖"></div>
+    <div class="banner" id="banner" hidden><div id="bannerText"></div><button class="btn primary" id="bannerBtn" hidden></button></div>
+    <div class="mapbtns">
+      <button id="compass" aria-label="地圖方向：車頭朝上" title="車頭朝上"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 3l4 9h-8z" fill="#FF4A4F"/><path d="M12 21l-4-9h8z" fill="#8C9DA8"/></svg></button>
+      <button id="trafficBtn" aria-pressed="false" hidden>路況</button>
+    </div>
+    <button class="btn primary recenter" id="recenter" hidden>回到目前位置</button>
+  </div>
+
+  <section class="card controls" id="controls" aria-label="操作">
+    <div class="row">
+      <button class="btn primary grow" id="searchBtn">搜尋目的地</button>
+      <button class="btn danger" id="endBtn" hidden>結束導航</button>
+      <button class="btn" id="voice" aria-pressed="true">語音</button>
+      <button class="btn" id="more" aria-expanded="false">設定</button>
+    </div>
+    <div class="extra">
+      <div class="label">即時路況（選填）</div>
+      <p class="msg">填入 TomTom 金鑰後，路線會依即時路況避開塞車，並可顯示路況圖層。免費申請：<a href="https://developer.tomtom.com/" target="_blank" rel="noopener">developer.tomtom.com</a></p>
+      <div class="field"><input id="ttKey" type="password" autocomplete="off" placeholder="TomTom API 金鑰"><button class="btn" id="ttSave">儲存</button></div>
+      <div class="label">搜尋更準確（選填）</div>
+      <p class="msg">填入 Google 地點金鑰後，搜尋店家、地標會跟 Google 地圖一樣準。到 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 啟用「Places API (New)」並建立金鑰，記得把金鑰限制在這個網站使用。</p>
+      <div class="field"><input id="gKeyIn" type="password" autocomplete="off" placeholder="Google 地點 API 金鑰"><button class="btn" id="gSave">儲存</button></div>
+      <button class="btn" id="diagBtn">連線檢查</button>
+      <p class="msg" id="dataNote">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相與速限：OpenStreetMap，資料可能不完整。</p>
+    </div>
+  </section>
+</div>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheetin">
+    <div class="sheethead"><h2 id="sheetTitle">要去哪裡？</h2><button class="btn" id="sheetClose">關閉</button></div>
+    <input id="q" type="search" enterkeyhint="search" autocomplete="off" placeholder="輸入地點、地址，例如：國賓飯店">
+    <div class="row"><span class="msg">選到的地點：</span><div class="seg" id="mode"><button data-m="dest" class="on">設為目的地</button><button data-m="stop">加為中途點</button></div></div>
+    <div class="sstatus" id="sstatus" aria-live="polite"></div>
+    <div class="chips" id="cats" aria-label="附近搜尋"></div>
+    <div class="list" id="results"></div>
+    <div class="plan" id="plan" hidden></div>
+    <button class="btn primary go" id="go" hidden>開始導航</button>
+  </div>
+</div>
+
+<div class="start" id="start">
+  <div class="box">
+    <h1>行車導航</h1>
+    <p>搜尋任何地點、規劃路線，用 GPS 顯示車速，並提醒前方測速照相。</p>
+    <p class="warn">開車時請讓副駕操作，駕駛專心看路。</p>
+    <button class="btn primary go" id="startBtn">開始（開啟定位與語音）</button>
+    <p class="msg" id="startMsg"></p>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<div class="sheet" id="diag" hidden role="dialog" aria-modal="true" aria-labelledby="diagTitle">
+  <div class="sheetin" style="height:auto;max-height:92%">
+    <div class="sheethead"><h2 id="diagTitle">連線檢查</h2><button class="btn" id="diagClose">關閉</button></div>
+    <p class="msg">逐一測試導航用到的每個服務，看是哪一個連不上、為什麼。</p>
+    <div class="list" id="diagList"></div>
+    <button class="btn primary go" id="diagRun">重新檢查</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- 狀態 ---------- */
+const S={gKey:LS.get('gKey',''),pos:null,last:null,heading:0,speed:0,follow:true,headUp:true,voice:LS.get('voice',true),key:LS.get('ttKey',''),traffic:false,
+  route:null,plan:{dest:null,stops:[]},mode:'dest',area:null,areaBusy:false,limit:null,camAhead:null,said:new Set(),
+  offCount:0,lastReroute:0,lastCheck:0,overBeep:0,limitWay:null};
+
+/* ---------- 工具 ---------- */
+const R=6371000,rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI;
+function hav(a,b){const dl=rad(b.lat-a.lat),dn=rad(b.lon-a.lon),x=Math.sin(dl/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function brg(a,b){const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return(deg(Math.atan2(y,x))+360)%360}
+const adiff=(a,b)=>{let d=Math.abs(a-b)%360;return d>180?360-d:d};
+function mkProj(lat0,lon0){const kx=Math.cos(rad(lat0))*111320,ky=110540;return p=>({x:(p.lon-lon0)*kx,y:(p.lat-lat0)*ky})}
+function segDist(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy||1e-9;let t=((p.x-a.x)*dx+(p.y-a.y)*dy)/l2;t=Math.max(0,Math.min(1,t));return{d:Math.hypot(p.x-a.x-dx*t,p.y-a.y-dy*t),t,l:Math.sqrt(l2)}}
+const fmtD=m=>m>=1000?(m>=10000?Math.round(m/1000):(m/1000).toFixed(1))+' km':Math.max(0,Math.round(m/10)*10)+' m';
+const cnD=m=>m>=1000?(m/1000).toFixed(1).replace('.0','')+'公里':Math.round(m/50)*50+'公尺';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let toastT=0;function toast(t,bad){const el=$('toast');el.textContent=t;el.className='toast'+(bad?' bad':'');el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,3500)}
+async function getJSON(url,opt={},ms=12000,ext){const c=new AbortController();let timedOut=false;const tm=setTimeout(()=>{timedOut=true;c.abort()},ms);
+  if(ext){if(ext.aborted)c.abort();else ext.addEventListener('abort',()=>c.abort())}
+  try{let r;try{r=await fetch(url,{...opt,signal:c.signal})}catch(e){const er=new Error(e.message);er.kind=timedOut?'timeout':(c.signal.aborted?'abort':'blocked');er.name=c.signal.aborted&&!timedOut?'AbortError':'NetError';throw er}
+    if(!r.ok){let m='';try{const tx=await r.text();try{const jj=JSON.parse(tx);m=jj.error?.message||jj.errorText||jj.detailedError?.message||jj.message||''}catch(_){m=tx.slice(0,160)}}catch(_){}
+      const er=new Error('HTTP '+r.status);er.kind='http';er.status=r.status;er.detail=m;throw er}
+    return await r.json()}finally{clearTimeout(tm)}}
+/* 錯誤說明：讓畫面直接講出原因 */
+function why(e){if(!e)return'未知錯誤';
+  if(e.kind==='timeout')return'等太久沒有回應（網路慢或服務忙）';
+  if(e.kind==='blocked')return location.protocol!=='https:'&&location.hostname!=='localhost'?'被擋下：這個頁面不是從 https 網址打開，瀏覽器不讓它連外':'連不上（被瀏覽器或網路擋下，或目前沒有網路）';
+  if(e.kind==='http'){const s=e.status,d=e.detail?'：'+e.detail.slice(0,120):'';
+    if(s===400)return'請求格式錯誤'+d;if(s===401||s===403)return'金鑰無效、未啟用這個服務，或金鑰限制了網址'+d;
+    if(s===429)return'使用太頻繁，請稍等一下'+d;if(s>=500)return'對方服務暫時故障（'+s+'）';return'錯誤 '+s+d}
+  return e.message||'未知錯誤'}
+
+/* ---------- 聲音 ---------- */
+let actx=null,zhVoice=null;
+function pickVoice(){try{const vs=speechSynthesis.getVoices();zhVoice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/zh[-_]HK/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null}catch(e){}}
+try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}catch(e){}
+function say(t){if(!S.voice)return;try{const u=new SpeechSynthesisUtterance(t);u.lang='zh-TW';if(zhVoice)u.voice=zhVoice;u.rate=1.05;speechSynthesis.speak(u)}catch(e){}}
+function beep(f=1400,d=.1){if(!actx||!S.voice)return;try{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.09,actx.currentTime);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
+
+/* ---------- 箭頭 ---------- */
+const P='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">';
+const ICON={
+  left:P+'<path d="M16 21V11a3 3 0 0 0-3-3H5"/><path d="M9 4 5 8l4 4"/></svg>',
+  right:P+'<path d="M8 21V11a3 3 0 0 1 3-3h8"/><path d="m15 4 4 4-4 4"/></svg>',
+  slightleft:P+'<path d="M15 21v-7L7 6"/><path d="M7 12V6h6"/></svg>',
+  slightright:P+'<path d="M9 21v-7l8-8"/><path d="M11 6h6v6"/></svg>',
+  straight:P+'<path d="M12 21V4"/><path d="m6 10 6-6 6 6"/></svg>',
+  uturn:P+'<path d="M8 21V9a4 4 0 0 1 8 0v4"/><path d="m12 10 4 4 4-4"/></svg>',
+  round:P+'<circle cx="12" cy="10" r="4"/><path d="M12 21v-7"/><path d="M15 7l3-3"/></svg>',
+  stop:P+'<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/></svg>',
+  arrive:P+'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+  search:P+'<circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>'};
+$('mArrow').innerHTML=ICON.search;
+
+/* ---------- 地圖 ---------- */
+let map=null,carMarker=null,pins=[];
+const EMPTY={type:'FeatureCollection',features:[]};
+async function initMap(){
+  let style='https://tiles.openfreemap.org/styles/liberty';
+  try{const st=await getJSON('https://tiles.openfreemap.org/styles/dark',{},6000);if(st&&st.layers)style=st}catch(e){}
+  map=new maplibregl.Map({container:'map',style,center:[120.97,23.97],zoom:7,attributionControl:{compact:true},pitchWithRotate:true,dragRotate:true});
+  map.on('load',()=>{
+    try{for(const l of map.getStyle().layers){const tf=l.layout&&l.layout['text-field'];if(l.type==='symbol'&&tf&&JSON.stringify(tf).includes('name'))
+      map.setLayoutProperty(l.id,'text-field',['coalesce',['get','name:zh-Hant'],['get','name:zh'],['get','name']])}}catch(e){}
+    map.addSource('route',{type:'geojson',data:EMPTY});
+    map.addLayer({id:'route-case',type:'line',source:'route',layout:{'line-join':'round','line-cap':'round'},paint:{'line-color':'#06121d','line-width':['interpolate',['linear'],['zoom'],8,5,16,14]}});
+    map.addLayer({id:'route-line',type:'line',source:'route',layout:{'line-join':'round','line-cap':'round'},paint:{'line-color':['get','c'],'line-width':['interpolate',['linear'],['zoom'],8,3,16,9]}});
+    map.addSource('cams',{type:'geojson',data:EMPTY});
+    map.addLayer({id:'cam-c',type:'circle',source:'cams',paint:{'circle-radius':['interpolate',['linear'],['zoom'],10,4,16,11],'circle-color':'#ffffff','circle-stroke-color':'#D62828','circle-stroke-width':3}});
+    map.addLayer({id:'cam-t',type:'symbol',source:'cams',minzoom:13,layout:{'text-field':['to-string',['get','lim']],'text-font':['Noto Sans Bold','Noto Sans Regular'],'text-size':11,'text-allow-overlap':true},paint:{'text-color':'#111'}});
+    if(S.route)drawRoute();if(S.area)drawCams();if(S.traffic)setTraffic(true);
+  });
+  map.on('dragstart',()=>{S.follow=false;$('recenter').hidden=false});
+  new ResizeObserver(()=>map&&map.resize()).observe(document.querySelector('.mapwrap'));
+  const el=document.createElement('div');el.className='car';el.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 2l7 19-7-4-7 4z" fill="#fff" stroke="#0B1116" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+  carMarker=new maplibregl.Marker({element:el,rotationAlignment:'map',pitchAlignment:'map'});
+}
+function follow(force){
+  if(!map||!S.pos||(!S.follow&&!force))return;
+  const v=S.speed,z=S.route?(v<25?17:v<55?16.2:v<85?15.4:14.7):(v<25?16.5:v<60?15.8:15);
+  const h=document.querySelector('.mapwrap').clientHeight;
+  map.easeTo({center:[S.pos.lon,S.pos.lat],bearing:S.headUp?S.heading:0,pitch:S.route?45:0,zoom:z,offset:[0,h*(S.route?.24:.12)],duration:force?600:950,easing:t=>t});
+}
+$('recenter').addEventListener('click',()=>{S.follow=true;$('recenter').hidden=true;follow(true)});
+$('compass').addEventListener('click',()=>{S.headUp=!S.headUp;const t=S.headUp?'車頭朝上':'北方朝上';$('compass').title=t;$('compass').setAttribute('aria-label','地圖方向：'+t);toast('地圖：'+t);follow(true)});
+function setTraffic(on){S.traffic=on;$('trafficBtn').setAttribute('aria-pressed',on);if(!map||!map.isStyleLoaded())return;
+  if(on&&!map.getSource('tt')){map.addSource('tt',{type:'raster',tileSize:256,tiles:[`https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${encodeURIComponent(S.key)}`],attribution:'路況 © TomTom'});
+    map.addLayer({id:'tt',type:'raster',source:'tt',paint:{'raster-opacity':.85}},'route-case')}
+  if(map.getLayer('tt'))map.setLayoutProperty('tt','visibility',on?'visible':'none')}
+$('trafficBtn').addEventListener('click',()=>setTraffic(!S.traffic));
+
+/* ---------- 定位 ---------- */
+function startGPS(){
+  if(!('geolocation' in navigator)){$('src').textContent='無定位';toast('這個瀏覽器不支援定位',true);return}
+  navigator.geolocation.watchPosition(onPos,err=>{
+    $('src').textContent='無定位';$('src').className='src';
+    if(err.code!==1&&S.gpsWarned)return;S.gpsWarned=true;
+    toast(err.code===1?'定位被拒絕：請到 iPhone「設定 > 隱私權 > 定位服務 > Safari」允許定位':'暫時取不到 GPS 訊號',true)},
+    {enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+}
+function onPos(p){
+  const c=p.coords,now={lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:p.timestamp};
+  let v=(c.speed!=null&&c.speed>=0)?c.speed*3.6:null;
+  if(S.last){const d=hav(S.last,now),dt=(now.t-S.last.t)/1000;if(v==null&&dt>0)v=d/dt*3.6;
+    if(c.heading!=null&&!isNaN(c.heading)&&(v||0)>4)S.heading=c.heading;else if(d>6)S.heading=brg(S.last,now)}
+  if(v!=null&&v>220&&(c.speed==null||c.speed<0))v=S.speed; // 過濾 GPS 跳點造成的假車速
+  S.speed=Math.max(0,v||0);
+  const first=!S.pos;S.pos=now;if(!S.last||hav(S.last,now)>3)S.last=now;else S.last.t=now.t;
+  $('src').textContent='GPS';$('src').className='src on';
+  if(map&&carMarker){carMarker.setLngLat([now.lon,now.lat]);if(!S.carAdded){carMarker.addTo(map);S.carAdded=true;follow(true)}carMarker.setRotation(S.heading)}
+  if(first){follow(true)}else follow();
+  ensureArea();
+  if(S.route)progress();
+  updateLimit();updateCam();updateHUD();
+}
+
+/* ---------- 搜尋：輸入即出現建議 ---------- */
+let qT=0,qCtl=null;
+const CATS=[{t:'加油站',q:'node["amenity"="fuel"]'},{t:'停車場',q:'nwr["amenity"="parking"]["access"!="private"]'},{t:'便利商店',q:'node["shop"="convenience"]'},
+  {t:'休息站／服務區',q:'nwr["highway"="services"]'},{t:'充電站',q:'node["amenity"="charging_station"]'},{t:'廁所',q:'node["amenity"="toilets"]'}];
+const OSM_CAT={hotel:'飯店',fuel:'加油站',restaurant:'餐廳',cafe:'咖啡店',fast_food:'速食',parking:'停車場',hospital:'醫院',clinic:'診所',station:'車站',school:'學校',university:'大學',convenience:'便利商店',supermarket:'超市',mall:'購物中心',department_store:'百貨公司',bank:'銀行',police:'警察局',museum:'博物館',park:'公園',place_of_worship:'廟宇／教堂',services:'服務區',charging_station:'充電站',cinema:'電影院'};
+const provider=()=>S.gKey?'google':S.key?'tomtom':'osm';
+const PROV_NAME={google:'Google 地點',tomtom:'TomTom',osm:'OpenStreetMap（免費）'};
+function addrOf(pr){return[pr.city||pr.county,pr.district||pr.locality,pr.street&&(pr.street+(pr.housenumber?pr.housenumber+'號':''))].filter(Boolean).join(' ')||pr.state||''}
+function hl(name,q){name=String(name||'');if(!q)return esc(name);const i=name.indexOf(q);
+  if(i>=0)return esc(name.slice(0,i))+'<mark>'+esc(q)+'</mark>'+esc(name.slice(i+q.length));
+  const qs=new Set([...q.replace(/\s/g,'')]);return[...name].map(ch=>qs.has(ch)?'<mark>'+esc(ch)+'</mark>':esc(ch)).join('')}
+function score(r,q){const n=r.name||'';let s=0;if(n===q)s-=3;else if(n.startsWith(q))s-=2;else if(n.includes(q))s-=1.2;
+  else{const qs=[...q.replace(/\s/g,'')];s-=qs.filter(c=>n.includes(c)).length/qs.length*.8}
+  return s+Math.log10(1+(r.dist||0)/1000)*.35}
+async function sugGoogle(q,sig){const b=S.pos||{lat:23.97,lon:120.97};
+  if(!S.gSess)S.gSess=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2));
+  const body={input:q,languageCode:'zh-TW',regionCode:'tw',includedRegionCodes:['tw'],sessionToken:S.gSess,locationBias:{circle:{center:{latitude:b.lat,longitude:b.lon},radius:50000}}};
+  if(S.pos)body.origin={latitude:b.lat,longitude:b.lon};
+  const j=await getJSON('https://places.googleapis.com/v1/places:autocomplete',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':S.gKey},body:JSON.stringify(body)},8000,sig);
+  return(j.suggestions||[]).filter(s=>s.placePrediction).map(s=>{const p=s.placePrediction,sf=p.structuredFormat||{};
+    return{name:sf.mainText?.text||p.text?.text||'',addr:sf.secondaryText?.text||'',placeId:p.placeId,dist:p.distanceMeters}})}
+async function googleDetails(id){const j=await getJSON(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=zh-TW${S.gSess?'&sessionToken='+S.gSess:''}`,
+  {headers:{'X-Goog-Api-Key':S.gKey,'X-Goog-FieldMask':'location,displayName,formattedAddress'}});S.gSess=null;
+  return{lat:j.location.latitude,lon:j.location.longitude,addr:j.formattedAddress||''}}
+async function sugTomTom(q,sig){const b=S.pos;
+  const j=await getJSON(`https://api.tomtom.com/search/2/search/${encodeURIComponent(q)}.json?key=${encodeURIComponent(S.key)}&typeahead=true&limit=10&countrySet=TW&language=zh-TW${b?`&lat=${b.lat}&lon=${b.lon}`:''}`,{},8000,sig);
+  return(j.results||[]).map(r=>({name:r.poi?.name||r.address?.streetName||r.address?.freeformAddress||q,addr:r.address?.freeformAddress||'',lat:r.position.lat,lon:r.position.lon,dist:r.dist,cat:r.poi?.categories?.[0]||''}))}
+async function sugOSM(q,sig,final){const b=S.pos||{lat:23.97,lon:120.97};
+  const vs=[q];if(/飯店$/.test(q)&&!/大飯店$/.test(q))vs.push(q.replace(/飯店$/,'大飯店'));
+  const reqs=vs.map(v=>getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(v)}&limit=12&lat=${b.lat}&lon=${b.lon}`,{},8000,sig).then(j=>(j.features||[]).filter(f=>!f.properties.countrycode||f.properties.countrycode==='TW').map(f=>{const pr=f.properties;
+    return{name:pr.name||addrOf(pr)||v,addr:addrOf(pr),lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],cat:OSM_CAT[pr.osm_value]||''}})));
+  // Nominatim 不允許邊打字邊查，只在按下搜尋（Enter）時使用
+  if(final)reqs.push(getJSON(`https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=tw&accept-language=zh-TW&limit=8&q=${encodeURIComponent(q)}`,{},8000,sig).then(j=>j.map(r=>({name:r.name||r.display_name.split(',')[0],addr:r.display_name.split(',').slice(1,4).join(' ').trim(),lat:+r.lat,lon:+r.lon}))));
+  const rs=await Promise.allSettled(reqs);if(sig.aborted)throw new DOMException('aborted','AbortError');
+  const out=rs.flatMap(r=>r.status==='fulfilled'?r.value:[]);if(!out.length&&rs.every(r=>r.status==='rejected'))throw rs[0].reason;return out}
+async function suggest(q,final){
+  if(qCtl)qCtl.abort();const ctl=qCtl=new AbortController();
+  $('sstatus').textContent='搜尋中…';
+  let list=null,prov=provider();
+  try{list=prov==='google'?await sugGoogle(q,ctl.signal):prov==='tomtom'?await sugTomTom(q,ctl.signal):await sugOSM(q,ctl.signal,final)}
+  catch(e){if(ctl.signal.aborted)return;S.lastErr=e;console.warn('[search]',prov,e.kind,e.status,e.detail||e.message);
+    if(prov!=='osm'){const first=e;try{list=await sugOSM(q,ctl.signal,final);prov='osm';$('sstatus').textContent=PROV_NAME[provider()]+' 搜尋失敗（'+why(first)+'），先用免費搜尋'}catch(e2){if(ctl.signal.aborted)return;S.lastErr=e2}}}
+  if(ctl!==qCtl)return;
+  if(!list){$('sstatus').innerHTML=`搜尋失敗：${esc(why(S.lastErr))}。<button class="linkbtn" data-diag>看連線檢查</button>`;return}
+  if(S.pos)list.forEach(r=>{if(r.lat!=null)r.dist=hav(S.pos,r)});
+  const seen=new Set();list=list.filter(r=>{const k=r.name+'|'+(r.lat!=null?r.lat.toFixed(3)+r.lon.toFixed(3):r.placeId);if(seen.has(k))return false;seen.add(k);return true});
+  if(prov==='osm')list.sort((a,b)=>score(a,q)-score(b,q));
+  if(!/失敗/.test($('sstatus').textContent))$('sstatus').textContent=list.length?'來源：'+PROV_NAME[prov]:'';
+  renderResults(list.slice(0,10),q);
+}
+async function nearby(cat){
+  if(!S.pos){toast('還沒取得 GPS 位置',true);return}
+  $('q').value='';if(qCtl)qCtl.abort();$('sstatus').textContent='尋找附近的'+cat.t+'…';$('results').innerHTML='';
+  const q=`[out:json][timeout:20];${cat.q}(around:6000,${S.pos.lat},${S.pos.lon});out center 60;`;let j=null;
+  for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},20000);break}catch(e){}}
+  if(!j){$('sstatus').textContent='暫時找不到，請稍後再試';return}
+  const list=(j.elements||[]).map(el=>{const tg=el.tags||{},lat=el.lat??el.center?.lat,lon=el.lon??el.center?.lon;if(lat==null)return null;
+    const nm=tg.name||(tg.brand?tg.brand+(tg['branch']?' '+tg.branch:''):cat.t);
+    return{name:nm,addr:[tg['addr:city'],tg['addr:district'],tg['addr:street']&&tg['addr:street']+(tg['addr:housenumber']?tg['addr:housenumber']+'號':'')].filter(Boolean).join(' ')||(tg.brand&&tg.brand!==nm?tg.brand:''),lat,lon,dist:hav(S.pos,{lat,lon})}}).filter(Boolean)
+    .sort((a,b)=>a.dist-b.dist).slice(0,15);
+  $('sstatus').textContent=list.length?`附近的${cat.t}（6 公里內，由近到遠）`:`6 公里內沒有找到${cat.t}`;
+  renderResults(list,'');
+}
+function optHTML(r,i,q){return`<button class="opt" data-i="${i}"><span class="t"><b>${hl(r.name,q)}</b><span>${esc([r.cat,r.addr].filter(Boolean).join(' · '))}</span></span>${r.dist!=null?`<span class="k">${fmtD(r.dist)}</span>`:''}</button>`}
+function renderResults(list,q){S.results=list;
+  $('results').innerHTML=list.length?list.map((r,i)=>optHTML(r,i,q)).join(''):(q?`<p class="msg">找不到「${esc(q)}」。按鍵盤上的「搜尋」再找一次，或加上城市，例如「新竹 國賓」，或輸入地址。${provider()==='osm'?'到「設定」填入 Google 金鑰，店家和地標會找得更準。':''}</p>`:'')}
+function showHome(){$('cats').hidden=false;$('sstatus').textContent='';const rec=LS.get('recent',[]);
+  if(S.pos)rec.forEach(r=>r.dist=hav(S.pos,r));S.results=rec;
+  $('results').innerHTML=rec.length?'<div class="label">最近去過</div>'+rec.map((r,i)=>optHTML(r,i,'')).join(''):''}
+$('cats').innerHTML=CATS.map((c,i)=>`<button class="chip" data-c="${i}">${c.t}</button>`).join('');
+$('cats').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b){$('cats').hidden=true;nearby(CATS[+b.dataset.c])}});
+$('q').addEventListener('input',e=>{clearTimeout(qT);const q=e.target.value.trim();
+  if(!q){if(qCtl)qCtl.abort();showHome();return}
+  $('cats').hidden=true;qT=setTimeout(()=>suggest(q),q.length<2?320:200)});
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const b=$('results').querySelector('[data-i]');if(b)b.click();else{clearTimeout(qT);const q=e.target.value.trim();if(q)suggest(q,true)}}});
+$('results').addEventListener('click',async e=>{const b=e.target.closest('[data-i]');if(!b)return;let r={...S.results[+b.dataset.i]};delete r.dist;
+  if(r.lat==null&&r.placeId){b.disabled=true;try{Object.assign(r,await googleDetails(r.placeId))}catch(err){b.disabled=false;toast('取得地點位置失敗，請再試一次',true);return}}
+  delete r.placeId;
+  if(S.mode==='dest')S.plan.dest=r;else{if(S.plan.stops.length>=5){toast('中途點最多 5 個');return}S.plan.stops.push(r)}
+  const rec=LS.get('recent',[]).filter(x=>x.name!==r.name);rec.unshift(r);LS.set('recent',rec.slice(0,8));
+  $('q').value='';showHome();renderPlan();toast(S.mode==='dest'?'目的地：'+r.name:'已加入中途點：'+r.name)});
+$('mode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.mode=b.dataset.m;[...$('mode').children].forEach(x=>x.classList.toggle('on',x===b))});
+function renderPlan(){
+  const p=S.plan,has=p.dest||p.stops.length;$('plan').hidden=!has;$('go').hidden=!p.dest;
+  let h='<div class="label">路線</div><div class="pl"><span class="dot" style="background:var(--ok)"></span><span class="nm">目前位置</span></div>';
+  p.stops.forEach((s,i)=>{h+=`<div class="pl"><span class="dot" style="background:var(--stop)">${i+1}</span><span class="nm">${esc(s.name)}</span>${i?`<button data-up="${i}" aria-label="往前移">上移</button>`:''}<button data-rm="${i}">移除</button></div>`});
+  h+=p.dest?`<div class="pl"><span class="dot" style="background:var(--accent)"></span><span class="nm">${esc(p.dest.name)}</span><button data-rmd>移除</button></div>`:'<p class="msg">還沒有目的地，搜尋後選「設為目的地」。</p>';
+  $('plan').innerHTML=h;$('go').textContent='開始導航'+(p.dest?'：'+p.dest.name:'')+(p.stops.length?`（途經 ${p.stops.length} 站）`:'');
+}
+$('plan').addEventListener('click',e=>{const b=e.target;const p=S.plan;
+  if(b.dataset.rm!=null)p.stops.splice(+b.dataset.rm,1);else if(b.dataset.up!=null){const i=+b.dataset.up;[p.stops[i-1],p.stops[i]]=[p.stops[i],p.stops[i-1]]}else if(b.hasAttribute('data-rmd'))p.dest=null;else return;renderPlan()});
+function openSheet(){$('sheet').hidden=false;renderPlan();if(!$('q').value)showHome();setTimeout(()=>$('q').focus(),50)}
+function closeSheet(){$('sheet').hidden=true}
+$('navCard').addEventListener('click',openSheet);
+$('navCard').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openSheet()}});
+$('searchBtn').addEventListener('click',openSheet);
+$('sheetClose').addEventListener('click',closeSheet);
+$('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('sheet').hidden)closeSheet()});
+$('go').addEventListener('click',async()=>{if(!S.pos){toast('還沒取得 GPS 位置，請稍候再試',true);return}closeSheet();await planRoute(true)});
+
+/* ---------- 路線 ---------- */
+const OSRM_TXT={left:'左轉',right:'右轉','slight left':'靠左','slight right':'靠右','sharp left':'左急轉','sharp right':'右急轉',straight:'直行',uturn:'迴轉'};
+function osrmIcon(m){const mo=(m.modifier||'').replace(' ','');if(m.type==='arrive')return'arrive';if(m.type&&m.type.startsWith('roundabout')||m.type==='rotary')return'round';
+  if(mo==='uturn')return'uturn';if(mo==='left'||mo==='sharpleft')return'left';if(mo==='right'||mo==='sharpright')return'right';if(mo==='slightleft')return'slightleft';if(mo==='slightright')return'slightright';return'straight'}
+function osrmText(st){const m=st.maneuver,road=st.name||st.ref||'',dir=OSRM_TXT[m.modifier]||'';
+  switch(m.type){
+    case'arrive':return null;
+    case'on ramp':return(dir&&dir!=='直行'?dir+' ':'')+'上匝道'+(road?'，往 '+road:'');
+    case'off ramp':return(dir.includes('左')?'靠左':'靠右')+' 下交流道'+(road?'，往 '+road:'');
+    case'fork':return(dir.includes('左')?'靠左':'靠右')+(road?' 往 '+road:' 行駛');
+    case'merge':return'匯入'+(road?' '+road:'車道');
+    case'roundabout':case'rotary':return`進入圓環，第 ${m.exit||1} 個出口`+(road?' 往 '+road:'');
+    case'continue':case'new name':return dir&&dir!=='直行'?dir+(road?' 往 '+road:''):'直行'+(road?' '+road:'');
+    case'end of road':case'turn':default:return(dir||'直行')+(road?' 進入 '+road:'')}}
+const TT_ICON=m=>/UTURN/.test(m)?'uturn':/ARRIVE/.test(m)?'arrive':/WAYPOINT/.test(m)?'stop':/ROUNDABOUT/.test(m)?'round':/(BEAR|KEEP|EXIT).*LEFT/.test(m)?'slightleft':/(BEAR|KEEP|EXIT|TAKE_EXIT).*RIGHT|TAKE_EXIT/.test(m)?'slightright':/LEFT/.test(m)?'left':/RIGHT/.test(m)?'right':'straight';
+
+async function planRoute(fresh){
+  const p=S.plan;if(!p.dest)return;
+  const pts=[S.pos,...p.stops,p.dest];
+  $('mDist').textContent='規劃路線中…';$('mRoad').textContent=p.dest.name;
+  let r=null;
+  try{r=S.key?await routeTomTom(pts):await routeOSRM(pts)}catch(e){
+    if(S.key){try{r=await routeOSRM(pts);toast('TomTom 路線失敗，改用一般路線（不含路況）',true)}catch(e2){}}}
+  if(!r){toast('路線規劃失敗，請檢查網路後再試',true);if(!S.route)resetNavUI();return}
+  buildRoute(r);
+  S.said.clear();S.offCount=0;S.lastReroute=Date.now();S.lastCheck=Date.now();
+  if(fresh){say(`開始導航，前往${p.dest.name}，全程${cnD(r.distance)}，約${Math.max(1,Math.round(r.duration/60))}分鐘`);S.follow=true;$('recenter').hidden=true}
+  $('endBtn').hidden=false;$('searchBtn').textContent='目的地／中途點';
+  drawRoute();progress();updateHUD();follow(true);
+}
+async function routeOSRM(pts){
+  const j=await getJSON(`https://router.project-osrm.org/route/v1/driving/${pts.map(p=>p.lon.toFixed(6)+','+p.lat.toFixed(6)).join(';')}?overview=full&geometries=geojson&steps=true`,{},15000);
+  if(j.code!=='Ok'||!j.routes||!j.routes.length)throw new Error(j.code||'no route');
+  const rt=j.routes[0],coords=rt.geometry.coordinates;
+  const steps=[];rt.legs.forEach((leg,li)=>leg.steps.forEach(st=>{const m=st.maneuver;if(m.type==='depart')return;
+    const isArr=m.type==='arrive',last=li===rt.legs.length-1;
+    if(isArr&&!last){steps.push({lon:m.location[0],lat:m.location[1],icon:'stop',text:'中途點 '+(S.plan.stops[li]?.name||''),stop:li});return}
+    if(isArr){steps.push({lon:m.location[0],lat:m.location[1],icon:'arrive',text:'抵達 '+S.plan.dest.name,arrive:true});return}
+    steps.push({lon:m.location[0],lat:m.location[1],icon:osrmIcon(m),text:osrmText(st)})}));
+  return{coords,steps,distance:rt.distance,duration:rt.duration,traffic:[],src:'OSRM'};
+}
+async function routeTomTom(pts){
+  const url=`https://api.tomtom.com/routing/1/calculateRoute/${pts.map(p=>p.lat.toFixed(6)+','+p.lon.toFixed(6)).join(':')}/json?key=${encodeURIComponent(S.key)}&traffic=true&travelMode=car&routeType=fastest&instructionsType=text&language=zh-TW&sectionType=traffic&computeTravelTimeFor=all`;
+  const j=await getJSON(url,{},15000);const rt=j.routes&&j.routes[0];if(!rt)throw new Error('no route');
+  const all=rt.legs.flatMap(l=>l.points.map(p=>[p.longitude,p.latitude]));
+  let wp=0;const steps=(rt.guidance?.instructions||[]).filter(i=>i.maneuver!=='DEPART').map(i=>{
+    const icon=TT_ICON(i.maneuver);const st={lon:i.point.longitude,lat:i.point.latitude,icon,text:i.message||i.street||''};
+    if(i.maneuver==='WAYPOINT_REACHED'||/WAYPOINT/.test(i.maneuver)){st.icon='stop';st.stop=wp;st.text='中途點 '+(S.plan.stops[wp]?.name||'');wp++}
+    if(i.maneuver==='ARRIVE'){st.arrive=true;st.text='抵達 '+S.plan.dest.name}return st});
+  const traffic=(rt.sections||[]).filter(s=>s.sectionType==='TRAFFIC').map(s=>({i0:s.startPointIndex,i1:s.endPointIndex,cat:s.simpleCategory,delay:s.delayInSeconds||0,kmh:s.effectiveSpeedInKmh}));
+  const sm=rt.summary;return{coords:all,steps,distance:sm.lengthInMeters,duration:sm.travelTimeInSeconds,delay:sm.trafficDelayInSeconds||0,traffic,src:'TomTom'};
+}
+function buildRoute(r){
+  const c=r.coords,lat0=c[0][1],lon0=c[0][0],pj=mkProj(lat0,lon0);
+  const xy=c.map(([lon,lat])=>pj({lat,lon}));const cum=[0];for(let i=1;i<xy.length;i++)cum.push(cum[i-1]+Math.hypot(xy[i].x-xy[i-1].x,xy[i].y-xy[i-1].y));
+  const L=cum[cum.length-1];
+  // 指示點投影到路線上（依序往前找）
+  let k=0;for(const st of r.steps){const p=pj(st);let best={d:1e9,s:0,i:k};
+    for(let i=Math.max(0,k-2);i<xy.length-1;i++){const q=segDist(p,xy[i],xy[i+1]);if(q.d<best.d){best={d:q.d,s:cum[i]+q.t*q.l,i}}if(q.d<2&&i>k+5)break}
+    st.s=best.s;k=best.i}
+  r.steps.sort((a,b)=>a.s-b.s);
+  const tr=(r.traffic||[]).map(t=>({s1:cum[Math.min(t.i0,cum.length-1)],s2:cum[Math.min(t.i1,cum.length-1)],cat:t.cat,delay:t.delay,kmh:t.kmh}));
+  S.route={...r,xy,cum,L,pj,tr,idx:0,s:0,visited:new Set()};
+  S.camOnRoute=null;
+  pins.forEach(m=>m.remove());pins=[];
+  if(map){S.plan.stops.forEach((s,i)=>pins.push(pin(s,'stopm',i+1)));pins.push(pin(S.plan.dest,'dest',''))}
+  $('trafficBtn').hidden=!S.key;
+  if(S.area)snapCamsToRoute();
+}
+function pin(p,cls,txt){const el=document.createElement('div');el.className='pin '+cls;el.innerHTML=`<span>${txt}</span>`;return new maplibregl.Marker({element:el,anchor:'bottom-left',offset:[-4,4]}).setLngLat([p.lon,p.lat]).addTo(map)}
+function drawRoute(){
+  if(!map||!map.getSource('route'))return;const r=S.route;if(!r){map.getSource('route').setData(EMPTY);return}
+  const col=c=>c==='JAM'?'#E5484D':c==='ROAD_WORK'||c==='ROAD_CLOSURE'?'#F2B33D':'#F2B33D';
+  const feats=[];let cuts=[{s:0,c:'#4DA3F0'}];
+  r.tr.forEach(t=>{cuts.push({s:t.s1,c:t.cat==='JAM'?'#E5484D':'#F2B33D'},{s:t.s2,c:'#4DA3F0'})});
+  cuts.sort((a,b)=>a.s-b.s);
+  for(let j=0;j<cuts.length;j++){const s1=Math.max(cuts[j].s,r.s),s2=j+1<cuts.length?cuts[j+1].s:r.L;if(s2<=s1)continue;
+    const line=[];for(let i=0;i<r.coords.length;i++){if(r.cum[i]>=s1&&r.cum[i]<=s2)line.push(r.coords[i])}
+    const a=pointAtS(s1),b=pointAtS(s2);line.unshift(a);line.push(b);
+    if(line.length>1)feats.push({type:'Feature',properties:{c:cuts[j].c},geometry:{type:'LineString',coordinates:line}})}
+  map.getSource('route').setData({type:'FeatureCollection',features:feats});
+}
+function pointAtS(s){const r=S.route;let i=Math.max(0,r.cum.findIndex(c=>c>=s)-1);if(i<0)i=0;const a=r.coords[i],b=r.coords[Math.min(i+1,r.coords.length-1)],l=(r.cum[i+1]-r.cum[i])||1,t=Math.min(1,Math.max(0,(s-r.cum[i])/l));return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}
+
+/* ---------- 導航進度 ---------- */
+let lastDraw=0;
+function progress(){
+  const r=S.route,p=r.pj(S.pos);let best={d:1e9,s:r.s,i:r.idx};
+  const i0=Math.max(0,r.idx-15),i1=Math.min(r.xy.length-1,r.idx+400);
+  for(let i=i0;i<i1;i++){const q=segDist(p,r.xy[i],r.xy[i+1]);if(q.d<best.d)best={d:q.d,s:r.cum[i]+q.t*q.l,i}}
+  if(best.d>1e8||best.i===r.idx&&best.d>200){for(let i=0;i<r.xy.length-1;i++){const q=segDist(p,r.xy[i],r.xy[i+1]);if(q.d<best.d)best={d:q.d,s:r.cum[i]+q.t*q.l,i}}}
+  const tol=Math.max(40,(S.pos.acc||20)*1.5);
+  if(best.d>tol){S.offCount++;if(S.offCount>=3&&Date.now()-S.lastReroute>12000){S.lastReroute=Date.now();say('重新規劃路線');toast('偏離路線，重新規劃中');planRoute(false);return}}
+  else{S.offCount=0;r.idx=best.i;r.s=Math.max(r.s-30,best.s)}
+  // 中途點與目的地
+  for(const st of r.steps){
+    if(st.stop!=null&&!r.visited.has('s'+st.stop)&&(Math.abs(st.s-r.s)<35||hav(S.pos,S.plan.stops[st.stop]||st)<40)){r.visited.add('s'+st.stop);
+      const n=S.plan.stops[st.stop]?.name||'中途點';say('已抵達中途點，'+n);showBanner('stop',`<span class="label">已抵達中途點</span><b>${esc(n)}</b>`,null,9000)}
+    if(st.arrive&&(r.L-r.s<35||hav(S.pos,S.plan.dest)<40)){say('已抵達目的地，'+S.plan.dest.name);toast('已抵達 '+S.plan.dest.name);endNav(true);return}}
+  // 轉彎語音
+  const nx=nextStep();if(nx&&nx.text){const d=nx.s-r.s,v=S.speed;
+    const ths=v>80?[2000,1000,400]:v>45?[1000,400,120]:[400,120];
+    for(const th of ths){const key=nx.s.toFixed(0)+'@'+th;if(d<=th&&d>th*.45&&!S.said.has(key)){S.said.add(key);say(`${cnD(d)}後，${nx.text}`)}}
+    const key0=nx.s.toFixed(0)+'@now';if(d<=(v>60?60:25)&&!S.said.has(key0)){S.said.add(key0);if(!nx.arrive&&nx.stop==null)say(nx.text)}}
+  // 塞車
+  const jam=r.tr.find(t=>t.cat==='JAM'&&t.s2>r.s);
+  if(jam&&jam.s1-r.s<3000&&jam.s1>r.s){const k='jam'+jam.s1.toFixed(0);if(!S.said.has(k)){S.said.add(k);say(`前方${cnD(jam.s1-r.s)}壅塞，約多${Math.max(1,Math.round(jam.delay/60))}分鐘`)}
+    if(!S.bannerHold)showBanner('jam',`<b>前方 ${fmtD(jam.s1-r.s)} 壅塞</b>長約 ${fmtD(jam.s2-jam.s1)}，約多 ${Math.max(1,Math.round(jam.delay/60))} 分鐘`)}
+  else if(!S.bannerHold&&$('banner').classList.contains('jam'))$('banner').hidden=true;
+  // 定期用路況找更快路線
+  if(S.key&&Date.now()-S.lastCheck>300000){S.lastCheck=Date.now();checkFaster()}
+  if(performance.now()-lastDraw>3000){lastDraw=performance.now();drawRoute()}
+}
+function nextStep(){const r=S.route;return r.steps.find(st=>st.s>r.s+3&&!(st.stop!=null&&r.visited.has('s'+st.stop)))||null}
+async function checkFaster(){
+  const r=S.route;if(!r)return;const remain=r.duration*(1-r.s/r.L);
+  const stops=S.plan.stops.filter((s,i)=>!r.visited.has('s'+i));
+  try{const n=await routeTomTom([S.pos,...stops,S.plan.dest]);const save=remain-n.duration;
+    if(save>180){S.alt=n;say(`找到更快的路線，可以省${Math.round(save/60)}分鐘`);
+      showBanner('info',`<b>有更快的路線</b>可省約 ${Math.round(save/60)} 分鐘`,'改走',30000,()=>{S.plan.stops=stops;buildRoute(S.alt);S.said.clear();drawRoute();progress();updateHUD()})}}catch(e){}
+}
+let bannerT=0;
+function showBanner(kind,html,btn,ms,fn){const b=$('banner');b.className='banner '+kind;$('bannerText').innerHTML=html;b.hidden=false;
+  const bb=$('bannerBtn');bb.hidden=!btn;if(btn){bb.textContent=btn;bb.onclick=()=>{b.hidden=true;S.bannerHold=false;fn&&fn()}}
+  clearTimeout(bannerT);if(ms){S.bannerHold=true;bannerT=setTimeout(()=>{b.hidden=true;S.bannerHold=false},ms)}}
+function endNav(arrived){S.route=null;S.plan.stops=[];if(!arrived)S.plan.dest=null;pins.forEach(m=>m.remove());pins=[];drawRoute();resetNavUI();$('banner').hidden=true;S.bannerHold=false;if(map)map.easeTo({pitch:0,duration:600});if(arrived)S.plan.dest=null}
+function resetNavUI(){$('mArrow').className='arrow idle';$('mArrow').innerHTML=ICON.search;$('mDist').textContent='要去哪裡？';$('mRoad').textContent='點這裡搜尋目的地';$('mDest').hidden=true;$('eta').hidden=true;$('endBtn').hidden=true;$('searchBtn').textContent='搜尋目的地';$('trafficBtn').hidden=!S.key}
+$('endBtn').addEventListener('click',()=>{endNav(false);say('已結束導航')});
+
+/* ---------- 測速照相與速限（OpenStreetMap / Overpass） ---------- */
+const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+async function ensureArea(){
+  const a=S.area,p=S.pos;if(S.areaBusy)return;
+  if(a&&hav(a.c,p)<900&&Date.now()-a.t<600000)return;
+  if(S.areaFail&&Date.now()-S.areaFail<30000)return;
+  S.areaBusy=true;
+  const q=`[out:json][timeout:25];(node["highway"="speed_camera"](around:5000,${p.lat},${p.lon});way["highway"]["maxspeed"](around:1500,${p.lat},${p.lon}););out geom qt;`;
+  let j=null;for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},25000);break}catch(e){}}
+  S.areaBusy=false;
+  if(!j){S.areaFail=Date.now();if(!S.area)$('eName').textContent='測速資料暫時載入失敗';return}
+  const cams=[],ways=[];
+  for(const el of j.elements||[]){const tg=el.tags||{};
+    if(el.type==='node'){cams.push({lat:el.lat,lon:el.lon,lim:parseLim(tg.maxspeed),dir:tg.direction,id:el.id})}
+    else if(el.type==='way'&&el.geometry){const lim=parseLim(tg.maxspeed);if(lim)ways.push({lim,g:el.geometry,oneway:tg.oneway==='yes'||/motorway/.test(tg.highway),name:tg.name||tg.ref||''})}}
+  S.area={c:{lat:p.lat,lon:p.lon},t:Date.now(),cams,ways};
+  snapCamsToRoute();drawCams();updateLimit();updateCam();updateHUD();
+}
+function parseLim(v){if(!v)return null;const m=String(v).match(/(\d+)\s*(mph)?/);if(!m)return null;return m[2]?Math.round(+m[1]*1.609):+m[1]}
+function drawCams(){if(!map||!map.getSource('cams')||!S.area)return;map.getSource('cams').setData({type:'FeatureCollection',features:S.area.cams.map(c=>({type:'Feature',properties:{lim:c.lim||''},geometry:{type:'Point',coordinates:[c.lon,c.lat]}}))})}
+function snapCamsToRoute(){const r=S.route;if(!r||!S.area)return;for(const c of S.area.cams){const p=r.pj(c);let best={d:1e9,s:0};
+  for(let i=0;i<r.xy.length-1;i++){const q=segDist(p,r.xy[i],r.xy[i+1]);if(q.d<best.d)best={d:q.d,s:r.cum[i]+q.t*q.l}}c.rs=best.d<35?best.s:null}}
+function updateLimit(){
+  const a=S.area,p=S.pos;if(!a||!p)return;const pj=mkProj(p.lat,p.lon),o={x:0,y:0};let best=null;
+  for(const w of a.ways){for(let i=0;i<w.g.length-1;i++){const A=pj(w.g[i]),B=pj(w.g[i+1]);if(Math.abs(A.x)>60&&Math.abs(B.x)>60&&Math.sign(A.x)===Math.sign(B.x))continue;
+    const q=segDist(o,A,B);if(q.d>28)continue;const sb=brg(w.g[i],w.g[i+1]);let ad=adiff(sb,S.heading);if(!w.oneway)ad=Math.min(ad,180-ad);
+    const score=q.d+(S.speed>8?ad*.6:0);if(!best||score<best.score)best={score,lim:w.lim,name:w.name}}}
+  if(best){S.limit=best.lim;S.limitT=Date.now()}else if(!S.limitT||Date.now()-S.limitT>15000)S.limit=null;
+}
+function updateCam(){
+  const a=S.area,p=S.pos;S.camAhead=null;if(!a||!p)return;let best=null;
+  for(const c of a.cams){let d;
+    if(S.route&&c.rs!=null){d=c.rs-S.route.s;if(d<-5||d>2500)continue}
+    else{d=hav(p,c);if(d>1600)continue;if(S.speed>5&&adiff(brg(p,c),S.heading)>30&&d>40)continue;if(c.dir&&!isNaN(+c.dir)&&adiff(+c.dir,S.heading)>60)continue}
+    if(!best||d<best.d)best={c,d:Math.max(0,d)}}
+  S.camAhead=best;
+  if(best){const lim=best.c.lim||S.limit,fast=S.speed>80,ths=fast?[1000,500]:[500,200];
+    for(const th of ths){const k=best.c.id+'@'+th;if(best.d<=th&&best.d>th*.45&&!S.said.has(k)){S.said.add(k);say(`前方${cnD(th)}，測速照相${lim?'，限速'+lim:''}`);beep(880,.18)}}}
+  // 通過後清掉提醒紀錄以免累積
+  if(S.said.size>400)S.said=new Set([...S.said].slice(-200));
+}
+
+/* ---------- 畫面更新 ---------- */
+function updateHUD(){
+  const v=Math.round(S.speed);$('spd').textContent=S.pos?v:'--';$('spd').classList.toggle('three',v>=100);
+  const cam=S.camAhead,lim=S.limit||(cam&&cam.d<600?cam.c.lim:null);
+  $('limit').className='sign'+(lim?'':' unk');$('limit').textContent=lim||'速限';
+  if(cam){const fast=S.speed>80,warn=fast?1000:500;$('eType').textContent='測速照相';$('eDist').innerHTML=cam.d>=1000?(cam.d/1000).toFixed(1)+'<small>km</small>':Math.round(cam.d)+'<small>m</small>';
+    $('eName').textContent=(cam.c.lim?'限速 '+cam.c.lim+' · ':'')+'OpenStreetMap';$('eBar').style.width=Math.max(0,Math.min(100,100*(1-cam.d/(warn*1.6))))+'%'}
+  else{$('eType').textContent='測速照相';$('eDist').textContent='—';$('eName').textContent=S.area?'前方無已知測速點':'載入測速資料中';$('eBar').style.width='0'}
+  const over=lim&&S.speed>lim+1,near=cam&&cam.d<(S.speed>80?1000:500);
+  $('hud').classList.toggle('over',!!over);$('hud').classList.toggle('near',!!(over&&near));
+  if(over&&near&&performance.now()-S.overBeep>1400){S.overBeep=performance.now();beep(1500,.1);setTimeout(()=>beep(1500,.1),160)}
+  // 導航
+  const r=S.route;if(!r)return;
+  const nx=nextStep();const rem=Math.max(0,r.L-r.s);
+  if(nx){const d=nx.s-r.s;$('mArrow').className='arrow'+(nx.stop!=null?' stop':'');$('mArrow').innerHTML=ICON[nx.icon]||ICON.straight;
+    $('mDist').textContent=fmtD(d);$('mRoad').textContent=nx.text||''}
+  const sec=r.duration*(rem/r.L);$('eta').hidden=false;
+  $('etaClock').textContent=new Date(Date.now()+sec*1000).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false});
+  $('etaRest').textContent=`剩 ${fmtD(rem)} · ${Math.max(1,Math.round(sec/60))} 分`;
+  const left=S.plan.stops.filter((s,i)=>!r.visited.has('s'+i)).length;
+  $('mDest').hidden=false;$('mDest').textContent='→ '+S.plan.dest.name+(left?` · 途經 ${left} 站`:'')+(r.src==='TomTom'?' · 含即時路況':'');
+}
+setInterval(()=>{if(S.pos)updateHUD()},1000);
+
+/* ---------- 設定 ---------- */
+$('more').addEventListener('click',()=>{const o=$('controls').classList.toggle('open');$('more').setAttribute('aria-expanded',o);$('more').textContent=o?'收起':'設定'});
+$('voice').setAttribute('aria-pressed',S.voice);
+$('voice').addEventListener('click',()=>{S.voice=!S.voice;LS.set('voice',S.voice);$('voice').setAttribute('aria-pressed',S.voice);if(S.voice)say('語音已開啟');else try{speechSynthesis.cancel()}catch(e){}});
+$('gKeyIn').value=S.gKey;$('gSave').addEventListener('click',()=>{S.gKey=$('gKeyIn').value.trim();LS.set('gKey',S.gKey);S.gSess=null;toast(S.gKey?'已儲存：搜尋改用 Google 地點':'已移除 Google 金鑰')});
+$('ttKey').value=S.key;$('trafficBtn').hidden=!S.key;
+$('ttSave').addEventListener('click',()=>{S.key=$('ttKey').value.trim();LS.set('ttKey',S.key);$('trafficBtn').hidden=!S.key;
+  if(map&&map.getSource('tt')){map.removeLayer('tt');map.removeSource('tt')}
+  toast(S.key?'已儲存：之後的路線會依即時路況規劃':'已移除金鑰：改用一般路線');if(S.route&&S.pos)planRoute(false)});
+
+
+/* ---------- 連線檢查 ---------- */
+function diagTests(){const b=S.pos||{lat:24.89,lon:121.10},oq=`[out:json][timeout:10];node["highway"="speed_camera"](around:300,${b.lat},${b.lon});out 1;`;
+  return[
+  {n:'網頁位址',run:async()=>{if(location.protocol==='https:'||location.hostname==='localhost')return location.origin;const e=new Error('');e.kind='env';e.msg=`目前是「${location.protocol==='file:'?'檔案':location.protocol}」打開。要用 https 網址打開，才能連到地圖、搜尋和路線服務`;throw e}},
+  {n:'GPS 定位',run:async()=>{if(!('geolocation' in navigator)){const e=new Error('');e.kind='env';e.msg='這個瀏覽器不支援定位';throw e}
+    if(S.pos)return`精度約 ${Math.round(S.pos.acc)} m`;let st='';try{st=(await navigator.permissions.query({name:'geolocation'})).state}catch(_){}
+    const e=new Error('');e.kind='env';e.msg=st==='denied'?'定位被拒絕：到 iPhone「設定 > 隱私權與安全性 > 定位服務 > Safari 網站」改成「使用 App 期間」':'還沒取得位置（請到室外或稍等）';throw e}},
+  {n:'地圖（OpenFreeMap）',run:()=>getJSON('https://tiles.openfreemap.org/styles/liberty',{},10000)},
+  {n:'免費搜尋（Photon）',run:()=>getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent('台北車站')}&limit=1`,{},10000)},
+  {n:'免費搜尋（Nominatim）',run:()=>getJSON(`https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=tw&limit=1&q=${encodeURIComponent('台北車站')}`,{},10000)},
+  {n:'Google 地點搜尋',skip:!S.gKey&&'沒有填金鑰',run:()=>getJSON('https://places.googleapis.com/v1/places:autocomplete',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':S.gKey},body:JSON.stringify({input:'台北車站',languageCode:'zh-TW',includedRegionCodes:['tw']})},10000)},
+  {n:'TomTom 搜尋／路況',skip:!S.key&&'沒有填金鑰',run:()=>getJSON(`https://api.tomtom.com/search/2/search/${encodeURIComponent('台北車站')}.json?key=${encodeURIComponent(S.key)}&limit=1&countrySet=TW`,{},10000)},
+  {n:'路線規劃（OSRM）',run:()=>getJSON('https://router.project-osrm.org/route/v1/driving/121.5170,25.0478;121.5440,25.0446?overview=false',{},10000)},
+  {n:'測速照相資料（Overpass）',run:async()=>{let last;for(const u of OVERPASS){try{return await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(oq),headers:{'Content-Type':'application/x-www-form-urlencoded'}},15000)}catch(e){last=e}}throw last}}]}
+async function runDiag(){const tests=diagTests();
+  $('diagList').innerHTML=tests.map((x,i)=>`<div class="dg" id="dg${i}"><span class="st wait">檢查中</span><span class="t">${esc(x.n)}</span></div>`).join('');
+  await Promise.all(tests.map(async(x,i)=>{const el=$('dg'+i);
+    if(x.skip){el.innerHTML=`<span class="st skip">略過</span><span class="t">${esc(x.n)}<span>${esc(x.skip)}</span></span>`;return}
+    const t0=performance.now();
+    try{const r=await x.run();el.innerHTML=`<span class="st ok">正常</span><span class="t">${esc(x.n)}<span>${typeof r==='string'?esc(r):Math.round(performance.now()-t0)+' 毫秒'}</span></span>`}
+    catch(e){el.innerHTML=`<span class="st bad">失敗</span><span class="t">${esc(x.n)}<span>${esc(e.kind==='env'?e.msg:why(e))}</span></span>`}}))}
+function openDiag(){$('diag').hidden=false;runDiag()}
+$('diagBtn').addEventListener('click',openDiag);
+$('diagRun').addEventListener('click',runDiag);
+$('diagClose').addEventListener('click',()=>$('diag').hidden=true);
+$('sstatus').addEventListener('click',e=>{if(e.target.closest('[data-diag]'))openDiag()});
+if(location.protocol!=='https:'&&location.hostname!=='localhost'){
+  $('startMsg').innerHTML='注意：這個頁面現在不是從 https 網址打開，地圖、搜尋和路線都會連不上。請把它放到網站上再用手機打開。<button class="linkbtn" id="startDiag">看連線檢查</button>';
+  $('startDiag').addEventListener('click',openDiag)}
+
+/* ---------- 開始 ---------- */
+let wake=null;async function keepAwake(){try{wake=await navigator.wakeLock.request('screen')}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')keepAwake()});
+$('startBtn').addEventListener('click',()=>{
+  try{actx=new (window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}
+  pickVoice();if(S.voice)say('導航已就緒');keepAwake();
+  if(typeof maplibregl==='undefined'){$('startMsg').textContent='地圖元件載入失敗，請確認網路後重新整理。';return}
+  $('start').hidden=true;initMap();startGPS();
+});
+})();
+</script>
+</body>
+</html>
