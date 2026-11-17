@@ -30,44 +30,43 @@ button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .app{height:100%;display:grid;gap:8px;max-width:1400px;margin:0 auto;
-  grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"nav" "hud" "map" "controls"}
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"controls controls" "hud nav" "map map"}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .label{font-size:11px;letter-spacing:.08em;color:var(--muted)}
 .msg{font-size:12.5px;color:var(--muted);margin:0}
 
-/* 導航 */
-.nav{grid-area:nav;display:flex;align-items:center;gap:12px;background:var(--raise);cursor:pointer;min-width:0}
-.nav .arrow{width:50px;height:50px;flex:none;border-radius:12px;background:var(--route);display:grid;place-items:center;color:#06121d}
+/* 轉彎指示（在車速右邊） */
+.nav{grid-area:nav;display:flex;align-items:center;gap:9px;background:var(--raise);cursor:pointer;min-width:0;padding:8px 10px}
+.nav .arrow{width:42px;height:42px;flex:none;border-radius:11px;background:var(--route);display:grid;place-items:center;color:#06121d}
 .nav .arrow.idle{background:var(--line);color:var(--muted)}
 .nav .arrow.stop{background:var(--stop)}
-.nav .arrow svg{width:32px;height:32px}
+.nav .arrow svg{width:28px;height:28px}
 .nav .what{min-width:0;flex:1}
-.nav .dist{font-family:var(--display);font-size:26px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
-.nav .road{font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nav .dest{font-size:12px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nav .eta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;flex:none}
-.nav .eta b{display:block;font-family:var(--display);font-size:20px;color:var(--fg);font-weight:600}
+.nav .dist{font-family:var(--display);font-size:22px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .road{font-size:13.5px;font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nav .dest{font-size:11.5px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .eta{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .eta b{font-family:var(--display);font-size:13px;color:var(--fg);font-weight:600;margin-right:4px}
 
-/* 車速 */
-.hud{grid-area:hud;display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:12px;align-items:center;transition:background .3s,border-color .3s}
-.speed{display:flex;flex-direction:column;min-width:96px}
-.speed .num{font-family:var(--display);font-weight:700;font-size:60px;line-height:.9;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.speed .num.three{font-size:48px}
-.speed .unit{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
-.src{font-size:10.5px;padding:1px 7px;border-radius:99px;border:1px solid var(--line)}
+/* 車速＋測速（合在一起） */
+.hud{grid-area:hud;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"num sign" "unit unit" "enf enf";column-gap:8px;align-items:center;padding:8px 10px;transition:background .3s,border-color .3s;min-width:0}
+.hud .num{grid-area:num;font-family:var(--display);font-weight:700;font-size:46px;line-height:.9;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.hud .num.three{font-size:38px}
+.hud .unit{grid-area:unit;font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-top:2px}
+.src{font-size:10px;padding:0 6px;border-radius:99px;border:1px solid var(--line)}
 .src.on{border-color:var(--ok);color:var(--ok)}
-.sign{width:60px;height:60px;border-radius:50%;background:#fff;border:6px solid #D62828;display:grid;place-items:center;color:#111;
-  font-family:var(--display);font-weight:700;font-size:24px;font-variant-numeric:tabular-nums;flex:none}
-.sign.unk{background:var(--raise);border-color:var(--line);color:var(--muted);font-size:13px;font-family:var(--body)}
-.enf{min-width:0;border-left:1px solid var(--line);padding-left:12px}
-.enf .type{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:6px;background:var(--line)}
-.enf .d{font-family:var(--display);font-size:26px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
-.enf .d small{font-size:13px;color:var(--muted);font-weight:500;margin-left:2px}
-.enf .n{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar{height:4px;border-radius:2px;background:var(--line);margin-top:5px;overflow:hidden}
+.sign{grid-area:sign;justify-self:end;width:46px;height:46px;border-radius:50%;background:#fff;border:5px solid #D62828;display:grid;place-items:center;color:#111;
+  font-family:var(--display);font-weight:700;font-size:19px;font-variant-numeric:tabular-nums;flex:none}
+.sign.unk{background:var(--raise);border-color:var(--line);color:var(--muted);font-size:11.5px;font-family:var(--body)}
+.enf{grid-area:enf;min-width:0;border-top:1px solid var(--line);margin-top:6px;padding-top:5px;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px}
+.enf .type{font-size:11px;padding:0 6px;border-radius:5px;background:var(--line)}
+.enf .d{font-family:var(--display);font-size:18px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.enf .d small{font-size:11.5px;color:var(--muted);font-weight:500;margin-left:1px}
+.enf .n{flex-basis:100%;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{flex-basis:100%;height:3px;border-radius:2px;background:var(--line);margin-top:3px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--accent)}
 .hud.over{background:#2a0f12;border-color:var(--danger)}
-.hud.over .speed .num{color:var(--danger)}
+.hud.over .num{color:var(--danger)}
 .hud.over .bar i{background:var(--danger)}
 @media (prefers-reduced-motion:no-preference){.hud.over.near{animation:pulse 1s ease-in-out infinite}@keyframes pulse{50%{background:#45121a}}}
 
@@ -127,6 +126,11 @@ button{cursor:pointer}
 .btn.danger{border-color:var(--danger);color:#ffb3b5}
 .btn[aria-pressed="true"]{border-color:var(--ok);color:var(--ok)}
 .grow{flex:1}
+/* 上方按鈕列：一行放得下 */
+.controls{padding:6px}
+.controls>.row{flex-wrap:nowrap;gap:5px}
+.controls>.row .btn{padding:8px 9px;font-size:13.5px;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.controls>.row .btn.grow{flex:1 1 auto}
 .extra{display:none;gap:10px}
 .controls.open .extra{display:grid;grid-auto-rows:max-content;max-height:min(55vh,520px);overflow:auto;padding-right:2px}
 .field{display:flex;gap:6px}
@@ -186,47 +190,67 @@ mark{background:none;color:var(--accent);font-weight:700}
 .toast.bad{border-color:var(--danger);color:#ffc9ca}
 
 /* 小手機 */
-@media (max-width:380px){.speed .num{font-size:50px}.speed .num.three{font-size:40px}.sign{width:52px;height:52px;font-size:21px}.enf .d{font-size:22px}}
-/* 傳統 iPhone 橫拿 */
+@media (max-width:370px){.hud .num{font-size:40px}.hud .num.three{font-size:32px}.sign{width:40px;height:40px;font-size:16px;border-width:4px}.nav .arrow{width:36px;height:36px}.nav .dist{font-size:19px}}
+/* 傳統 iPhone 橫拿：地圖在左，右側上面是按鈕，下面車速與轉彎並排 */
 @media (orientation:landscape) and (max-height:520px){
-  .app{grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"map nav" "map hud" "map controls" "map ."}
+  .app{grid-template-columns:minmax(0,1fr) 170px 170px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud nav" "map . ."}
   .controls{align-self:start}
-  .nav{padding:8px 10px}.nav .arrow{width:42px;height:42px}.nav .dist{font-size:22px}
-  .hud{padding:8px 10px}.speed .num{font-size:48px}.speed .num.three{font-size:40px}.sign{width:50px;height:50px;font-size:20px}
-}
-/* iPhone Duo 展開直拿 */
-@media (min-width:600px) and (orientation:portrait){
-  .app{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"nav hud" "map map" "controls controls"}
-  .speed .num{font-size:52px}.speed .num.three{font-size:42px}.sign{width:54px;height:54px;font-size:21px}
 }
 /* iPhone Duo 展開橫拿、平板、電腦 */
 @media (min-width:900px) and (min-height:521px){
-  .app{gap:10px;grid-template-columns:minmax(0,1fr) 380px;grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"map nav" "map hud" "map controls" "map ."}
-  .controls{align-self:start;padding:12px}
+  .app{gap:10px;grid-template-columns:minmax(0,1fr) 200px 200px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud nav" "map . ."}
+  .controls{align-self:start}
+  .hud .num{font-size:52px}.hud .num.three{font-size:42px}
 }
 </style>
 </head>
 <body>
 <div class="app">
+  <section class="card controls" id="controls" aria-label="操作">
+    <div class="row">
+      <button class="btn primary grow" id="searchBtn">搜尋目的地</button>
+      <button class="btn danger" id="endBtn" hidden>結束</button>
+      <button class="btn" id="voice" aria-pressed="true">語音</button>
+      <button class="btn" id="coBtn" aria-pressed="false">攝影機</button>
+      <button class="btn" id="more" aria-expanded="false">設定</button>
+    </div>
+    <div class="extra">
+      <div class="label">地圖來源</div>
+      <div class="seg" id="mapSrc" role="group" aria-label="地圖來源"><button data-src="free">免費地圖</button><button data-src="google">Google 地圖</button><button data-src="apple">Apple 地圖</button></div>
+      <p class="msg" id="mapSrcNote"></p>
+      <div class="field" id="gMapIdRow" hidden><input id="gMapId" autocomplete="off" placeholder="Google Map ID（選填）"><button class="btn" id="gMapIdSave">儲存</button></div>
+      <div class="field" id="appleRow" hidden><input id="appleTok" type="password" autocomplete="off" placeholder="Apple MapKit JS 權杖"><button class="btn" id="appleSave">儲存</button></div>
+      <div class="label">紅綠燈</div>
+      <p class="msg">地圖會標出紅綠燈位置，畫面左上角顯示前方紅綠燈的距離。台灣沒有公開即時燈號，所以無法顯示紅燈或綠燈。</p>
+      <button class="btn" id="sigVoiceBtn" aria-pressed="false">紅綠燈語音提醒：關</button>
+      <div class="label">即時路況</div>
+      <p class="msg">有 Google 金鑰（並在 Google Cloud 啟用「Routes API」）時，路線會依 Google 即時路況規劃、避開塞車；選 Google 地圖還能看到整片路況。也可以改用 TomTom 金鑰，免費申請：<a href="https://developer.tomtom.com/" target="_blank" rel="noopener">developer.tomtom.com</a></p>
+      <div class="field"><input id="ttKey" type="password" autocomplete="off" placeholder="TomTom API 金鑰"><button class="btn" id="ttSave">儲存</button></div>
+      <div class="label">搜尋更準確（選填）</div>
+      <p class="msg">填入 Google 地點金鑰後，搜尋店家、地標會跟 Google 地圖一樣準。到 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 啟用「Places API (New)」並建立金鑰，記得把金鑰限制在這個網站使用。</p>
+      <div class="field"><input id="gKeyIn" type="password" autocomplete="off" placeholder="Google 地點 API 金鑰"><button class="btn" id="gSave">儲存</button></div>
+      <button class="btn" id="diagBtn">連線檢查</button>
+      <p class="msg" id="dataNote">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相：警政署開放資料（每週更新），速限：OpenStreetMap。免費地圖的衛星影像：Esri。</p>
+    </div>
+  </section>
+
   <section class="card nav" id="navCard" role="button" tabindex="0" aria-label="搜尋目的地與中途點">
     <div class="arrow idle" id="mArrow"></div>
     <div class="what">
       <div class="dist" id="mDist">要去哪裡？</div>
-      <div class="road" id="mRoad">點這裡搜尋目的地</div>
+      <div class="road" id="mRoad">點這裡搜尋</div>
+      <div class="eta" id="eta" hidden><b id="etaClock">--:--</b><span id="etaRest"></span></div>
       <div class="dest" id="mDest" hidden></div>
     </div>
-    <div class="eta" id="eta" hidden><b id="etaClock">--:--</b><span id="etaRest"></span></div>
   </section>
 
   <section class="card hud" id="hud" aria-label="車速與測速提醒">
-    <div class="speed">
-      <div class="num" id="spd">--</div>
-      <div class="unit">km/h <span class="src" id="src">定位中</span></div>
-    </div>
+    <div class="num" id="spd">--</div>
     <div class="sign unk" id="limit" title="目前路段速限">速限</div>
+    <div class="unit">km/h <span class="src" id="src">定位中</span></div>
     <div class="enf">
-      <span class="type" id="eType">測速照相</span>
-      <div class="d" id="eDist">—</div>
+      <span class="type" id="eType">測速</span>
+      <span class="d" id="eDist">—</span>
       <div class="n" id="eName">載入中</div>
       <div class="bar"><i id="eBar"></i></div>
     </div>
@@ -251,33 +275,6 @@ mark{background:none;color:var(--accent);font-weight:700}
     <button class="btn primary recenter" id="recenter" hidden>回到目前位置</button>
   </div>
 
-  <section class="card controls" id="controls" aria-label="操作">
-    <div class="row">
-      <button class="btn primary grow" id="searchBtn">搜尋目的地</button>
-      <button class="btn danger" id="endBtn" hidden>結束導航</button>
-      <button class="btn" id="voice" aria-pressed="true">語音</button>
-      <button class="btn" id="coBtn" aria-pressed="false">攝影機</button>
-      <button class="btn" id="more" aria-expanded="false">設定</button>
-    </div>
-    <div class="extra">
-      <div class="label">地圖來源</div>
-      <div class="seg" id="mapSrc" role="group" aria-label="地圖來源"><button data-src="free">免費地圖</button><button data-src="google">Google 地圖</button><button data-src="apple">Apple 地圖</button></div>
-      <p class="msg" id="mapSrcNote"></p>
-      <div class="field" id="gMapIdRow" hidden><input id="gMapId" autocomplete="off" placeholder="Google Map ID（選填）"><button class="btn" id="gMapIdSave">儲存</button></div>
-      <div class="field" id="appleRow" hidden><input id="appleTok" type="password" autocomplete="off" placeholder="Apple MapKit JS 權杖"><button class="btn" id="appleSave">儲存</button></div>
-      <div class="label">紅綠燈</div>
-      <p class="msg">地圖會標出紅綠燈位置，畫面左上角顯示前方紅綠燈的距離。台灣沒有公開即時燈號，所以無法顯示紅燈或綠燈。</p>
-      <button class="btn" id="sigVoiceBtn" aria-pressed="false">紅綠燈語音提醒：關</button>
-      <div class="label">即時路況</div>
-      <p class="msg">有 Google 金鑰（並在 Google Cloud 啟用「Routes API」）時，路線會依 Google 即時路況規劃、避開塞車；選 Google 地圖還能看到整片路況。也可以改用 TomTom 金鑰，免費申請：<a href="https://developer.tomtom.com/" target="_blank" rel="noopener">developer.tomtom.com</a></p>
-      <div class="field"><input id="ttKey" type="password" autocomplete="off" placeholder="TomTom API 金鑰"><button class="btn" id="ttSave">儲存</button></div>
-      <div class="label">搜尋更準確（選填）</div>
-      <p class="msg">填入 Google 地點金鑰後，搜尋店家、地標會跟 Google 地圖一樣準。到 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 啟用「Places API (New)」並建立金鑰，記得把金鑰限制在這個網站使用。</p>
-      <div class="field"><input id="gKeyIn" type="password" autocomplete="off" placeholder="Google 地點 API 金鑰"><button class="btn" id="gSave">儲存</button></div>
-      <button class="btn" id="diagBtn">連線檢查</button>
-      <p class="msg" id="dataNote">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相：警政署開放資料（每週更新），速限：OpenStreetMap。免費地圖的衛星影像：Esri。</p>
-    </div>
-  </section>
 </div>
 
 <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -389,7 +386,8 @@ const pinEl=(cls,txt)=>mkEl('pin '+cls,`<span>${txt}</span>`);
 function loadScript(src,attrs={}){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.async=true;
   for(const[k,v]of Object.entries(attrs))s.setAttribute(k,v);s.onload=()=>res();s.onerror=()=>{const e=new Error('script');e.kind='blocked';rej(e)};document.head.appendChild(s)})}
 const errOf=(msg,kind)=>{const e=new Error(msg);e.kind=kind;return e};
-const zoomFor=()=>{const v=S.speed;return S.route?(v<25?17:v<55?16.2:v<85?15.4:14.7):(v<25?16.5:v<60?15.8:15)};
+const ZOOM_UP=Math.log2(1.25); // 地圖再放大 25%
+const zoomFor=()=>{const v=S.speed;return ZOOM_UP+(S.route?(v<25?17:v<55?16.2:v<85?15.4:14.7):(v<25?16.5:v<60?15.8:15))};
 const mpp=(lat,z)=>156543.03392*Math.cos(rad(lat))/2**z;
 function ahead(lat,lon,hdg,m){const d=m/R,b=rad(hdg),la=rad(lat),lo=rad(lon);const la2=Math.asin(Math.sin(la)*Math.cos(d)+Math.cos(la)*Math.sin(d)*Math.cos(b));
   const lo2=lo+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la),Math.cos(d)-Math.sin(la)*Math.sin(la2));return{lat:deg(la2),lon:deg(lo2)}}
@@ -431,7 +429,7 @@ function FreeMap(){let map,car,pins=[];const self={trafficOK:()=>!!S.key,
     if(v==='sat'){if(!map.getSource('sat')){map.addSource('sat',{type:'raster',tileSize:256,maxzoom:19,tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],attribution:'衛星影像 © Esri'});
       map.addLayer({id:'sat',type:'raster',source:'sat'},firstSym)}map.setLayoutProperty('sat','visibility','visible')}
     else if(map.getLayer('sat'))map.setLayoutProperty('sat','visibility','none');
-    if(v==='3d'){if(!map.getLayer('bld3d')){const src=Object.keys(st.sources).find(k=>st.sources[k].type==='vector');
+    if(v==='3d'){if(!map.getLayer('bld3d')){const ss=st.sources||{},src=Object.keys(ss).find(k=>ss[k].type==='vector');
         if(src)map.addLayer({id:'bld3d',type:'fill-extrusion',source:src,'source-layer':'building',minzoom:14,paint:{'fill-extrusion-color':'#2b3a46','fill-extrusion-height':['coalesce',['get','render_height'],8],'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-opacity':.85}},firstSym)}
       else map.setLayoutProperty('bld3d','visibility','visible')}
     else if(map.getLayer('bld3d'))map.setLayoutProperty('bld3d','visibility','none');
@@ -878,7 +876,7 @@ function showBanner(kind,html,btn,ms,fn){const b=$('banner');b.className='banner
   const bb=$('bannerBtn');bb.hidden=!btn;if(btn){bb.textContent=btn;bb.onclick=()=>{b.hidden=true;S.bannerHold=false;fn&&fn()}}
   clearTimeout(bannerT);if(ms){S.bannerHold=true;bannerT=setTimeout(()=>{b.hidden=true;S.bannerHold=false},ms)}}
 function endNav(arrived){S.route=null;S.plan.stops=[];if(!arrived)S.plan.dest=null;drawPins();drawRoute();resetNavUI();$('banner').hidden=true;S.bannerHold=false;follow(true);if(arrived)S.plan.dest=null}
-function resetNavUI(){$('mArrow').className='arrow idle';$('mArrow').innerHTML=ICON.search;$('mDist').textContent='要去哪裡？';$('mRoad').textContent='點這裡搜尋目的地';$('mDest').hidden=true;$('eta').hidden=true;$('endBtn').hidden=true;$('searchBtn').textContent='搜尋目的地';$('trafficBtn').hidden=!(A&&A.trafficOK())}
+function resetNavUI(){$('mArrow').className='arrow idle';$('mArrow').innerHTML=ICON.search;$('mDist').textContent='要去哪裡？';$('mRoad').textContent='點這裡搜尋';$('mDest').hidden=true;$('eta').hidden=true;$('endBtn').hidden=true;$('searchBtn').textContent='搜尋目的地';$('trafficBtn').hidden=!(A&&A.trafficOK())}
 $('endBtn').addEventListener('click',()=>{endNav(false);say('已結束導航')});
 
 /* ---------- 測速照相與速限（OpenStreetMap / Overpass） ---------- */
@@ -946,9 +944,9 @@ function updateHUD(){
   const v=Math.round(S.speed);$('spd').textContent=S.pos?v:'--';$('spd').classList.toggle('three',v>=100);
   const cam=S.camAhead,lim=S.limit||(cam&&cam.d<600?cam.c.lim:null);
   $('limit').className='sign'+(lim?'':' unk');$('limit').textContent=lim||'速限';
-  if(cam){const fast=S.speed>80,warn=fast?1000:500;$('eType').textContent='測速照相';$('eDist').innerHTML=cam.d>=1000?(cam.d/1000).toFixed(1)+'<small>km</small>':Math.round(cam.d)+'<small>m</small>';
+  if(cam){const fast=S.speed>80,warn=fast?1000:500;$('eType').textContent='測速';$('eDist').innerHTML=cam.d>=1000?(cam.d/1000).toFixed(1)+'<small>km</small>':Math.round(cam.d)+'<small>m</small>';
     $('eName').textContent=(cam.c.lim?'限速 '+cam.c.lim+' · ':'')+(cam.c.addr?cam.c.addr.replace(/^(..[縣市])/,''):'OpenStreetMap');$('eBar').style.width=Math.max(0,Math.min(100,100*(1-cam.d/(warn*1.6))))+'%'}
-  else{$('eType').textContent='測速照相';$('eDist').textContent='—';$('eName').textContent=S.area&&S.area.cams?(S.area.cams.length||S.official?'前方無測速點':'前方無已知測速點'):(S.areaErr?'測速資料暫時載入失敗':'載入測速資料中');$('eBar').style.width='0'}
+  else{$('eType').textContent='測速';$('eDist').textContent='—';$('eName').textContent=S.area&&S.area.cams?(S.area.cams.length||S.official?'前方無測速點':'前方無已知測速點'):(S.areaErr?'測速資料暫時載入失敗':'載入測速資料中');$('eBar').style.width='0'}
   const over=lim&&S.speed>lim+1,near=cam&&cam.d<(S.speed>80?1000:500);
   $('hud').classList.toggle('over',!!over);$('hud').classList.toggle('near',!!(over&&near));
   if(over&&near&&performance.now()-S.overBeep>1400){S.overBeep=performance.now();beep(1500,.1);setTimeout(()=>beep(1500,.1),160)}
