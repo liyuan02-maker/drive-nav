@@ -641,9 +641,11 @@ function applyView(quiet){if(!A)return;const res=A.setView?A.setView(S.view):'ok
 $('layerBtn').addEventListener('click',()=>{const o=$('layers').hidden;$('layers').hidden=!o;$('layerBtn').setAttribute('aria-expanded',o)});
 $('layers').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;S.view=b.dataset.v;LS.set('mapView',S.view);$('layers').hidden=true;$('layerBtn').setAttribute('aria-expanded',false);applyView();toast('地圖：'+VIEW_NAME[S.view])});
 function follow(force){
+  if(!force&&S.stopped&&S.lastFollow&&S.pos&&S.lastFollow.lat===S.pos.lat&&S.lastFollow.lon===S.pos.lon&&Math.abs(S.lastFollow.h-S.heading)<1)return;
+  if(S.pos)S.lastFollow={lat:S.pos.lat,lon:S.pos.lon,h:S.heading};
   if(!A||!S.pos||(!S.follow&&!force))return;
   const h=document.querySelector('.mapwrap').clientHeight;
-  A.view({lat:S.pos.lat,lon:S.pos.lon,bearing:S.headUp?S.heading:0,pitch:S.view==='3d'?(S.mapNow==='google'?60:55):0,zoom:zoomFor(),offY:h*(S.route?.24:.12),dur:force?600:950});
+  A.view({lat:S.pos.lat,lon:S.pos.lon,bearing:S.headUp?S.heading:0,pitch:S.view==='3d'?(S.mapNow==='google'?60:55):0,zoom:zoomFor(),offY:h*(S.route?.24:.12),dur:force?500:650});
 }
 $('recenter').addEventListener('click',()=>{S.follow=true;$('recenter').hidden=true;follow(true)});
 $('compass').addEventListener('click',()=>{S.headUp=!S.headUp;const t=S.headUp?'車頭朝上':'北方朝上';$('compass').title=t;$('compass').setAttribute('aria-label','地圖方向：'+t);toast('地圖：'+t);follow(true)});
@@ -659,7 +661,9 @@ function startGPS(){
     $('src').textContent='無定位';$('src').className='src';
     if(err.code!==1&&S.gpsWarned)return;S.gpsWarned=true;
     toast(err.code===1?'定位被拒絕：請到 iPhone「設定 > 隱私權 > 定位服務 > Safari」允許定位':'暫時取不到 GPS 訊號',true)},
-    {enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+    {enableHighAccuracy:true,maximumAge:0,timeout:15000});
+  // 剛打開時先用手機已知的大概位置，馬上顯示；精確 GPS 隨後接手
+  if(!S.pos)try{navigator.geolocation.getCurrentPosition(p=>{if(!S.pos)onPos(p,true)},()=>{},{enableHighAccuracy:false,maximumAge:120000,timeout:3000})}catch(e){}
 }
 // GPS 看門狗：超過 12 秒沒有新位置就重新連線（iPhone 有時切換畫面或鍵盤後會停止回報）
 setInterval(()=>{if(document.hidden||S.watchId==null)return;const age=Date.now()-(S.fixT||0);
@@ -668,13 +672,17 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.watchId
 function freshFix(){return new Promise(res=>{if(S.pos&&Date.now()-(S.fixT||0)<8000)return res(S.pos);
   try{navigator.geolocation.getCurrentPosition(p=>{onPos(p);res(S.pos)},()=>res(S.pos),{enableHighAccuracy:true,maximumAge:0,timeout:8000})}catch(e){res(S.pos)}})}
 const safe=(name,fn)=>{try{fn()}catch(e){S.jsErr=name+'：'+(e&&e.message);console.error('['+name+']',e)}};
-function onPos(p){S.fixT=Date.now();
+function onPos(p,rough){if(!rough)S.fixT=Date.now();
   const c=p.coords,now={lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:p.timestamp};
   let v=(c.speed!=null&&c.speed>=0)?c.speed*3.6:null;
+  // 停車判斷：車速低於 3 km/h，或位置只是在誤差範圍內飄動，就當作停住，畫面不再跟著飄
+  if(S.pos&&!rough){const moved=hav(S.pos,now),jitter=Math.max(6,Math.min(30,(c.accuracy||20)*.6));
+    const slow=v!=null?v<3:moved<jitter;
+    if(slow&&moved<Math.max(25,c.accuracy||25)){now.lat=S.pos.lat;now.lon=S.pos.lon;v=0;S.stopped=true}else S.stopped=false}
   if(S.last){const d=hav(S.last,now),dt=(now.t-S.last.t)/1000;if(v==null&&dt>0)v=d/dt*3.6;
     if(c.heading!=null&&!isNaN(c.heading)&&(v||0)>4){S.heading=c.heading;S.headingKnown=true}else if(d>6){S.heading=brg(S.last,now);S.headingKnown=true}}
   if(v!=null&&v>220&&(c.speed==null||c.speed<0))v=S.speed; // 過濾 GPS 跳點造成的假車速
-  S.speed=Math.max(0,v||0);
+  S.speed=v!=null&&v<3?0:Math.max(0,v||0);
   const first=!S.pos;S.pos=now;if(!S.last||hav(S.last,now)>3)S.last=now;else S.last.t=now.t;
   $('src').textContent='GPS';$('src').className='src on';
   // 每一步各自保護：其中一個出錯也不會讓定位、車速、地圖停住
