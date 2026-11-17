@@ -133,6 +133,10 @@ html.navigating .wxpill{display:none!important}
 .hwsign .br{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:6px 8px;border-radius:8px;background:#0B5D33;border:2px solid #E8EEF2;color:#fff;font-weight:700;font-size:15px;opacity:.38;position:relative;min-width:0}
 .hwsign .br.on{opacity:1;box-shadow:0 0 0 3px var(--accent)}
 .hwsign .to{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanepill.city{background:rgba(14,28,52,.96);border-color:#5B93F0}
+.lanepill.city b{color:#9CC1FF}
+.lanepill.city .hwsign .br{background:#1D4C9A}
+.lanepill.city .hwsign .br.on{box-shadow:0 0 0 3px #9CC1FF}
 .hwsign .exno{position:absolute;top:-9px;left:6px;background:#F2D33D;color:#111;font:700 11px var(--display);border-radius:4px;padding:0 5px}
 .sigpill,.wxpill{display:flex;align-items:center;gap:7px;max-width:100%;background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px 5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
 .wxpill{background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:13px;font-variant-numeric:tabular-nums}
@@ -994,12 +998,28 @@ function exitNoOf(tx){const m=tx.match(/(\d{1,3}[A-Za-z]?)\s*[-－]\s*[^\s，]*\
 // 出口名稱（例如「62-中壢出口」的中壢、「竹北交流道出口」的竹北），沒有寫「往哪裡」時拿來當方向
 function exitNameOf(tx){const m=tx.match(/\d{1,3}[A-Za-z]?\s*[-－]\s*([^\s，\d]{1,8})\s*出口/)||tx.match(/([^\s，從]{1,6})交流道出口/);return m?m[1]:''}
 function roadIn(tx){const m=tx.match(/(國道\s*\d+\s*號(?:甲|乙)?線?|國\d+|台\s*\d+\s*[甲乙丙]?\s*線|[^\s，]{2,6}快速(?:道路|公路))/);return m?m[1].replace(/\s+/g,''):''}
-const ARW={left:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20 7 8"/><path d="M7 15V8h7"/></svg>',
+const ARW={up:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V5"/><path d="m6 11 6-6 6 6"/></svg>',left:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20 7 8"/><path d="M7 15V8h7"/></svg>',
   right:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20 17 8"/><path d="M10 8h7v7"/></svg>'};
-function signHTML(st,side){const sg=st.sign||{},go=sg.to||(st.exit?'出口':'');
+function signHTML(st,side,straight){const sg=st.sign||{},go=sg.to||(st.exit?'出口':'');
   const other=sg.other||'直行';
-  const box=(s,label,on,no)=>`<div class="br${on?' on':''}">${no?`<span class="exno">${esc(no)}</span>`:''}${s==='left'?ARW.left:''}<span class="to">${esc(label)}</span>${s==='right'?ARW.right:''}</div>`;
-  return side==='left'?box('left',go,true,sg.exitNo)+box('right',other,false,''):box('left',other,false,'')+box('right',go,true,sg.exitNo)}
+  const box=(s,label,on,no)=>`<div class="br${on?' on':''}">${no?`<span class="exno">${esc(no)}</span>`:''}${s==='left'?ARW.left:''}${s==='up'?ARW.up:''}<span class="to">${esc(label)}</span>${s==='right'?ARW.right:''}</div>`;
+  const o=straight?'up':null;
+  return side==='left'?box('left',go,true,sg.exitNo)+box(o||'right',other,false,''):box(o||'left',other,false,'')+box('right',go,true,sg.exitNo)}
+/* ---------- 平面道路的方向指標（藍色路牌） ---------- */
+const TURN_ZH={left:'左轉',right:'右轉',slightleft:'靠左',slightright:'靠右'};
+function roadOfText(tx){tx=tx||'';const m=tx.match(/進入\s*([^\s，。]+)/)||tx.match(/沿\s*([^\s，。]+?)\s*(?:行駛|前進|直行)/)||tx.match(/(?:走|上)\s*([^\s，。]+?(?:路|街|大道|段|線|號))/);
+  return m?m[1].replace(/^往/,''):roadIn(tx)}
+function cityHint(r){const pill=$('lanePill');
+  const nx=nextStep(),ok=nx&&motorized()&&!nx.arrive&&nx.stop==null&&TURN_ZH[nx.icon];
+  const show=S.speed>50?800:400;
+  if(!ok||nx.s-r.s>show){pill.hidden=true;return}
+  const d=nx.s-r.s,side=/left/.test(nx.icon)?'left':'right',road=roadOfText(nx.text),to=towardOf(nx.text);
+  // 目前所在的路：剛剛經過的那一步寫的路名
+  let cur='';for(let i=r.steps.length-1;i>=0;i--){const st=r.steps[i];if(st.s<=r.s+3){cur=roadOfText(st.text);break}}
+  const label=road||to||TURN_ZH[nx.icon];
+  $('laneIcon').innerHTML='';$('laneSign').innerHTML=signHTML({sign:{to:label,other:'直行'+(cur&&cur!==label?' '+cur:'')}},side,true);$('laneSign').hidden=false;
+  pill.classList.add('city');
+  $('laneText').innerHTML=`<b>${TURN_ZH[nx.icon]}</b> ${fmtD(d)}`+(to&&to!==label?`，往 ${esc(to)}`:'');pill.hidden=false}
 /* ---------- 下交流道車道提醒 ---------- */
 // 台灣公開資料沒有分車道的即時車速，所以不建議開第幾道；只在快下交流道時提醒提早換到出口那一側
 const exitSide=st=>st&&(st.exit||st.fork||(/出口|下交流道/.test(st.text||'')&&!/入口|上匝道|上國道/.test(st.text||'')?(/靠左|左側/.test(st.text)?'left':'right'):null));
@@ -1010,9 +1030,9 @@ function laneSVG(side){const hi=side==='left'?0:2;let s='<svg viewBox="0 0 54 30
   return s+'</svg>'}
 function laneHint(r){const pill=$('lanePill');
   const ex=motorized()?r.steps.find(st=>st.s>r.s+3&&exitSide(st)):null;
-  if(!ex||S.speed<45){pill.hidden=true;return}
+  if(!ex||S.speed<45||ex.s-r.s>2300){cityHint(r);return}
+  pill.classList.remove('city');
   const d=ex.s-r.s,side=exitSide(ex),zh=side==='left'?'左':'右',to=ex.sign&&ex.sign.to,isExit=!!(ex.exit||!ex.fork);
-  if(d>2300){pill.hidden=true;return}
   for(const th of[2000,1000]){const k='lane'+ex.s.toFixed(0)+'@'+th;
     if(d<=th&&d>th*.55&&!S.said.has(k)){S.said.add(k);
       say(isExit?`${th/1000}公里後${zh}側出口${to?'，往'+to:''}，請開始靠${zh}`:`${th/1000}公里後道路分岔，請靠${zh}${to?'，往'+to:''}`)}}
