@@ -83,6 +83,13 @@ button{cursor:pointer}
 .banner.info{background:var(--raise);border:1px solid var(--line)}
 .banner b{display:block}
 .mapbtns{position:absolute;right:10px;bottom:34px;display:flex;flex-direction:column;gap:6px;z-index:2}
+.layers{position:absolute;right:60px;bottom:34px;z-index:6;display:grid;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.layers button{border:0;background:none;text-align:left;padding:8px 12px;border-radius:8px;font-size:14px;white-space:nowrap}
+.layers button[aria-pressed="true"]{background:var(--line);color:var(--accent)}
+.svbox{position:absolute;left:10px;right:60px;top:50%;transform:translateY(-50%);z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px;font-size:13.5px}
+.svbox p{margin:0}
+.svbox a.btn{text-decoration:none}
+.mapbtns .layerbtn{font:700 12px var(--display)}
 .mapbtns button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0;font-size:13px}
 .sigpill{position:absolute;left:10px;top:10px;z-index:3;display:flex;align-items:center;gap:7px;max-width:calc(100% - 20px);background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px 5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
 .mapwrap:has(.cctv:not([hidden])) .sigpill{max-width:44%}
@@ -235,9 +242,12 @@ mark{background:none;color:var(--accent);font-weight:700}
     </div>
     <div class="banner" id="banner" hidden><div id="bannerText"></div><button class="btn primary" id="bannerBtn" hidden></button></div>
     <div class="mapbtns">
+      <button id="layerBtn" class="layerbtn" aria-label="地圖顯示方式" aria-expanded="false">3D</button>
       <button id="compass" aria-label="地圖方向：車頭朝上" title="車頭朝上"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 3l4 9h-8z" fill="#FF4A4F"/><path d="M12 21l-4-9h8z" fill="#8C9DA8"/></svg></button>
       <button id="trafficBtn" aria-pressed="false" hidden>路況</button>
     </div>
+    <div class="layers" id="layers" hidden aria-label="地圖顯示方式"><button data-v="2d">2D 平面</button><button data-v="3d">3D 立體</button><button data-v="sat">衛星</button><button data-v="street">街景</button></div>
+    <div class="svbox" id="svBox" hidden><p id="svText"></p><div class="row"><a class="btn primary" id="svLink" href="#" target="_blank" rel="noopener">在 Google 地圖看街景</a><button class="btn" id="svMap">回到地圖</button></div></div>
     <button class="btn primary recenter" id="recenter" hidden>回到目前位置</button>
   </div>
 
@@ -265,7 +275,7 @@ mark{background:none;color:var(--accent);font-weight:700}
       <p class="msg">填入 Google 地點金鑰後，搜尋店家、地標會跟 Google 地圖一樣準。到 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> 啟用「Places API (New)」並建立金鑰，記得把金鑰限制在這個網站使用。</p>
       <div class="field"><input id="gKeyIn" type="password" autocomplete="off" placeholder="Google 地點 API 金鑰"><button class="btn" id="gSave">儲存</button></div>
       <button class="btn" id="diagBtn">連線檢查</button>
-      <p class="msg" id="dataNote">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相：警政署開放資料（每週更新），速限：OpenStreetMap。</p>
+      <p class="msg" id="dataNote">地圖：OpenFreeMap／OpenStreetMap。搜尋：Google 或 TomTom（有金鑰時），否則 Photon、Nominatim。路線：OSRM（未含即時路況）。測速照相：警政署開放資料（每週更新），速限：OpenStreetMap。免費地圖的衛星影像：Esri。</p>
     </div>
   </section>
 </div>
@@ -416,7 +426,16 @@ function FreeMap(){let map,car,pins=[];const self={trafficOK:()=>!!S.key,
     if(on&&!map.getSource('tt')){map.addSource('tt',{type:'raster',tileSize:256,tiles:[`https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${encodeURIComponent(S.key)}`],attribution:'路況 © TomTom'});
       map.addLayer({id:'tt',type:'raster',source:'tt',paint:{'raster-opacity':.85}},'route-case')}
     if(map.getLayer('tt'))map.setLayoutProperty('tt','visibility',on?'visible':'none')},
-  resetTraffic(){if(map.getSource('tt')){map.removeLayer('tt');map.removeSource('tt')}}};return self}
+  resetTraffic(){if(map.getSource('tt')){map.removeLayer('tt');map.removeSource('tt')}},
+  setView(v){const st=map.getStyle(),firstSym=(st.layers.find(l=>l.type==='symbol')||{}).id;
+    if(v==='sat'){if(!map.getSource('sat')){map.addSource('sat',{type:'raster',tileSize:256,maxzoom:19,tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],attribution:'衛星影像 © Esri'});
+      map.addLayer({id:'sat',type:'raster',source:'sat'},firstSym)}map.setLayoutProperty('sat','visibility','visible')}
+    else if(map.getLayer('sat'))map.setLayoutProperty('sat','visibility','none');
+    if(v==='3d'){if(!map.getLayer('bld3d')){const src=Object.keys(st.sources).find(k=>st.sources[k].type==='vector');
+        if(src)map.addLayer({id:'bld3d',type:'fill-extrusion',source:src,'source-layer':'building',minzoom:14,paint:{'fill-extrusion-color':'#2b3a46','fill-extrusion-height':['coalesce',['get','render_height'],8],'fill-extrusion-base':['coalesce',['get','render_min_height'],0],'fill-extrusion-opacity':.85}},firstSym)}
+      else map.setLayoutProperty('bld3d','visibility','visible')}
+    else if(map.getLayer('bld3d'))map.setLayoutProperty('bld3d','visibility','none');
+    return v==='street'?'unsupported':'ok'}};return self}
 
 /* Google 地圖：Maps JavaScript API（向量地圖可旋轉、傾斜，內建即時路況） */
 function GoogleMap(){let map,car,carEl,lines=[],cams=[],pins=[],traffic=null;
@@ -456,7 +475,15 @@ function GoogleMap(){let map,car,carEl,lines=[],cams=[],pins=[],traffic=null;
   setCams(list){cams.forEach(m=>m.map=null);cams=list.slice(0,150).map(c=>new self.AME({map,position:{lat:c.lat,lng:c.lon},content:wrap(camEl(c.lim)),zIndex:50}))},
   setSignals(list){(self.sg||[]).forEach(m=>m.map=null);self.sg=list.map(s=>new self.AME({map,position:{lat:s.lat,lng:s.lon},content:wrap(sigEl()),zIndex:40}))},
   setPins(list){pins.forEach(m=>m.map=null);pins=list.map(p=>new self.AME({map,position:{lat:p.lat,lng:p.lon},content:pinEl(p.cls,p.txt),zIndex:60}))},
-  setTraffic(on){if(!traffic)traffic=new google.maps.TrafficLayer();traffic.setMap(on?map:null)}};return self}
+  setTraffic(on){if(!traffic)traffic=new google.maps.TrafficLayer();traffic.setMap(on?map:null)},
+  setView(v){if(v!=='street'){if(self.pano)self.pano.setVisible(false);self.lastSv=null;map.setMapTypeId(v==='sat'?'hybrid':'roadmap')}return'ok'},
+  streetAt(p,h){
+    if(!self.pano){self.pano=map.getStreetView();self.pano.setOptions({disableDefaultUI:true,addressControl:false,linksControl:false,clickToGo:false,motionTracking:false,motionTrackingControl:false,showRoadLabels:true})}
+    if(self.lastSv&&hav(self.lastSv,p)<25){if(self.pano.getVisible())self.pano.setPov({heading:h,pitch:0});return}
+    self.lastSv={lat:p.lat,lon:p.lon};if(!self.svs)self.svs=new google.maps.StreetViewService();
+    self.svs.getPanorama({location:{lat:p.lat,lng:p.lon},radius:60},(data,status)=>{if(S.view!=='street')return;
+      if(status!=='OK'||!data){self.pano.setVisible(false);self.onNoPano&&self.onNoPano();return}
+      self.pano.setPano(data.location.pano);self.pano.setPov({heading:h,pitch:0});self.pano.setVisible(true);self.onPano&&self.onPano()})}};return self}
 
 /* Apple 地圖：MapKit JS */
 function AppleMap(){let map,car,carEl,lines=[],cams=[],pins=[],sign=1;
@@ -499,7 +526,9 @@ function AppleMap(){let map,car,carEl,lines=[],cams=[],pins=[],sign=1;
   setCams(list){if(cams.length)map.removeAnnotations(cams);cams=list.slice(0,150).map(c=>new mapkit.Annotation(C(c.lat,c.lon),()=>camEl(c.lim),{anchorOffset:new DOMPoint(0,11),calloutEnabled:false,enabled:false}));if(cams.length)map.addAnnotations(cams)},
   setSignals(list){if(self.sg&&self.sg.length)map.removeAnnotations(self.sg);self.sg=list.map(s=>new mapkit.Annotation(C(s.lat,s.lon),()=>sigEl(),{anchorOffset:new DOMPoint(0,10),calloutEnabled:false,enabled:false}));if(self.sg.length)map.addAnnotations(self.sg)},
   setPins(list){if(pins.length)map.removeAnnotations(pins);pins=list.map(p=>new mapkit.MarkerAnnotation(C(p.lat,p.lon),{color:p.cls==='dest'?'#F2B33D':'#C9A7FF',glyphText:String(p.txt||''),calloutEnabled:false}));if(pins.length)map.addAnnotations(pins)},
-  setTraffic(){}};return self}
+  setTraffic(){},
+  setView(v){try{const MT=mapkit.MapType||mapkit.Map.MapTypes;map.mapType=v==='sat'?MT.Hybrid:MT.Standard}catch(e){}
+    return v==='street'?'unsupported':v==='3d'?'no3d':'ok'}};return self}
 
 async function mountMap(src,quiet){
   if(A){try{A.destroy()}catch(e){}A=null}
@@ -510,17 +539,32 @@ async function mountMap(src,quiet){
     if(src!=='free'){toast(`${MAP_NAME[src]}載入失敗：${e.kind==='env'?e.message:why(e)}。先改用免費地圖`,true);return mountMap('free',true)}
     toast('地圖載入失敗：'+why(e),true);return}
   A=a;S.mapNow=src;S.carAdded=false;
+  a.onNoPano=()=>showSvBox('這附近沒有街景，可以在 Google 地圖查看附近的街景。');a.onPano=()=>{$('svBox').hidden=true};
   a.onDrag=()=>{S.follow=false;$('recenter').hidden=false};
-  renderMapSrc();refreshMap();
+  renderMapSrc();refreshMap();applyView(true);
   if(!quiet)toast('地圖：'+MAP_NAME[src]);
 }
 function refreshMap(){if(!A)return;if(S.pos){A.setCar(S.pos,S.heading);S.carAdded=true}drawRoute();drawCams();drawPins();S.sigDrawn=null;drawSignals();
   $('trafficBtn').hidden=!A.trafficOK();if(S.traffic&&A.trafficOK())A.setTraffic(true);follow(true)}
 new ResizeObserver(()=>A&&A.resize()).observe(document.querySelector('.mapwrap'));
+/* 地圖顯示：2D、3D、衛星、街景 */
+const VIEW_NAME={'2d':'2D','3d':'3D',sat:'衛星',street:'街景'};
+S.view=LS.get('mapView','3d');
+function svURL(){const p=S.pos||{lat:23.97,lon:120.97};return`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat.toFixed(6)},${p.lon.toFixed(6)}&heading=${Math.round(S.heading||0)}`}
+function showSvBox(msg){$('svText').textContent=msg;$('svLink').href=svURL();$('svBox').hidden=false}
+function applyView(quiet){if(!A)return;const res=A.setView?A.setView(S.view):'ok';$('svBox').hidden=true;
+  if(S.view==='street'&&res==='unsupported')showSvBox(`${MAP_NAME[S.mapNow]}在網頁上沒有街景。改用 Google 地圖（設定 → 地圖來源）就能在這裡直接看，或先在 Google 地圖打開。`);
+  if(res==='no3d'&&!quiet)toast('Apple 地圖網頁版沒有 3D 視角，先用平面顯示');
+  $('layerBtn').textContent=VIEW_NAME[S.view];[...$('layers').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.view));
+  if(S.view==='street'&&A.streetAt&&S.pos)A.streetAt(S.pos,S.heading);follow(true)}
+$('layerBtn').addEventListener('click',()=>{const o=$('layers').hidden;$('layers').hidden=!o;$('layerBtn').setAttribute('aria-expanded',o)});
+$('layers').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;if(S.view!=='street')LS.set('mapViewPrev',S.view);S.view=b.dataset.v;LS.set('mapView',S.view);$('layers').hidden=true;$('layerBtn').setAttribute('aria-expanded',false);applyView();toast('地圖：'+VIEW_NAME[S.view])});
+$('svMap').addEventListener('click',()=>{S.view=LS.get('mapViewPrev','3d');if(S.view==='street')S.view='3d';LS.set('mapView',S.view);applyView()});
 function follow(force){
   if(!A||!S.pos||(!S.follow&&!force))return;
+  if(S.view==='street'){if(A.streetAt)A.streetAt(S.pos,S.heading);else $('svLink').href=svURL();if(!A.streetAt)return}
   const h=document.querySelector('.mapwrap').clientHeight;
-  A.view({lat:S.pos.lat,lon:S.pos.lon,bearing:S.headUp?S.heading:0,pitch:S.route?45:0,zoom:zoomFor(),offY:h*(S.route?.24:.12),dur:force?600:950});
+  A.view({lat:S.pos.lat,lon:S.pos.lon,bearing:S.headUp?S.heading:0,pitch:S.view==='3d'?(S.mapNow==='google'?60:55):0,zoom:zoomFor(),offY:h*(S.route?.24:.12),dur:force?600:950});
 }
 $('recenter').addEventListener('click',()=>{S.follow=true;$('recenter').hidden=true;follow(true)});
 $('compass').addEventListener('click',()=>{S.headUp=!S.headUp;const t=S.headUp?'車頭朝上':'北方朝上';$('compass').title=t;$('compass').setAttribute('aria-label','地圖方向：'+t);toast('地圖：'+t);follow(true)});
