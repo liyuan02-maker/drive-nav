@@ -113,6 +113,15 @@ html.mapday .mapwrap{background:#E9EEF1}
 /* 測速點只在快到時出現；GPS 正常時不顯示「GPS」標籤 */
 .hud.nocam .enf{display:none}
 .src.on{display:none}
+.sign.est{border-color:#E57373}
+.sign.est::after{content:"約";position:absolute;font-size:9px;font-family:var(--body);margin-top:-30px;color:#555}
+.sign{position:relative}
+.overtxt{font-family:var(--display);font-size:13px;color:#fff;background:var(--danger);border-radius:6px;padding:0 6px}
+html.overspeed .hud{background:#4a0d14;border-color:var(--danger)}
+html.overspeed .hud .num{color:#ff6b6f}
+html.overspeed .sign{box-shadow:0 0 0 4px rgba(255,74,79,.55)}
+html.overspeed .mapwrap{box-shadow:inset 0 0 0 4px var(--danger)}
+@media (prefers-reduced-motion:no-preference){html.overspeed .mapwrap,html.overspeed .hud{animation:alarm 1s ease-in-out infinite}@keyframes alarm{50%{box-shadow:inset 0 0 0 4px rgba(255,74,79,.2)}}}
 html.navigating .wxpill{display:none!important}
 .tl{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%}
 .sigpill,.wxpill{display:flex;align-items:center;gap:7px;max-width:100%;background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px 5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
@@ -281,7 +290,7 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
   <section class="card hud" id="hud" aria-label="車速與測速提醒">
     <div class="num" id="spd">--</div>
     <div class="sign unk" id="limit" title="目前路段速限">速限</div>
-    <div class="unit">km/h <span class="src" id="src">定位中</span></div>
+    <div class="unit">km/h <span class="src" id="src">定位中</span><b class="overtxt" id="overTxt" hidden></b></div>
     <div class="enf">
       <span class="type" id="eType">測速</span>
       <span class="d" id="eDist">—</span>
@@ -641,13 +650,21 @@ function drawPins(){if(!A)return;const l=[];if(S.route&&S.plan.dest){S.plan.stop
 /* ---------- 定位 ---------- */
 function startGPS(){
   if(!('geolocation' in navigator)){$('src').textContent='無定位';toast('這個瀏覽器不支援定位',true);return}
-  navigator.geolocation.watchPosition(onPos,err=>{
+  if(S.watchId!=null)try{navigator.geolocation.clearWatch(S.watchId)}catch(e){}
+  S.watchId=navigator.geolocation.watchPosition(onPos,err=>{
     $('src').textContent='無定位';$('src').className='src';
     if(err.code!==1&&S.gpsWarned)return;S.gpsWarned=true;
     toast(err.code===1?'定位被拒絕：請到 iPhone「設定 > 隱私權 > 定位服務 > Safari」允許定位':'暫時取不到 GPS 訊號',true)},
     {enableHighAccuracy:true,maximumAge:1000,timeout:20000});
 }
-function onPos(p){
+// GPS 看門狗：超過 12 秒沒有新位置就重新連線（iPhone 有時切換畫面或鍵盤後會停止回報）
+setInterval(()=>{if(document.hidden||S.watchId==null)return;const age=Date.now()-(S.fixT||0);
+  if(S.pos&&age>12000){$('src').textContent='GPS 訊號弱';$('src').className='src';startGPS()}},5000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.watchId!=null)startGPS()});
+function freshFix(){return new Promise(res=>{if(S.pos&&Date.now()-(S.fixT||0)<8000)return res(S.pos);
+  try{navigator.geolocation.getCurrentPosition(p=>{onPos(p);res(S.pos)},()=>res(S.pos),{enableHighAccuracy:true,maximumAge:0,timeout:8000})}catch(e){res(S.pos)}})}
+const safe=(name,fn)=>{try{fn()}catch(e){S.jsErr=name+'：'+(e&&e.message);console.error('['+name+']',e)}};
+function onPos(p){S.fixT=Date.now();
   const c=p.coords,now={lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:p.timestamp};
   let v=(c.speed!=null&&c.speed>=0)?c.speed*3.6:null;
   if(S.last){const d=hav(S.last,now),dt=(now.t-S.last.t)/1000;if(v==null&&dt>0)v=d/dt*3.6;
@@ -656,11 +673,12 @@ function onPos(p){
   S.speed=Math.max(0,v||0);
   const first=!S.pos;S.pos=now;if(!S.last||hav(S.last,now)>3)S.last=now;else S.last.t=now.t;
   $('src').textContent='GPS';$('src').className='src on';
-  if(A){A.setCar(now,S.heading);if(!S.carAdded){S.carAdded=true;follow(true)}}
-  if(first){follow(true);setTimeout(()=>updateCo(true),0)}else follow();
-  ensureArea();
-  if(S.route)progress();
-  updateLimit();updateCam();updateHUD();
+  // 每一步各自保護：其中一個出錯也不會讓定位、車速、地圖停住
+  safe('地圖',()=>{if(A){A.setCar(now,S.heading);if(!S.carAdded){S.carAdded=true;follow(true)}}
+    if(first){follow(true);setTimeout(()=>updateCo(true),0)}else follow()});
+  safe('測速資料',()=>ensureArea());
+  if(S.route)safe('導航',()=>progress());
+  safe('速限',()=>updateLimit());safe('測速',()=>updateCam());safe('畫面',()=>updateHUD());
 }
 
 /* ---------- 搜尋：輸入即出現建議 ---------- */
@@ -828,6 +846,7 @@ async function getRoute(pts,stops,only){
 async function planRoute(fresh){
   const p=S.plan;if(!p.dest)return;
   if(S.route&&!fresh)p.stops=p.stops.filter((s,i)=>!S.route.visited.has('s'+i)); // 已經到過的中途點不再繞回去
+  $('mDist').textContent='取得目前位置…';await freshFix();if(!S.pos){toast('還沒取得 GPS 位置',true);return}
   const pts=[S.pos,...p.stops,p.dest];
   $('mDist').textContent='規劃路線中…';$('mRoad').textContent=p.dest.name;
   let r=null;
@@ -904,7 +923,11 @@ function buildRoute(r){
     st.s=best.s;k=best.i}
   r.steps.sort((a,b)=>a.s-b.s);
   const tr=(r.traffic||[]).map(t=>({s1:cum[Math.min(t.i0,cum.length-1)],s2:cum[Math.min(t.i1,cum.length-1)],cat:t.cat,delay:t.delay,kmh:t.kmh}));
-  S.route={...r,xy,cum,L,pj,tr,idx:0,s:0,visited:new Set()};
+  // 路線格狀索引：找「某個點離路線多近」時只看附近幾格，不必掃整條路線（長路線才不會讓手機卡住）
+  const G=150,grid=new Map();
+  for(let i=0;i<xy.length-1;i++){const a=xy[i],b=xy[i+1];const x0=Math.floor(Math.min(a.x,b.x)/G),x1=Math.floor(Math.max(a.x,b.x)/G),y0=Math.floor(Math.min(a.y,b.y)/G),y1=Math.floor(Math.max(a.y,b.y)/G);
+    for(let gx=x0;gx<=x1;gx++)for(let gy=y0;gy<=y1;gy++){const k=gx+','+gy;let l=grid.get(k);if(!l)grid.set(k,l=[]);l.push(i)}}
+  S.route={...r,xy,cum,L,pj,tr,idx:0,s:0,visited:new Set(),grid,G,grace:Date.now()+20000};
   S.camOnRoute=null;
   drawPins();
   $('trafficBtn').hidden=!(A&&A.trafficOK());
@@ -924,15 +947,21 @@ function drawRoute(){
 }
 function pointAtS(s){const r=S.route;let i=Math.max(0,r.cum.findIndex(c=>c>=s)-1);if(i<0)i=0;const a=r.coords[i],b=r.coords[Math.min(i+1,r.coords.length-1)],l=(r.cum[i+1]-r.cum[i])||1,t=Math.min(1,Math.max(0,(s-r.cum[i])/l));return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}
 
+/* 把一個點對到路線上：回傳離路線多遠、在路線上第幾公尺、哪一段 */
+function snapRoute(r,pt,tol){const p=r.pj(pt),G=r.G,gx=Math.floor(p.x/G),gy=Math.floor(p.y/G),seen=new Set();let best=null;
+  const rr=Math.ceil(tol/G);
+  for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){const l=r.grid.get((gx+dx)+','+(gy+dy));if(!l)continue;
+    for(const i of l){if(seen.has(i))continue;seen.add(i);const g=segDist(p,r.xy[i],r.xy[i+1]);if(g.d<=tol&&(!best||g.d<best.d))best={d:g.d,s:r.cum[i]+g.t*g.l,i}}}
+  return best}
 /* ---------- 導航進度 ---------- */
 let lastDraw=0;
 function progress(){
   const r=S.route,p=r.pj(S.pos);let best={d:1e9,s:r.s,i:r.idx};
   const i0=Math.max(0,r.idx-15),i1=Math.min(r.xy.length-1,r.idx+400);
   for(let i=i0;i<i1;i++){const q=segDist(p,r.xy[i],r.xy[i+1]);if(q.d<best.d)best={d:q.d,s:r.cum[i]+q.t*q.l,i}}
-  if(best.d>1e8||best.i===r.idx&&best.d>200){for(let i=0;i<r.xy.length-1;i++){const q=segDist(p,r.xy[i],r.xy[i+1]);if(q.d<best.d)best={d:q.d,s:r.cum[i]+q.t*q.l,i}}}
+  if(best.d>1e8||best.i===r.idx&&best.d>200){const g=snapRoute(r,S.pos,400);if(g&&g.d<best.d)best=g}
   const tol=Math.max(40,(S.pos.acc||20)*1.5);
-  if(best.d>tol){S.offCount++;if(S.offCount>=3&&Date.now()-S.lastReroute>12000){S.lastReroute=Date.now();say('重新規劃路線');toast('偏離路線，重新規劃中');planRoute(false);return}}
+  if(best.d>tol&&Date.now()>r.grace){S.offCount++;if(S.offCount>=3&&Date.now()-S.lastReroute>12000){S.lastReroute=Date.now();say('重新規劃路線');toast('偏離路線，重新規劃中');planRoute(false);return}}
   else{S.offCount=0;r.idx=best.i;r.s=Math.max(r.s-30,best.s)}
   // 中途點與目的地
   for(const st of r.steps){
@@ -990,7 +1019,7 @@ async function ensureArea(){
   if(S.wayC&&hav(S.wayC,p)<900&&Date.now()-S.wayT<600000)return;
   if(S.areaFail&&Date.now()-S.areaFail<45000)return;
   S.areaBusy=true;
-  const q=`[out:json][timeout:20];(${S.official?'':`node["highway"="speed_camera"](around:5000,${p.lat},${p.lon});`}way["highway"]["maxspeed"](around:1200,${p.lat},${p.lon});node["highway"="traffic_signals"](around:1500,${p.lat},${p.lon}););out geom qt;`;
+  const q=`[out:json][timeout:20];(${S.official?'':`node["highway"="speed_camera"](around:5000,${p.lat},${p.lon});`}way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link)$"](around:900,${p.lat},${p.lon});node["highway"="traffic_signals"](around:1500,${p.lat},${p.lon}););out geom qt;`;
   let j=null,last=null;
   for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},15000);break}catch(e){last=e}}
   S.areaBusy=false;
@@ -1000,21 +1029,29 @@ async function ensureArea(){
   for(const el of j.elements||[]){const tg=el.tags||{};
     if(el.type==='node'&&tg.highway==='traffic_signals'){sigs.push({lat:el.lat,lon:el.lon})}
     else if(el.type==='node'){cams.push({lat:el.lat,lon:el.lon,lim:parseLim(tg.maxspeed),dir:tg.direction,id:el.id,db:tg.direction&&!isNaN(+tg.direction)?+tg.direction:null})}
-    else if(el.type==='way'&&el.geometry){const lim=parseLim(tg.maxspeed);if(lim)ways.push({lim,g:el.geometry,oneway:tg.oneway==='yes'||/motorway/.test(tg.highway),name:tg.name||tg.ref||''})}}
+    else if(el.type==='way'&&el.geometry){const lim=parseLim(tg.maxspeed);ways.push({lim,cls:tg.highway,g:el.geometry,oneway:tg.oneway==='yes'||/motorway/.test(tg.highway),name:tg.name||tg.ref||''})}}
   S.wayC={lat:p.lat,lon:p.lon};S.wayT=Date.now();
   S.sigArea=clusterPts(sigs);
   setArea(S.official?{ways}:{cams,ways});
 }
 function parseLim(v){if(!v)return null;const m=String(v).match(/(\d+)\s*(mph)?/);if(!m)return null;return m[2]?Math.round(+m[1]*1.609):+m[1]}
 function drawCams(){if(!A)return;A.setCams(S.area?S.area.cams:[])}
-function snapCamsToRoute(){const r=S.route;if(!r||!S.area)return;for(const c of S.area.cams){const p=r.pj(c);let best={d:1e9,s:0};
-  for(let i=0;i<r.xy.length-1;i++){const q=segDist(p,r.xy[i],r.xy[i+1]);if(q.d<best.d)best={d:q.d,s:r.cum[i]+q.t*q.l}}c.rs=best.d<35?best.s:null}}
+function snapCamsToRoute(){const r=S.route;if(!r||!S.area)return;for(const c of S.area.cams){const b=snapRoute(r,c,35);c.rs=b?b.s:null}}
+// 沒有標速限的路段，依道路類型推算（道路交通安全規則：一般道路沒有標誌時 50，沒有劃分車道的巷道 30）
+const CLS_LIM={motorway:100,motorway_link:60,trunk:80,trunk_link:50,primary:50,primary_link:40,secondary:50,secondary_link:40,tertiary:50,tertiary_link:40,unclassified:50,living_street:30};
+const estLim=w=>w.cls==='residential'?(/[巷弄]/.test(w.name)||!w.name?30:50):CLS_LIM[w.cls]||null;
 function updateLimit(){
-  const a=S.area,p=S.pos;if(!a||!p)return;const pj=mkProj(p.lat,p.lon),o={x:0,y:0};let best=null;
-  for(const w of a.ways){for(let i=0;i<w.g.length-1;i++){const A=pj(w.g[i]),B=pj(w.g[i+1]);if(Math.abs(A.x)>60&&Math.abs(B.x)>60&&Math.sign(A.x)===Math.sign(B.x))continue;
-    const q=segDist(o,A,B);if(q.d>28)continue;const sb=brg(w.g[i],w.g[i+1]);let ad=adiff(sb,S.heading);if(!w.oneway)ad=Math.min(ad,180-ad);
-    const score=q.d+(S.speed>8?ad*.6:0);if(!best||score<best.score)best={score,lim:w.lim,name:w.name}}}
-  if(best){S.limit=best.lim;S.limitT=Date.now()}else if(!S.limitT||Date.now()-S.limitT>15000)S.limit=null;
+  const p=S.pos;if(!p)return;const a=S.area;let best=null;
+  if(a){const pj=mkProj(p.lat,p.lon),o={x:0,y:0};
+    for(const w of a.ways){for(let i=0;i<w.g.length-1;i++){const A=pj(w.g[i]),B=pj(w.g[i+1]);if(Math.abs(A.x)>60&&Math.abs(B.x)>60&&Math.sign(A.x)===Math.sign(B.x))continue;
+      const q=segDist(o,A,B);if(q.d>28)continue;const sb=brg(w.g[i],w.g[i+1]);let ad=adiff(sb,S.heading);if(!w.oneway)ad=Math.min(ad,180-ad);
+      // 有標速限的路段優先；同樣近時，選方向對的
+      const score=q.d+(S.speed>8?ad*.6:0)-(w.lim?6:0);if(!best||score<best.score)best={score,w}}}}
+  let lim=null,est=false;
+  if(best){if(best.w.lim)lim=best.w.lim;else{lim=estLim(best.w);est=!!lim}}
+  // 都沒有資料時：旁邊 150 m 內有同方向的國道攝影機，就當作在國道上（約 100）
+  if(!lim&&S.cctvNearL&&S.headingKnown){const f=S.cctvNearL.find(c=>c.src==='國道'&&hav(p,c)<150&&camTravel(c)!=null&&adiff(camTravel(c),S.heading)<60);if(f){lim=100;est=true}}
+  if(lim){S.limit=lim;S.limitEst=est;S.limitT=Date.now()}else if(!S.limitT||Date.now()-S.limitT>20000){S.limit=null;S.limitEst=false}
 }
 function updateCam(){
   const a=S.area,p=S.pos;S.camAhead=null;if(!a||!p)return;let best=null;
@@ -1032,13 +1069,18 @@ function updateCam(){
 /* ---------- 畫面更新 ---------- */
 function updateHUD(){
   const v=Math.round(S.speed);$('spd').textContent=S.pos?v:'--';$('spd').classList.toggle('three',v>=100);
-  const cam=S.camAhead,lim=S.limit||(cam&&cam.d<600?cam.c.lim:null);
-  $('limit').className='sign'+(lim?'':' unk');$('limit').textContent=lim||'速限';
+  const cam=S.camAhead,camLim=cam&&cam.d<500&&cam.c.lim?cam.c.lim:null,lim=camLim||S.limit,est=!camLim&&S.limitEst;
+  $('limit').className='sign'+(lim?'':' unk')+(est?' est':'');$('limit').textContent=lim||'速限';$('limit').title=lim?(est?'依道路類型推算的速限':'目前路段速限'):'這段路沒有速限資料';
   $('hud').classList.toggle('nocam',!(cam&&cam.d<(S.speed>80?2000:1200))&&!!S.area);
   if(cam){const fast=S.speed>80,warn=fast?1000:500;$('eType').textContent='測速';$('eDist').innerHTML=cam.d>=1000?(cam.d/1000).toFixed(1)+'<small>km</small>':Math.round(cam.d)+'<small>m</small>';
     $('eName').textContent=(cam.c.lim?'限速 '+cam.c.lim+' · ':'')+(cam.c.addr?cam.c.addr.replace(/^(..[縣市])/,''):'OpenStreetMap');$('eBar').style.width=Math.max(0,Math.min(100,100*(1-cam.d/(warn*1.6))))+'%'}
   else{$('eType').textContent='測速';$('eDist').textContent='—';$('eName').textContent=S.area&&S.area.cams?(S.area.cams.length||S.official?'前方無測速點':'前方無已知測速點'):(S.areaErr?'測速資料暫時載入失敗':'載入測速資料中');$('eBar').style.width='0'}
-  const over=lim&&S.speed>lim+1,near=cam&&cam.d<(S.speed>80?1000:500);
+  const over=motorized()&&lim&&S.speed>lim+1,near=cam&&cam.d<(S.speed>80?1000:500);
+  // 超速超過 3 km/h 持續 2 秒：整個畫面變紅、地圖外框閃紅、語音提醒（之後每 45 秒提醒一次）
+  const hard=over&&S.speed>lim+3;if(hard){if(!S.overSince)S.overSince=Date.now()}else S.overSince=0;
+  const alarm=hard&&Date.now()-S.overSince>2000;document.documentElement.classList.toggle('overspeed',!!alarm);
+  $('overTxt').hidden=!alarm;if(alarm)$('overTxt').textContent=`超速 +${Math.round(S.speed-lim)}`;
+  if(alarm&&Date.now()-(S.overSaid||0)>45000){S.overSaid=Date.now();say(`超速，限速${lim}`);beep(1200,.15)}
   $('hud').classList.toggle('over',!!over);$('hud').classList.toggle('near',!!(over&&near));
   if(motorized()&&over&&near&&performance.now()-S.overBeep>1400){S.overBeep=performance.now();beep(1500,.1);setTimeout(()=>beep(1500,.1),160)}
   // 導航
@@ -1091,14 +1133,13 @@ function simplify(pts,tol){ // Douglas-Peucker，pts 是 {x,y}
   while(st.length){const[a,b]=st.pop();let md=0,mi=-1;for(let i=a+1;i<b;i++){const d=segDist(pts[i],pts[a],pts[b]).d;if(d>md){md=d;mi=i}}if(md>tol){keep[mi]=1;st.push([a,mi],[mi,b])}}
   const idx=[];keep.forEach((k,i)=>k&&idx.push(i));return idx}
 async function routeSignals(r){
-  let idx=simplify(r.xy,12);if(idx.length>450){const k=Math.ceil(idx.length/450);idx=idx.filter((_,i)=>i%k===0||i===idx.length-1)}
+  // 每隔約 80 m 取一點（最多 700 點），不再做耗時的線段簡化
+  const step=Math.max(80,r.L/700);const idx=[0];let last=0;for(let i=1;i<r.cum.length;i++)if(r.cum[i]-r.cum[last]>=step){idx.push(i);last=i}if(idx[idx.length-1]!==r.cum.length-1)idx.push(r.cum.length-1);
   const line=idx.map(i=>r.coords[i][1].toFixed(5)+','+r.coords[i][0].toFixed(5)).join(',');
-  const q=`[out:json][timeout:25];node["highway"="traffic_signals"](around:30,${line});out qt;`;
+  const q=`[out:json][timeout:25];node["highway"="traffic_signals"](around:35,${line});out qt;`;
   let j=null;for(const u of OVERPASS){try{j=await getJSON(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}},25000);break}catch(e){}}
   if(!j||S.route!==r)return;
-  const list=[];for(const el of j.elements||[]){const p=r.pj(el);let best={d:1e9,s:0};
-    for(let i=0;i<r.xy.length-1;i++){const g=segDist(p,r.xy[i],r.xy[i+1]);if(g.d<best.d)best={d:g.d,s:r.cum[i]+g.t*g.l}}
-    if(best.d<30)list.push({lat:el.lat,lon:el.lon,s:best.s})}
+  const list=[];for(const el of j.elements||[]){const best=snapRoute(r,el,30);if(best)list.push({lat:el.lat,lon:el.lon,s:best.s})}
   list.sort((a,b)=>a.s-b.s);const cl=[];for(const s of list){const l=cl[cl.length-1];if(l&&s.s-l.s<60)continue;cl.push(s)}
   r.sigs=cl;S.sigDrawn=null;drawSignals();updateSignal()}
 function sigAhead(){const r=S.route,p=S.pos;if(!p)return null;
@@ -1148,10 +1189,10 @@ function coList(){
   const r=S.route,out=[],fast=S.speed>70;let snap=null;
   if(r){snap=routeSnap.get(r);if(!snap){snap=new Map();routeSnap.set(r,snap)}}
   for(const c of S.cctvNearL){let d,travel=S.heading,ang=0;
-    if(r){let sn=snap.get(c);if(sn===undefined){const q=r.pj(c);let best={d:1e9,s:0,i:0};for(let i=0;i<r.xy.length-1;i++){const g=segDist(q,r.xy[i],r.xy[i+1]);if(g.d<best.d)best={d:g.d,s:r.cum[i]+g.t*g.l,i}}
+    if(r){let sn=snap.get(c);if(sn===undefined){
         // 有標方向的（國道、省道）路邊攝影機可離路線 60 m；市區路口攝影機要更貼近路線，免得挑到旁邊巷子的
-        const a=r.xy[best.i],b=r.xy[best.i+1],tol=CAM_DIR[c.dir]!=null?60:35;
-        sn=best.d<tol?{s:best.s,b:(deg(Math.atan2(b.x-a.x,b.y-a.y))+360)%360}:null;snap.set(c,sn)}
+        const tol=CAM_DIR[c.dir]!=null?60:35,best=snapRoute(r,c,tol);
+        if(best){const a=r.xy[best.i],b=r.xy[best.i+1];sn={s:best.s,b:(deg(Math.atan2(b.x-a.x,b.y-a.y))+360)%360}}else sn=null;snap.set(c,sn)}
       if(!sn)continue;d=sn.s-r.s;
       // 國道攝影機看遠一點（8 公里），好讓快上國道時先看到國道上的路況
       const reach=isFwy(c)?8000:(fast?6000:3000);if(d<-30||d>reach)continue;c._s=sn.s;travel=sn.b}
@@ -1246,6 +1287,7 @@ $('ttSave').addEventListener('click',()=>{S.key=$('ttKey').value.trim();LS.set('
 /* ---------- 連線檢查 ---------- */
 function diagTests(){const b=S.pos||{lat:24.89,lon:121.10},oq=`[out:json][timeout:10];node["highway"="speed_camera"](around:300,${b.lat},${b.lon});out 1;`;
   return[
+  {n:'程式狀態',run:async()=>{if(!S.jsErr)return'沒有錯誤';const e=new Error('');e.kind='env';e.msg='最近的錯誤（'+S.jsErr+'）';throw e}},
   {n:'網頁位址',run:async()=>{if(location.protocol==='https:'||location.hostname==='localhost')return location.origin;const e=new Error('');e.kind='env';e.msg=`目前是「${location.protocol==='file:'?'檔案':location.protocol}」打開。要用 https 網址打開，才能連到地圖、搜尋和路線服務`;throw e}},
   {n:'GPS 定位',run:async()=>{if(!('geolocation' in navigator)){const e=new Error('');e.kind='env';e.msg='這個瀏覽器不支援定位';throw e}
     if(S.pos)return`精度約 ${Math.round(S.pos.acc)} m`;let st='';try{st=(await navigator.permissions.query({name:'geolocation'})).state}catch(_){}
