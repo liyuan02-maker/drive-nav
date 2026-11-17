@@ -772,7 +772,7 @@ $('endBtn').addEventListener('click',()=>{endNav(false);say('已結束導航')})
 const OVERPASS=['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
 /* 官方測速點：警政署開放資料，由 GitHub 每週自動下載成 cameras.json */
 const DIRB={北:0,東:90,南:180,西:270};
-function parseDir(s){s=String(s||'');let m=s.match(/([東西南北])向([東西南北])/);if(m)return DIRB[m[2]];
+function parseDir(s){s=String(s||'');let m=s.match(/([東西南北])[向往]([東西南北])/);if(m)return DIRB[m[2]];
   if(/北上|往北|北行/.test(s))return 0;if(/南下|往南|南行/.test(s))return 180;if(/往東|東行/.test(s))return 90;if(/往西|西行/.test(s))return 270;return null}
 S.official=null;
 (async()=>{try{const j=await getJSON('cameras.json?d='+new Date().toISOString().slice(0,10),{},20000);
