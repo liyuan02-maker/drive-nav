@@ -30,7 +30,7 @@ button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .app{height:100%;display:grid;gap:8px;max-width:1400px;margin:0 auto;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"controls controls" "hud nav" "map map"}
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"controls controls" "hud nav" "cam cam" "map map"}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .label{font-size:11px;letter-spacing:.08em;color:var(--muted)}
 .msg{font-size:12.5px;color:var(--muted);margin:0}
@@ -90,16 +90,21 @@ html.mapday .mapwrap{background:#E9EEF1}
 .mapbtns button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0;font-size:13px}
 .tl{position:absolute;left:10px;top:10px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:calc(100% - 20px)}
 .sigpill,.wxpill{display:flex;align-items:center;gap:7px;max-width:100%;background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px 5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
-.mapwrap:has(.cctv:not([hidden])) .tl{max-width:44%}
 .wxpill{background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:13px;font-variant-numeric:tabular-nums}
 .wxpill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wxpill.rain{border-color:var(--route);background:rgba(16,36,56,.94)}
 .wxpill svg{flex:none;width:18px;height:18px}
 .sigpill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sigdot{width:12px;height:22px;display:grid;place-items:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
-.cctv{position:absolute;top:10px;right:10px;width:min(52%,340px);z-index:4;background:#000;border:1px solid #3a4a56;border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.45)}
-.cctv.big{left:10px;width:auto;max-width:720px}
-.cctvview{position:relative;aspect-ratio:16/9;background:#0b0f12;display:grid;place-items:center;cursor:zoom-in;overflow:hidden}
+/* 攝影機有自己的位置（不再疊在地圖上）；點畫面放大成全螢幕 */
+.cctv{grid-area:cam;position:relative;min-width:0;background:#000;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.cctv .cctvview{aspect-ratio:auto;height:min(24vh,210px)}
+@media (orientation:landscape) and (max-height:520px){.cctv .cctvview{height:auto;aspect-ratio:16/9}}
+@media (min-width:900px) and (min-height:521px){.cctv .cctvview{height:auto;aspect-ratio:16/9}}
+.cctv.big{position:fixed;z-index:35;inset:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;border-color:#3a4a56;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.cctv.big .cctvview{flex:1;height:auto;aspect-ratio:auto}
+.cctv.big .cctvview img,.cctv.big .cctvview video{object-fit:contain}
+.cctvview{position:relative;background:#0b0f12;display:grid;place-items:center;cursor:zoom-in;overflow:hidden}
 .cctv.big .cctvview{cursor:zoom-out}
 .cctvview iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
 .cctvbar a{flex:none;color:var(--route);text-decoration:none;padding:0 2px}
@@ -196,12 +201,12 @@ mark{background:none;color:var(--accent);font-weight:700}
 @media (max-width:370px){.hud .num{font-size:40px}.hud .num.three{font-size:32px}.sign{width:40px;height:40px;font-size:16px;border-width:4px}.nav .arrow{width:36px;height:36px}.nav .dist{font-size:19px}}
 /* 傳統 iPhone 橫拿：地圖在左，右側上面是按鈕，下面車速與轉彎並排 */
 @media (orientation:landscape) and (max-height:520px){
-  .app{grid-template-columns:minmax(0,1fr) 170px 170px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud nav" "map . ."}
+  .app{grid-template-columns:minmax(0,1fr) 170px 170px;grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud nav" "map cam cam" "map . ."}
   .controls{align-self:start}
 }
 /* iPhone Duo 展開橫拿、平板、電腦 */
 @media (min-width:900px) and (min-height:521px){
-  .app{gap:10px;grid-template-columns:minmax(0,1fr) 200px 200px;grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud nav" "map . ."}
+  .app{gap:10px;grid-template-columns:minmax(0,1fr) 200px 200px;grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"map controls controls" "map hud nav" "map cam cam" "map . ."}
   .controls{align-self:start}
   .hud .num{font-size:52px}.hud .num.three{font-size:42px}
 }
@@ -265,16 +270,17 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
     </div>
   </section>
 
+  <section class="cctv" id="cctv" hidden aria-label="路口攝影機">
+      <div class="cctvview" id="cctvView" role="button" tabindex="0" aria-label="放大或縮小畫面"></div>
+      <div class="cctvbar" id="cctvBar"><b id="cctvName">路口攝影機</b><span id="cctvDist"></span><a id="cctvOpen" href="#" target="_blank" rel="noopener" hidden aria-label="在新分頁打開這支攝影機">↗</a></div>
+      <div class="cctvchips" id="cctvChips"></div>
+  </section>
+
   <div class="mapwrap">
     <div id="map" aria-label="導航地圖"></div>
     <div class="tl">
     <div class="sigpill" id="sigPill" hidden><svg viewBox="0 0 12 24" width="10" height="20" aria-hidden="true"><rect x="1" y="1" width="10" height="22" rx="3" fill="#0B1116" stroke="#F2B33D" stroke-width="1.2"/><circle cx="6" cy="6" r="2.3" fill="#E5484D"/><circle cx="6" cy="12" r="2.3" fill="#F2B33D"/><circle cx="6" cy="18" r="2.3" fill="#36C276"/></svg><span id="sigText"></span></div>
     <div class="wxpill" id="wxPill" hidden><span id="wxIcon"></span><span id="wxText"></span></div>
-    </div>
-    <div class="cctv" id="cctv" hidden aria-label="路口攝影機">
-      <div class="cctvview" id="cctvView" role="button" tabindex="0" aria-label="放大或縮小畫面"></div>
-      <div class="cctvbar" id="cctvBar"><b id="cctvName">路口攝影機</b><span id="cctvDist"></span><a id="cctvOpen" href="#" target="_blank" rel="noopener" hidden aria-label="在新分頁打開這支攝影機">↗</a></div>
-      <div class="cctvchips" id="cctvChips"></div>
     </div>
     <div class="banner" id="banner" hidden><div id="bannerText"></div><button class="btn primary" id="bannerBtn" hidden></button></div>
     <div class="mapbtns">
@@ -609,7 +615,7 @@ function onPos(p){
   const first=!S.pos;S.pos=now;if(!S.last||hav(S.last,now)>3)S.last=now;else S.last.t=now.t;
   $('src').textContent='GPS';$('src').className='src on';
   if(A){A.setCar(now,S.heading);if(!S.carAdded){S.carAdded=true;follow(true)}}
-  if(first){follow(true)}else follow();
+  if(first){follow(true);setTimeout(()=>updateCo(true),0)}else follow();
   ensureArea();
   if(S.route)progress();
   updateLimit();updateCam();updateHUD();
@@ -1050,7 +1056,8 @@ $('sigVoiceBtn').addEventListener('click',()=>{S.sigVoice=!S.sigVoice;LS.set('si
 $('sigVoiceBtn').setAttribute('aria-pressed',S.sigVoice);$('sigVoiceBtn').textContent='紅綠燈語音提醒：'+(S.sigVoice?'開':'關');
 
 /* ---------- 副駕模式：路口攝影機（交通部 TDX 清單，GitHub 每週更新） ---------- */
-S.co=LS.get('co',false);S.cctvAll=null;S.coCur=null;S.coPin=null;S.coPinT=0;
+if(!LS.get('coV2',false)){LS.set('co',true);LS.set('coV2',true)}
+S.co=LS.get('co',true);S.cctvAll=null;S.coCur=null;S.coPin=null;S.coPinT=0;
 (async()=>{try{const j=await getJSON('cctv.json?d='+new Date().toISOString().slice(0,10),{},30000);if(j&&Array.isArray(j.cctv)&&j.cctv.length){S.cctvAll=j;S.cctvC=null}}
   catch(e){console.warn('[cctv] 沒有攝影機清單',e.kind||e.message)}finally{updateCo(true)}})();
 const routeSnap=new WeakMap();
