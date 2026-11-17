@@ -314,7 +314,7 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
   </div>
 </div>
 
-<div class="start" id="start">
+<div class="start" id="start" hidden>
   <div class="box">
     <h1>行車導航</h1>
     <p>搜尋任何地點、規劃路線，用 GPS 顯示車速，並提醒前方測速照相。</p>
@@ -1201,11 +1201,15 @@ if(location.protocol!=='https:'&&location.hostname!=='localhost'){
 /* ---------- 開始 ---------- */
 let wake=null;async function keepAwake(){try{wake=await navigator.wakeLock.request('screen')}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')keepAwake()});
-$('startBtn').addEventListener('click',()=>{
-  try{actx=new (window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}
-  pickVoice();if(S.voice)say('導航已就緒');keepAwake();
-  $('start').hidden=true;mountMap(S.mapSrc,true);startGPS();
-});
+// 直接進入導航畫面，不再顯示開始頁。iPhone 規定聲音要等使用者碰過畫面才能播放，
+// 所以第一次點畫面（任何地方）時才開啟語音與螢幕常亮。
+function unlockAudio(){if(S.audioOn)return;S.audioOn=true;
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}
+  try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}
+  pickVoice();keepAwake()}
+['pointerdown','touchend','keydown'].forEach(ev=>document.addEventListener(ev,unlockAudio,{capture:true,passive:true}));
+mountMap(S.mapSrc,true);startGPS();
+if(location.protocol!=='https:'&&location.hostname!=='localhost')setTimeout(()=>toast('這個頁面不是從 https 網址打開，地圖和搜尋會連不上',true),800);
 })();
 </script>
 </body>
