@@ -91,6 +91,29 @@ html.mapday .mapwrap{background:#E9EEF1}
 .mapbtns button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0;font-size:13px}
 .maptop{position:absolute;left:10px;right:10px;top:10px;z-index:4;display:flex;flex-direction:column;gap:6px;pointer-events:none}
 .maptop>*{pointer-events:auto}
+/* 導航時的畫面只留：轉彎箭頭、距離、路名（其他資訊點一下才展開） */
+.nav .eta,.nav .dest{display:none}
+.nav .road{-webkit-line-clamp:1;font-size:15px}
+.nav .dist{font-size:26px}
+.nav .arrow{width:48px;height:48px}.nav .arrow svg{width:32px;height:32px}
+.nav .more{flex:none;color:var(--muted);transition:transform .2s}
+.nav[aria-expanded="true"] .more{transform:rotate(180deg)}
+.steps{background:rgba(17,26,33,.97);border:1px solid var(--line);border-radius:14px;padding:10px 12px;max-height:min(58vh,520px);overflow:auto;box-shadow:0 6px 18px rgba(0,0,0,.35);display:grid;gap:8px}
+.sthead{display:grid;gap:3px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:8px}
+.sthead b{font-family:var(--display);font-size:20px;color:var(--fg);font-weight:600}
+.sthead .wx{display:flex;align-items:center;gap:6px;color:var(--fg)}.sthead .wx svg{width:18px;height:18px}
+.stlist{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+.stlist li{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(36,50,61,.6);font-size:14px}
+.stlist li:last-child{border-bottom:0}
+.stlist .ic{width:30px;height:30px;border-radius:8px;background:var(--line);display:grid;place-items:center;color:var(--fg)}
+.stlist .ic svg{width:20px;height:20px}
+.stlist .ic.stop{background:var(--stop);color:#160d26}.stlist .ic.arrive{background:var(--accent);color:#1b1305}
+.stlist .km{font-family:var(--display);font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.stbtns{display:flex;gap:8px}
+/* 測速點只在快到時出現；GPS 正常時不顯示「GPS」標籤 */
+.hud.nocam .enf{display:none}
+.src.on{display:none}
+html.navigating .wxpill{display:none!important}
 .tl{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%}
 .sigpill,.wxpill{display:flex;align-items:center;gap:7px;max-width:100%;background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px 5px 8px;font-size:13px;font-variant-numeric:tabular-nums}
 .wxpill{background:rgba(17,26,33,.92);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:13px;font-variant-numeric:tabular-nums}
@@ -276,7 +299,7 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
   <div class="mapwrap">
     <div id="map" aria-label="導航地圖"></div>
     <div class="maptop">
-      <section class="card nav" id="navCard" hidden role="button" tabindex="0" aria-label="搜尋目的地與中途點">
+      <section class="card nav" id="navCard" hidden role="button" tabindex="0" aria-label="轉彎指示，點一下看接下來的路線" aria-expanded="false">
         <div class="arrow idle" id="mArrow"></div>
         <div class="what">
           <div class="dist" id="mDist">要去哪裡？</div>
@@ -284,7 +307,13 @@ html.in-browser body{padding-top:max(52px,env(safe-area-inset-top,0px))}
           <div class="eta" id="eta" hidden><b id="etaClock">--:--</b><span id="etaRest"></span></div>
           <div class="dest" id="mDest" hidden></div>
         </div>
+        <svg class="more" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </section>
+      <div class="steps" id="steps" hidden>
+        <div class="sthead" id="stHead"></div>
+        <ol class="stlist" id="stList"></ol>
+        <div class="stbtns"><button class="btn" id="stEdit">改目的地／中途點</button><button class="btn" id="stClose">收起</button></div>
+      </div>
       <div class="tl">
       <div class="sigpill" id="sigPill" hidden><svg viewBox="0 0 12 24" width="10" height="20" aria-hidden="true"><rect x="1" y="1" width="10" height="22" rx="3" fill="#0B1116" stroke="#F2B33D" stroke-width="1.2"/><circle cx="6" cy="6" r="2.3" fill="#E5484D"/><circle cx="6" cy="12" r="2.3" fill="#F2B33D"/><circle cx="6" cy="18" r="2.3" fill="#36C276"/></svg><span id="sigText"></span></div>
       <div class="wxpill" id="wxPill" hidden><span id="wxIcon"></span><span id="wxText"></span></div>
@@ -748,8 +777,21 @@ $('plan').addEventListener('click',e=>{const b=e.target;const p=S.plan;
   if(b.dataset.rm!=null)p.stops.splice(+b.dataset.rm,1);else if(b.dataset.up!=null){const i=+b.dataset.up;[p.stops[i-1],p.stops[i]]=[p.stops[i],p.stops[i-1]]}else if(b.hasAttribute('data-rmd'))p.dest=null;else return;renderPlan()});
 function openSheet(){$('sheet').hidden=false;endSetFav();renderFav();renderPlan();if(!$('q').value)showHome()}
 function closeSheet(){$('sheet').hidden=true}
-$('navCard').addEventListener('click',openSheet);
-$('navCard').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openSheet()}});
+function toggleSteps(open){const o=open??$('steps').hidden;$('steps').hidden=!o;$('navCard').setAttribute('aria-expanded',o);if(o)renderSteps()}
+$('navCard').addEventListener('click',()=>toggleSteps());
+$('navCard').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleSteps()}});
+$('stClose').addEventListener('click',()=>toggleSteps(false));
+$('stEdit').addEventListener('click',()=>{toggleSteps(false);openSheet()});
+function renderSteps(){const r=S.route;if(!r||$('steps').hidden)return;
+  const rem=Math.max(0,r.L-r.s),sec=r.duration*(rem/r.L),at=new Date(Date.now()+sec*1000);
+  const hm=at.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false});
+  let wx='';try{const w=wxAt(at);if(w)wx=`<div class="wx">${WXI[wxIcon(w.code)]}抵達時 ${WX[w.code]||''} ${w.temp}°${w.rain!=null?` · 降雨 ${w.rain}%`:''}</div>`}catch(e){}
+  const left=S.plan.stops.filter((s,i)=>!r.visited.has('s'+i)).length;
+  $('stHead').innerHTML=`<div><b>${hm}</b> 抵達 · 剩 ${fmtD(rem)} · ${Math.max(1,Math.round(sec/60))} 分</div>`+
+    `<div>${esc(S.plan.dest.name)}${left?` · 途經 ${left} 站`:''} · ${TRAVEL[S.travel].t}${motorized()?(TRAFFIC_SRC.has(r.src)?' · 含即時路況':' · 未含路況'):''}</div>`+wx;
+  const list=r.steps.filter(st=>st.s>r.s+3&&!(st.stop!=null&&r.visited.has('s'+st.stop))&&st.text).slice(0,40);
+  $('stList').innerHTML=list.length?list.map(st=>`<li><span class="ic${st.stop!=null?' stop':st.arrive?' arrive':''}">${ICON[st.icon]||ICON.straight}</span><span>${esc(st.text)}</span><span class="km">${fmtD(st.s-r.s)}</span></li>`).join(''):'<li><span></span><span>沿目前道路直行到目的地</span><span></span></li>'}
+setInterval(renderSteps,2000);
 $('searchBtn').addEventListener('click',openSheet);
 $('sheetClose').addEventListener('click',closeSheet);
 $('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))closeSheet()});
@@ -795,7 +837,7 @@ async function planRoute(fresh){
   S.said.clear();S.offCount=0;S.lastReroute=Date.now();S.lastCheck=Date.now();
   if(fresh){const tr=TRAFFIC_SRC.has(r.src)?(r.delay>=60?`，目前路況會多${Math.round(r.delay/60)}分鐘`:'，目前路況順暢'):'';
     say(`開始導航，前往${p.dest.name}，全程${cnD(r.distance)}，約${Math.max(1,Math.round(r.duration/60))}分鐘${tr}`);S.follow=true;$('recenter').hidden=true}
-  $('endBtn').hidden=false;$('navCard').hidden=false;$('searchBtn').textContent='改目的地';
+  $('endBtn').hidden=false;$('navCard').hidden=false;document.documentElement.classList.add('navigating');$('searchBtn').textContent='改目的地';
   drawRoute();progress();updateHUD();follow(true);
   routeSignals(S.route);wxForRoute(fresh);
 }
@@ -924,7 +966,7 @@ function showBanner(kind,html,btn,ms,fn){const b=$('banner');b.className='banner
   const bb=$('bannerBtn');bb.hidden=!btn;if(btn){bb.textContent=btn;bb.onclick=()=>{b.hidden=true;S.bannerHold=false;fn&&fn()}}
   clearTimeout(bannerT);if(ms){S.bannerHold=true;bannerT=setTimeout(()=>{b.hidden=true;S.bannerHold=false},ms)}}
 function endNav(arrived){S.route=null;$('wxPill').hidden=true;S.plan.stops=[];if(!arrived)S.plan.dest=null;drawPins();drawRoute();resetNavUI();$('banner').hidden=true;S.bannerHold=false;follow(true);if(arrived)S.plan.dest=null}
-function resetNavUI(){$('navCard').hidden=true;$('mArrow').className='arrow idle';$('mArrow').innerHTML=ICON.search;$('mDist').textContent='要去哪裡？';$('mRoad').textContent='點這裡搜尋';$('mDest').hidden=true;$('eta').hidden=true;$('endBtn').hidden=true;$('searchBtn').textContent='搜尋目的地';$('trafficBtn').hidden=!(A&&A.trafficOK())}
+function resetNavUI(){document.documentElement.classList.remove('navigating');$('steps').hidden=true;$('navCard').setAttribute('aria-expanded',false);$('navCard').hidden=true;$('mArrow').className='arrow idle';$('mArrow').innerHTML=ICON.search;$('mDist').textContent='要去哪裡？';$('mRoad').textContent='點這裡搜尋';$('mDest').hidden=true;$('eta').hidden=true;$('endBtn').hidden=true;$('searchBtn').textContent='搜尋目的地';$('trafficBtn').hidden=!(A&&A.trafficOK())}
 $('endBtn').addEventListener('click',()=>{endNav(false);say('已結束導航')});
 
 /* ---------- 測速照相與速限（OpenStreetMap / Overpass） ---------- */
@@ -992,6 +1034,7 @@ function updateHUD(){
   const v=Math.round(S.speed);$('spd').textContent=S.pos?v:'--';$('spd').classList.toggle('three',v>=100);
   const cam=S.camAhead,lim=S.limit||(cam&&cam.d<600?cam.c.lim:null);
   $('limit').className='sign'+(lim?'':' unk');$('limit').textContent=lim||'速限';
+  $('hud').classList.toggle('nocam',!(cam&&cam.d<(S.speed>80?2000:1200))&&!!S.area);
   if(cam){const fast=S.speed>80,warn=fast?1000:500;$('eType').textContent='測速';$('eDist').innerHTML=cam.d>=1000?(cam.d/1000).toFixed(1)+'<small>km</small>':Math.round(cam.d)+'<small>m</small>';
     $('eName').textContent=(cam.c.lim?'限速 '+cam.c.lim+' · ':'')+(cam.c.addr?cam.c.addr.replace(/^(..[縣市])/,''):'OpenStreetMap');$('eBar').style.width=Math.max(0,Math.min(100,100*(1-cam.d/(warn*1.6))))+'%'}
   else{$('eType').textContent='測速';$('eDist').textContent='—';$('eName').textContent=S.area&&S.area.cams?(S.area.cams.length||S.official?'前方無測速點':'前方無已知測速點'):(S.areaErr?'測速資料暫時載入失敗':'載入測速資料中');$('eBar').style.width='0'}
@@ -1065,9 +1108,11 @@ function sigAhead(){const r=S.route,p=S.pos;if(!p)return null;
 function updateSignal(){
   const a=sigAhead(),pill=$('sigPill');
   if(!a||(a.none&&!S.route)){pill.hidden=true;return}
+  // 導航時只在快到紅綠燈（400 m 內）才出現，避免畫面太多字
+  if(S.route&&(a.none||a.d>400)){pill.hidden=true;return}
   pill.hidden=false;
   if(a.none){$('sigText').textContent='到目的地前沒有紅綠燈了';return}
-  $('sigText').textContent=`${fmtD(a.d)} 紅綠燈`+(a.left!=null?` · 剩 ${a.left} 個`:'');
+  $('sigText').textContent=S.route?`${fmtD(a.d)}`:`${fmtD(a.d)} 紅綠燈`+(a.left!=null?` · 剩 ${a.left} 個`:'');
   if(S.sigVoice&&a.d<=180&&a.d>60&&!S.said.has('sig'+a.id)){S.said.add('sig'+a.id);say('前方紅綠燈')}}
 function drawSignals(){if(!A||!A.setSignals)return;const p=S.pos;let l=[];
   if(S.route&&S.route.sigs)l=S.route.sigs.filter(s=>s.s>S.route.s-20&&s.s<S.route.s+4000);
