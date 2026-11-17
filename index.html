@@ -915,6 +915,7 @@ function showStream(c){
   if(url&&/\.m3u8(\?|$)/i.test(url)){const vd=document.createElement('video');vd.muted=true;vd.autoplay=true;vd.playsInline=true;vd.setAttribute('playsinline','');vd.src=url;vd.onerror=()=>img?image(img,fail):fail();v.appendChild(vd);vd.play&&vd.play().catch(()=>{});return}
   if(url&&isPage(url)){img?image(img,()=>frame(url)):frame(url);return}
   if(url)image(url,()=>img?image(img,()=>frame(url)):frame(url));else image(img,fail)}
+function startSnap(im,u){clearInterval(S.coTimer);S.coTimer=setInterval(()=>{if(!document.hidden)im.src=u+(u.includes('?')?'&':'?')+'_t='+Date.now()},5000)}
 function stopStream(){clearInterval(S.coTimer);$('cctvView').innerHTML='';S.coCur=null}
 function updateCo(force){
   const box=$('cctv');$('coBtn').setAttribute('aria-pressed',S.co);box.hidden=!S.co;if(!S.co){if(S.coCur)stopStream();return}
