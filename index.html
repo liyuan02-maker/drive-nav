@@ -86,6 +86,7 @@ html.mapday .mapwrap{background:#E9EEF1}
 .layers{position:absolute;right:60px;bottom:34px;z-index:6;display:grid;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 6px 18px rgba(0,0,0,.45)}
 .layers button{border:0;background:none;text-align:left;padding:8px 12px;border-radius:8px;font-size:14px;white-space:nowrap}
 .layers button[aria-pressed="true"]{background:var(--line);color:var(--accent)}
+.mapbtns button[aria-pressed="true"]{border-color:var(--ok);color:var(--ok)}
 .mapbtns .layerbtn{font:700 12px var(--display)}
 .mapbtns button{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0;font-size:13px}
 .maptop{position:absolute;left:10px;right:10px;top:10px;z-index:4;display:flex;flex-direction:column;gap:6px;pointer-events:none}
@@ -342,7 +343,7 @@ const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.par
 /* ---------- 狀態 ---------- */
 // 內建的 Google 金鑰：已在 Google Cloud 限制只能在 liyuan02-maker.github.io 使用，且只開放地圖、地點、路線三個 API
 const BUILTIN_GKEY='AIzaSyBgtHDCyFcMT2aXLL5m0mIrW87XgPukeag';
-const S={gKey:LS.get('gKey','')||BUILTIN_GKEY,pos:null,last:null,heading:0,speed:0,follow:true,headUp:true,voice:LS.get('voice',true),key:LS.get('ttKey',''),traffic:false,
+const S={gKey:LS.get('gKey','')||BUILTIN_GKEY,pos:null,last:null,heading:0,speed:0,follow:true,headUp:true,voice:LS.get('voice',true),key:LS.get('ttKey',''),traffic:LS.get('traffic',true),
   route:null,plan:{dest:null,stops:[]},mode:'dest',area:null,areaBusy:false,limit:null,camAhead:null,said:new Set(),
   offCount:0,lastReroute:0,lastCheck:0,overBeep:0,limitWay:null};
 
@@ -579,7 +580,7 @@ async function mountMap(src,quiet){
   if(!quiet)toast('地圖：'+MAP_NAME[src]);
 }
 function refreshMap(){if(!A)return;if(S.pos){A.setCar(S.pos,S.heading);S.carAdded=true}drawRoute();drawCams();drawPins();S.sigDrawn=null;drawSignals();
-  $('trafficBtn').hidden=!A.trafficOK();if(S.traffic&&A.trafficOK())A.setTraffic(true);follow(true)}
+  $('trafficBtn').hidden=!A.trafficOK();$('trafficBtn').setAttribute('aria-pressed',S.traffic);if(A.trafficOK())A.setTraffic(S.traffic);follow(true)}
 new ResizeObserver(()=>A&&A.resize()).observe(document.querySelector('.mapwrap'));
 /* 地圖顯示：2D、3D、衛星 */
 const VIEW_NAME={'2d':'2D','3d':'3D',sat:'衛星'};
@@ -596,7 +597,7 @@ function follow(force){
 }
 $('recenter').addEventListener('click',()=>{S.follow=true;$('recenter').hidden=true;follow(true)});
 $('compass').addEventListener('click',()=>{S.headUp=!S.headUp;const t=S.headUp?'車頭朝上':'北方朝上';$('compass').title=t;$('compass').setAttribute('aria-label','地圖方向：'+t);toast('地圖：'+t);follow(true)});
-function setTraffic(on){S.traffic=on;$('trafficBtn').setAttribute('aria-pressed',on);if(A&&A.trafficOK())A.setTraffic(on)}
+function setTraffic(on){S.traffic=on;LS.set('traffic',on);$('trafficBtn').setAttribute('aria-pressed',on);if(A&&A.trafficOK())A.setTraffic(on)}
 $('trafficBtn').addEventListener('click',()=>setTraffic(!S.traffic));
 function drawPins(){if(!A)return;const l=[];if(S.route&&S.plan.dest){S.plan.stops.forEach((s,i)=>l.push({lat:s.lat,lon:s.lon,cls:'stopm',txt:i+1}));l.push({lat:S.plan.dest.lat,lon:S.plan.dest.lon,cls:'dest',txt:''})}A.setPins(l)}
 
