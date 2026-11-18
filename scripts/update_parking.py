@@ -31,7 +31,7 @@ def get(url, tok, want_headers=False):
          "Origin": "https://liyuan02-maker.github.io"}
     if tok:
         h["Authorization"] = "Bearer " + tok
-    for attempt in range(4):
+    for attempt in range(2):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=120) as r:
                 data = json.loads(r.read())
@@ -39,7 +39,7 @@ def get(url, tok, want_headers=False):
         except urllib.error.HTTPError as e:
             print("  HTTP", e.code, url)
             if e.code == 429:
-                time.sleep(30 + attempt * 30)
+                time.sleep(20)
                 continue
             raise
     raise RuntimeError("too many requests")
