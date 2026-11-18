@@ -1354,7 +1354,7 @@ function updateHUD(){
   $('mDest').hidden=false;$('mDest').textContent='→ '+S.plan.dest.name+(left?` · 途經 ${left} 站`:'')+' · '+TRAVEL[S.travel].t+(motorized()?(TRAFFIC_SRC.has(r.src)?' · 即時路況（'+r.src+'）':' · 未含路況'):'');
 }
 setInterval(()=>{if(S.pos)updateHUD();const r=S.route;
-  $('parkBtn').classList.toggle('hint',!!(r&&S.plan.dest&&!S.plan.dest.park&&motorized()&&r.L-r.s<1500))},1000);
+  $('parkBtn').classList.toggle('hint',!!(r&&S.plan.dest&&!S.plan.dest.park&&motorized()&&r.L-r.s<500))},1000);
 
 
 
