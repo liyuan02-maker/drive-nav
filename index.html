@@ -292,7 +292,7 @@ html[lang=en].navigating .controls .langbtn{min-width:0}
 /* 直拿手機：地圖占滿按鈕以下的整個畫面。左上：轉彎大箭頭＋距離，下面是車速；左下：攝影機；地圖按鈕在右側中間 */
 @media (orientation:portrait) and (max-width:899px){
   .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"controls" "map"}
-  .cctv{grid-area:map;z-index:5;align-self:end;margin-bottom:28px;box-shadow:0 4px 16px rgba(0,0,0,.45)}
+  .cctv{grid-area:map;z-index:5;box-shadow:0 4px 16px rgba(0,0,0,.45)}
   .maptop{left:8px;right:8px;top:8px}
   .maptop>.nav,.maptop>.hud{align-self:flex-start;width:112px;box-shadow:0 4px 16px rgba(0,0,0,.45)}
   .nav{flex-direction:column;align-items:center;gap:2px;padding:6px 6px 5px}
@@ -305,8 +305,7 @@ html[lang=en].navigating .controls .langbtn{min-width:0}
   .hud .sign{top:-10px;right:-10px;width:38px;height:38px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
   .hud .enf{margin-top:4px;padding-top:4px}
   .hud .enf .d{font-size:16px}
-  .cctv{justify-self:start;margin-left:8px;width:min(32vw,128px)}
-  .cctv:not(.big) .cctvchips{display:none}
+  .cctv{width:min(44vw,180px)}
   #lanePill{display:none!important}
   .cctv .cctvbar{padding:3px 6px;font-size:11px}
   .cctv.big{width:auto;margin:0;box-shadow:0 10px 40px rgba(0,0,0,.6)}
@@ -314,14 +313,17 @@ html[lang=en].navigating .controls .langbtn{min-width:0}
   .layers{bottom:auto;top:38%}
   .tl{max-width:calc(100% - 60px)}
 }
-/* 直拿手機：上方按鈕改成地圖右上角一排直的圖示，地圖一直延伸到螢幕最上面 */
+/* 直拿手機：按鈕改成地圖最下面一排橫的圖示（連同 P、3D、指北針），攝影機在右上角，地圖延伸到螢幕最上面 */
 @media (orientation:portrait) and (max-width:899px){
   .app{grid-template-rows:minmax(0,1fr);grid-template-areas:"map"}
-  .controls{grid-area:map;z-index:7;align-self:start;justify-self:end;margin:8px 8px 0 0;padding:4px;width:auto;background:rgba(17,26,33,.9);box-shadow:0 4px 16px rgba(0,0,0,.45)}
-  .controls>.row{flex-direction:column;gap:4px}
-  .controls>.row .btn{width:42px;height:42px;padding:0;flex:none;font-size:0;color:var(--fg);display:grid;place-items:center;position:relative}
+  .controls{grid-area:map;z-index:7;align-self:end;justify-self:stretch;margin:0 8px 8px;padding:4px;background:rgba(17,26,33,.92);box-shadow:0 4px 16px rgba(0,0,0,.45)}
+  .controls .extra{order:-1}
+  .controls>.row{flex-direction:row;gap:4px;justify-content:space-between}
+  .controls>.row .mapbtns{position:static;display:contents;transform:none}
+  .controls>.row .btn,.controls>.row .mapbtns button{height:40px;padding:0;flex:1 1 0;max-width:48px;min-width:0;width:auto}
+  .controls>.row .btn{font-size:0;color:var(--fg);display:grid;place-items:center;position:relative}
   .controls>.row .btn::before{content:"";width:22px;height:22px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
-  .controls>.row .btn.grow{flex:none}
+  .controls>.row .btn.grow{flex:1 1 0}
   #searchBtn{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='m20 20-4.8-4.8'/%3E%3C/svg%3E");color:#1a1306}
   html.navigating #searchBtn{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3Cpath d='m13.5 6.5 4 4'/%3E%3C/svg%3E")}
   #endBtn{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E");color:#ff6b6f}
@@ -334,16 +336,11 @@ html[lang=en].navigating .controls .langbtn{min-width:0}
   .controls>.row #langBtn{font:600 13px var(--display);letter-spacing:0;min-width:0}
   .controls>.row #langBtn::before{display:none}
   html[lang=en] .controls>.row #langBtn{font-size:12px}
-  .controls.open{justify-self:stretch;margin:8px 8px 0}
-  .controls.open>.row{flex-direction:row;justify-content:flex-end}
-  .maptop{right:62px}
-  .mapbtns{top:auto;bottom:34px;transform:none}
-  .layers{top:auto;bottom:34px}
-  .cctv{width:min(26vw,104px)}
-  .cctv .cctvbar{font-size:10px;padding:2px 5px}
-  .cctv .cctvbar #cctvDist{display:none}
-  .cctv:not(.big) .cctvview .note{font-size:10px;padding:6px}
-  .recenter{bottom:auto;top:62%}
+  .maptop:has(#steps:not([hidden])){z-index:8}
+  .layers{top:auto;bottom:64px;right:8px}
+  .cctv{align-self:start;justify-self:end;margin:8px 8px 0 0}
+  .recenter,.banner{bottom:64px}
+  .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 }
 @media (orientation:portrait) and (max-width:370px){.maptop>.nav,.maptop>.hud{width:100px}.hud .num{font-size:44px}.hud .num.three{font-size:34px}}
 </style>
@@ -867,7 +864,7 @@ function follow(force){
   if(S.pos)S.lastFollow={lat:S.pos.lat,lon:S.pos.lon,h:S.heading};
   if(!A||!S.pos||(!S.follow&&!force))return;
   const h=document.querySelector('.mapwrap').clientHeight;
-  A.view({lat:S.pos.lat,lon:S.pos.lon,bearing:S.headUp?S.heading:0,pitch:S.view==='3d'?(S.mapNow==='google'?60:55):0,zoom:zoomFor(),offY:h*(S.route?(PORTRAIT.matches?.14:.24):.12),dur:force?500:650});
+  A.view({lat:S.pos.lat,lon:S.pos.lon,bearing:S.headUp?S.heading:0,pitch:S.view==='3d'?(S.mapNow==='google'?60:55):0,zoom:zoomFor(),offY:h*(S.route?(PORTRAIT.matches?.2:.24):.12),dur:force?500:650});
 }
 $('recenter').addEventListener('click',()=>{S.follow=true;$('recenter').hidden=true;follow(true)});
 $('compass').addEventListener('click',()=>{S.headUp=!S.headUp;const t=S.headUp?'車頭朝上':'北方朝上';$('compass').title=t;$('compass').setAttribute('aria-label','地圖方向：'+t);toast('地圖：'+t);follow(true)});
@@ -1038,8 +1035,8 @@ $('plan').addEventListener('click',e=>{const b=e.target;const p=S.plan;
 function openSheet(){$('sheet').hidden=false;endSetFav();renderFav();renderPlan();if(!$('q').value)showHome()}
 function closeSheet(){$('sheet').hidden=true}
 function toggleSteps(open){const o=open??$('steps').hidden;$('steps').hidden=!o;$('navCard').setAttribute('aria-expanded',o);if(o)renderSteps()}
-{const mq=PORTRAIT,hud=$('hud'),home=hud.nextElementSibling,top=document.querySelector('.maptop');
-  const place=()=>{if(mq.matches){if(hud.parentNode!==top)$('navCard').after(hud)}else if(hud.parentNode!==home.parentNode)home.before(hud);A&&A.resize&&A.resize()};
+{const mq=PORTRAIT,hud=$('hud'),home=hud.nextElementSibling,mb=document.querySelector('.mapbtns'),mbHome=mb.parentNode,mbNext=mb.nextElementSibling,row=document.querySelector('.controls>.row'),top=document.querySelector('.maptop');
+  const place=()=>{if(mq.matches){if(hud.parentNode!==top)$('navCard').after(hud);if(mb.parentNode!==row)row.append(mb)}else{if(hud.parentNode!==home.parentNode)home.before(hud);if(mb.parentNode!==mbHome)mbHome.insertBefore(mb,mbNext)}A&&A.resize&&A.resize()};
   mq.addEventListener?mq.addEventListener('change',place):mq.addListener(place);place()}
 $('navCard').addEventListener('click',()=>toggleSteps());
 $('navCard').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleSteps()}});
