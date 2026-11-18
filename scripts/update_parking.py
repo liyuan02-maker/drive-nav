@@ -31,7 +31,7 @@ def get(url, tok, want_headers=False):
          "Origin": "https://liyuan02-maker.github.io"}
     if tok:
         h["Authorization"] = "Bearer " + tok
-    for attempt in range(3):
+    for attempt in range(4):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=120) as r:
                 data = json.loads(r.read())
@@ -39,7 +39,7 @@ def get(url, tok, want_headers=False):
         except urllib.error.HTTPError as e:
             print("  HTTP", e.code, url)
             if e.code == 429:
-                time.sleep(5 + attempt * 5)
+                time.sleep(30 + attempt * 30)
                 continue
             raise
     raise RuntimeError("too many requests")
@@ -75,15 +75,31 @@ def main():
         print("取得 TDX token 失敗，改用非會員額度：", e)
     parks, probe = [], {}
     for city in CITIES:
+        # 先拿即時空位清單：只保留有即時空位的停車場（台中的停車場清單有 8 萬多筆，大多沒有即時資料）
         try:
-            data = get(f"{BASE}/CarPark/City/{city}?$format=JSON", tok)
+            av, hd = get(f"{BASE}/ParkingAvailability/City/{city}?$format=JSON&$select=CarParkID,TotalSpaces,AvailableSpaces", tok, True)
+            live = {a["CarParkID"] for a in records(av, "CarParkID")}
+        except Exception as e:  # noqa: BLE001
+            print(city, "即時空位失敗", e)
+            probe[city] = {"error": str(e)}
+            time.sleep(8)
+            continue
+        time.sleep(8)
+        if not live:
+            print(city, "沒有即時空位資料")
+            probe[city] = {"live": 0}
+            continue
+        try:
+            data = get(f"{BASE}/CarPark/City/{city}?$format=JSON&$select=CarParkID,CarParkName,CarParkPosition,Address,FareDescription", tok)
         except Exception as e:  # noqa: BLE001
             print(city, "停車場清單失敗", e)
-            time.sleep(2)
+            probe[city] = {"live": len(live), "error": str(e)}
+            time.sleep(8)
             continue
-        recs = records(data, "CarParkID")
         n0 = len(parks)
-        for c in recs:
+        for c in records(data, "CarParkID"):
+            if c["CarParkID"] not in live:
+                continue
             pos = c.get("CarParkPosition") or {}
             lat, lon = pos.get("PositionLat"), pos.get("PositionLon")
             if not lat or not lon:
@@ -91,20 +107,20 @@ def main():
             parks.append({"id": c["CarParkID"], "c": city, "n": zh(c.get("CarParkName")),
                           "lat": round(float(lat), 6), "lon": round(float(lon), 6),
                           "a": zh(c.get("Address"))[:60], "f": zh(c.get("FareDescription"))[:80]})
-        time.sleep(1.5)
-        # 確認這個縣市有沒有即時空位，順便記下回應格式與 CORS 標頭
-        try:
-            av, hd = get(f"{BASE}/ParkingAvailability/City/{city}?$format=JSON&$top=2", tok, True)
-            ar = records(av, "CarParkID")
-            probe[city] = {"parks": len(parks) - n0, "sample": ar[:1],
-                           "cors": hd.get("Access-Control-Allow-Origin") or hd.get("access-control-allow-origin")}
-        except Exception as e:  # noqa: BLE001
-            probe[city] = {"parks": len(parks) - n0, "error": str(e)}
-        print(city, len(parks) - n0, "個停車場；即時空位：", "有" if probe[city].get("sample") else "無")
-        time.sleep(1.5)
-    if len(parks) < 100:
+        probe[city] = {"live": len(live), "kept": len(parks) - n0, "cors": hd.get("Access-Control-Allow-Origin")}
+        print(city, "即時空位", len(live), "個，有位置的", len(parks) - n0, "個")
+        time.sleep(8)
+    if len(parks) < 300:
         print("取得的停車場太少，不更新")
         sys.exit(0)
+    # 確認網頁用的 $filter 查詢可以用
+    try:
+        ids = [p["id"] for p in parks if p["c"] == "Taipei"][:2]
+        flt = urllib.parse.quote(" or ".join(f"CarParkID eq '{i}'" for i in ids))
+        r = get(f"{BASE}/ParkingAvailability/City/Taipei?$format=JSON&$select=CarParkID,TotalSpaces,AvailableSpaces,Availabilities,ServiceStatus,DataCollectTime&$filter={flt}", tok)
+        probe["filter_test"] = {"asked": ids, "got": records(r, "CarParkID")}
+    except Exception as e:  # noqa: BLE001
+        probe["filter_test"] = {"error": str(e)}
     with open("parking.json", "w", encoding="utf-8") as f:
         json.dump({"updated": time.strftime("%Y-%m-%d"), "parks": parks}, f, ensure_ascii=False, separators=(",", ":"))
     with open("parking_probe.json", "w", encoding="utf-8") as f:

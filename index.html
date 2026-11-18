@@ -88,6 +88,8 @@ html.mapday .mapwrap{background:#E9EEF1}
 .layers button[aria-pressed="true"]{background:var(--line);color:var(--accent)}
 .mapbtns button[aria-pressed="true"]{border-color:var(--ok);color:var(--ok)}
 .mapbtns .layerbtn{font:700 12px var(--display)}
+.pk{font-style:normal;font-size:12px;font-weight:700;margin-left:8px;padding:2px 7px;border-radius:999px;white-space:nowrap;vertical-align:1px}
+.pk.ok{background:#16a34a;color:#fff}.pk.low{background:#f59e0b;color:#111}.pk.full{background:#dc2626;color:#fff}
 .mapbtns .parkbtn{font:800 20px var(--display);color:#fff;background:#2563eb;border-color:#2563eb}
 .mapbtns .parkbtn.hint{animation:parkPulse 1.6s ease-in-out infinite}
 @keyframes parkPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.7)}50%{box-shadow:0 0 0 8px rgba(37,99,235,0)}}
@@ -216,7 +218,7 @@ html.navigating .wxpill{display:none!important}
 .seg button{border:0;background:var(--raise);padding:7px 12px;font-size:13.5px}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button.on{background:var(--line);color:var(--accent)}
-.list{display:grid;gap:6px}
+.list{display:grid;gap:6px;grid-template-columns:minmax(0,1fr)}
 .linkbtn{background:none;border:0;padding:0;color:var(--route);text-decoration:underline;font-size:inherit}
 .dg{display:flex;gap:10px;align-items:flex-start;background:var(--raise);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
 .dg .st{flex:none;width:44px;font-weight:700}
@@ -431,7 +433,7 @@ const LANG=LS.get('lang','zh');
 /* ---------- 介面語言：中文／English ---------- */
 // 切到英文時：畫面上出現的中文即時換成英文（含之後動態產生的提示），語音改英文，Google 路線、搜尋、地名也要英文版
 const EN=LANG==='en',L=(zh,en)=>EN?en:zh;
-const I18N={'找停車場':'Find parking','尋找目的地附近的停車場…':'Finding parking near your destination…','尋找附近的停車場…':'Finding parking nearby…','目的地附近的停車場（點一下直接導航過去）':'Parking near your destination (tap to navigate there)','附近的停車場（點一下直接導航過去）':'Parking nearby (tap to navigate there)','目的地附近找不到停車場':'No parking found near your destination','附近找不到停車場':'No parking found nearby','營業中':'Open','休息中':'Closed','免費':'Free','地下停車場':'Underground parking','路邊停車格':'Street parking','這個頁面不是從 https 網址打開，地圖和搜尋會連不上':'This page wasn’t opened from an https address, so maps and search can’t connect','Google Map ID（選填）':'Google Map ID (optional)','Apple MapKit JS 權杖':'Apple MapKit JS token','TomTom API 金鑰':'TomTom API key','已內建金鑰；要用自己的再貼上':'Built-in key in use; paste your own to replace it','這段路沒有速限資料':'No speed limit data for this road',
+const I18N={'暫停營業':'Closed','已滿':'Full','找停車場':'Find parking','尋找目的地附近的停車場…':'Finding parking near your destination…','尋找附近的停車場…':'Finding parking nearby…','目的地附近的停車場（點一下直接導航過去）':'Parking near your destination (tap to navigate there)','附近的停車場（點一下直接導航過去）':'Parking nearby (tap to navigate there)','目的地附近找不到停車場':'No parking found near your destination','附近找不到停車場':'No parking found nearby','營業中':'Open','休息中':'Closed','免費':'Free','地下停車場':'Underground parking','路邊停車格':'Street parking','這個頁面不是從 https 網址打開，地圖和搜尋會連不上':'This page wasn’t opened from an https address, so maps and search can’t connect','Google Map ID（選填）':'Google Map ID (optional)','Apple MapKit JS 權杖':'Apple MapKit JS token','TomTom API 金鑰':'TomTom API key','已內建金鑰；要用自己的再貼上':'Built-in key in use; paste your own to replace it','這段路沒有速限資料':'No speed limit data for this road',
 '操作':'Controls','搜尋目的地':'Search','改目的地':'Route','結束':'End','語音':'Voice','攝影機':'Camera','設定':'Settings','收起':'Close',
 '地圖來源':'Map source','免費地圖':'Free map','Google 地圖':'Google Maps','Apple 地圖':'Apple Maps','儲存':'Save','交通方式':'Travel mode',
 '汽車':'Car','機車':'Scooter','自行車':'Bicycle','步行':'Walking','地圖顏色':'Map colors','自動':'Auto','白天':'Day','夜間':'Night',
@@ -921,7 +923,10 @@ async function nearby(cat){
   $('sstatus').textContent=list.length?`附近的${cat.t}（6 公里內，由近到遠）`:`6 公里內沒有找到${cat.t}`;
   renderResults(list,'');
 }
-function optHTML(r,i,q){return`<button class="opt" data-i="${i}"><span class="t"><b>${hl(r.name,q)}</b><span>${esc([r.cat,r.addr].filter(Boolean).join(' · '))}</span></span>${r.dist!=null?`<span class="k">${fmtD(r.dist)}</span>`:''}</button>`}
+function pkBadge(r){if(!r.park)return'';if(r.shut)return`<i class="pk full">${L('暫停營業','Closed')}</i>`;if(r.free==null)return'';
+  const cls=r.free===0?'full':r.free<(r.tot?Math.max(5,r.tot*.1):10)?'low':'ok';
+  return`<i class="pk ${cls}">${r.free===0?L('已滿','Full'):L('空位 ','')+r.free+(r.tot?'／'+r.tot:'')+L('',' free')}</i>`}
+function optHTML(r,i,q){return`<button class="opt" data-i="${i}"><span class="t"><b>${hl(r.name,q)}${pkBadge(r)}</b><span>${esc([r.cat,r.addr].filter(Boolean).join(' · '))}</span></span>${r.dist!=null?`<span class="k">${fmtD(r.dist)}</span>`:''}</button>`}
 function renderResults(list,q){S.results=list;
   $('results').innerHTML=list.length?list.map((r,i)=>optHTML(r,i,q)).join(''):(q?`<p class="msg">找不到「${esc(q)}」。按鍵盤上的「搜尋」再找一次，或加上城市，例如「新竹 國賓」，或輸入地址。${provider()==='osm'?'到「設定」填入 Google 金鑰，店家和地標會找得更準。':''}</p>`:'')}
 function showHome(){$('cats').hidden=false;$('sstatus').textContent='';const rec=LS.get('recent',[]);
@@ -957,7 +962,7 @@ $('results').addEventListener('click',async e=>{const b=e.target.closest('[data-
   if(r.lat==null&&r.placeId){b.disabled=true;try{Object.assign(r,await googleDetails(r.placeId))}catch(err){b.disabled=false;toast('取得地點位置失敗，請再試一次',true);return}}
   delete r.placeId;
   if(S.setFav){saveFav(S.setFav,r);$('q').value='';showHome();return}
-  if(r.park){delete r.cat;S.plan.dest=r;$('q').value='';showHome();renderPlan();
+  if(r.park){delete r.cat;delete r.free;delete r.tot;delete r.shut;S.plan.dest=r;$('q').value='';showHome();renderPlan();
     if(!S.pos){toast('還沒取得 GPS 位置，請稍候再試',true);return}
     keepAwake();if(!('wakeLock' in navigator))noSleepOn();closeSheet();toast('導航到停車場：'+r.name);await planRoute(true);return}
   if(S.mode==='dest')S.plan.dest=r;else{if(S.plan.stops.length>=5){toast('中途點最多 5 個');return}S.plan.stops.push(r)}
@@ -1445,21 +1450,42 @@ async function parkOSM(c,radius){
     return{name:tg.name||(tg.parking==='underground'?'地下停車場':tg.parking==='street_side'||tg.parking==='lane'?'路邊停車格':'停車場'),
       addr:[tg['addr:district'],tg['addr:street']&&tg['addr:street']+(tg['addr:housenumber']?tg['addr:housenumber']+'號':'')].filter(Boolean).join(' '),
       lat,lon,cap:+tg.capacity||null,fee:tg.fee==='no'?'免費':null}}).filter(Boolean)}
+/* 即時空位：交通部 TDX 路外停車場（位置清單每週由 GitHub 更新到 parking.json，空位在查詢時直接向 TDX 要） */
+async function parkData(){if(S.parkAll)return S.parkAll;
+  try{const j=await getJSON('parking.json?d='+new Date().toISOString().slice(0,10),{},20000);S.parkAll=Array.isArray(j.parks)?j.parks:[]}catch(e){console.warn('[park] list',e.message);return[]}
+  return S.parkAll}
+const PAV={};
+async function parkAvail(city,ids){const key=city+':'+ids.join(),c=PAV[key];if(c&&Date.now()-c.t<90000)return c.m;
+  const base=`https://tdx.transportdata.tw/api/basic/v1/Parking/OffStreet/ParkingAvailability/City/${city}?$format=JSON&$select=CarParkID,TotalSpaces,AvailableSpaces,Availabilities,ServiceStatus,DataCollectTime`;
+  let j;try{j=await getJSON(base+'&$filter='+encodeURIComponent(ids.map(id=>`CarParkID eq '${id.replace(/'/g,"''")}'`).join(' or ')),{},15000)}
+  catch(e){if(e.status===429)throw e;j=await getJSON(base,{},20000)}
+  const arr=Array.isArray(j)?j:(j.ParkingAvailabilities||[]),m={};
+  for(const a of arr){let free=a.AvailableSpaces,tot=a.TotalSpaces;
+    const car=(a.Availabilities||[]).find(x=>x.SpaceType===1);if(car){if(car.AvailableSpaces!=null)free=car.AvailableSpaces;if(car.NumberOfSpaces)tot=car.NumberOfSpaces}
+    m[a.CarParkID]={free:free!=null&&free>=0?free:null,tot:tot>0?tot:null,closed:a.ServiceStatus===0||a.ServiceStatus===2,at:a.DataCollectTime||a.SrcUpdateTime}}
+  PAV[key]={t:Date.now(),m};return m}
+async function parkLive(c,radius){const all=await parkData();const near=all.map(p=>({p,d:hav(c,p)})).filter(x=>x.d<radius).sort((a,b)=>a.d-b.d).slice(0,25).map(x=>x.p);if(!near.length)return[];
+  const maps={};await Promise.all([...new Set(near.map(p=>p.c))].map(async city=>{try{maps[city]=await parkAvail(city,near.filter(p=>p.c===city).map(p=>p.id))}catch(e){console.warn('[park] tdx',city,e.kind,e.status)}}));
+  return near.map(p=>{const a=(maps[p.c]||{})[p.id];return{name:p.n||'停車場',addr:p.a||'',lat:p.lat,lon:p.lon,tdx:true,fare:p.f,
+    free:a?a.free:null,tot:a?a.tot:null,shut:a?a.closed:false,live:!!(a&&a.free!=null)}})}
 async function parkList(){
   const nav=!!(S.route&&S.plan.dest&&!S.plan.dest.park),c=nav?S.plan.dest:S.pos;
   if(!c){toast('還沒取得 GPS 位置',true);return}
   $('cats').hidden=true;$('q').value='';if(qCtl)qCtl.abort();$('results').innerHTML='';
   $('sstatus').textContent=nav?'尋找目的地附近的停車場…':'尋找附近的停車場…';
-  let list=[];
+  let list=[],live=[];
   for(const radius of [1000,2500]){
+    const lp=parkLive(c,radius).catch(()=>[]);
     if(S.gKey){try{list=await parkGoogle(c,radius)}catch(e){console.warn('[park] google',e.kind,e.status,e.detail||e.message);list=[]}}
     if(!list.length){try{list=await parkOSM(c,radius)}catch(e){}}
-    if(list.length>=3)break}
-  const out=[];for(const s of list)if(!out.some(o=>hav(o,s)<40&&o.name===s.name))out.push(s);
-  out.forEach(s=>s.dist=hav(c,s));out.sort((a,b)=>a.dist-b.dist);
-  const res=out.slice(0,15).map(s=>({name:s.name,lat:s.lat,lon:s.lon,addr:s.addr,dist:s.dist,park:true,
+    live=await lp;if(list.length+live.length>=3)break}
+  // 交通部有即時空位的停車場優先；Google／OSM 的同一個停車場（80 公尺內）就合併
+  const out=[...live];for(const s of list){const m=out.find(o=>hav(o,s)<80&&(o.tdx||o.name===s.name));if(m){if(m.tdx){m.open=s.open;m.rating=s.rating}}else out.push(s)}
+  out.forEach(s=>s.dist=hav(c,s));const bad=s=>s.free===0||s.shut?1:0;out.sort((a,b)=>bad(a)-bad(b)||a.dist-b.dist);
+  const res=out.slice(0,20).map(s=>({name:s.name,lat:s.lat,lon:s.lon,addr:s.addr,dist:s.dist,park:true,free:s.free,tot:s.tot,shut:s.shut,
     cat:[nav?L('距目的地 ','')+fmtD(s.dist)+L('',' from destination'):'',s.open===true?L('營業中','Open'):s.open===false?L('休息中','Closed'):'',s.rating?'★'+s.rating.toFixed(1):'',s.cap?s.cap+L(' 格',' spaces'):'',s.fee?L(s.fee,'Free'):''].filter(Boolean).join(' · ')}));
   $('sstatus').textContent=res.length?(nav?'目的地附近的停車場（點一下直接導航過去）':'附近的停車場（點一下直接導航過去）'):(nav?'目的地附近找不到停車場':'附近找不到停車場');
+  if(res.length&&!res.some(r=>r.free!=null))$('sstatus').textContent+=L('。這一帶沒有即時空位資料',' — no live space data in this area');
   renderResults(res,'')}
 $('parkBtn').addEventListener('click',()=>{openSheet();parkList()});
 $('evBtn').addEventListener('click',()=>{S.showEV=!S.showEV;LS.set('showEV',S.showEV);$('evBtn').setAttribute('aria-pressed',S.showEV);$('evBtn').textContent='地圖顯示特斯拉超充站：'+(S.showEV?'開':'關');S.evDrawn=null;drawEV();if(S.showEV)ensureEV()});
