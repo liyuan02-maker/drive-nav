@@ -28,6 +28,5 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git pull --rebase -q
           git add cctv.json
-          git diff --cached --quiet || (git commit -m "Update CCTV list" && git push)
+          git diff --cached --quiet || (git commit -m "Update CCTV list" && git pull --rebase -X theirs -q && git push)

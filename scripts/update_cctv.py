@@ -43,7 +43,7 @@ def get(url, tok):
         except urllib.error.HTTPError as e:
             print("  HTTP", e.code, url)
             if e.code == 429:
-                time.sleep(5 + attempt * 5)
+                time.sleep(15 + attempt * 15)
                 continue
             raise
     raise RuntimeError("too many requests")
@@ -113,7 +113,17 @@ def main():
         print(label, n)
         if n:
             ok.append(label)
-        time.sleep(0.6 if tok else 2.5)
+        time.sleep(1.5 if tok else 3)
+    # 這次沒抓到的地區，保留上次的資料
+    try:
+        old = json.load(open("cctv.json", encoding="utf-8"))
+        miss = [c for c in old.get("cctv", []) if c.get("src") not in ok and c.get("src")]
+        if miss:
+            print("沿用上次的", len(miss), "支（", ",".join(sorted({c["src"] for c in miss})), "）")
+            out += miss
+            ok += sorted({c["src"] for c in miss})
+    except Exception as e:  # noqa: BLE001
+        print("沒有舊資料可沿用", e)
     if len(out) < 50:
         sys.exit("監視器資料太少，可能被 TDX 擋下（請設定 TDX_CLIENT_ID／TDX_CLIENT_SECRET）")
     doc = {"source": "交通部 TDX 運輸資料流通服務", "updated": time.strftime("%Y-%m-%d", time.gmtime(time.time() + 8 * 3600)),

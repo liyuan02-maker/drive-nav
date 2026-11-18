@@ -80,7 +80,7 @@ def main():
     except Exception as e:  # noqa: BLE001
         print("取得 TDX token 失敗，改用非會員額度：", e)
     global PAUSE
-    PAUSE = 1 if tok else 8
+    PAUSE = 2 if tok else 8
     parks, probe = [], {}
     for city in CITIES:
         # 先拿即時空位清單：只保留有即時空位的停車場（台中的停車場清單有 8 萬多筆，大多沒有即時資料）
@@ -122,6 +122,16 @@ def main():
                        "sample_live": sorted(live)[:3], "sample_park": recs[:1]}
         print(city, "即時空位", len(live), "個，有位置的", len(parks) - n0, "個")
         time.sleep(PAUSE)
+    # 這次失敗的縣市，保留上次的資料
+    try:
+        old = json.load(open("parking.json", encoding="utf-8")).get("parks", [])
+        failed = {c for c, v in probe.items() if isinstance(v, dict) and v.get("error")}
+        keep = [p for p in old if p.get("c") in failed]
+        if keep:
+            print("沿用上次的", len(keep), "個（", ",".join(sorted({p["c"] for p in keep})), "）")
+            parks += keep
+    except Exception as e:  # noqa: BLE001
+        print("沒有舊資料可沿用", e)
     if len(parks) < 300:
         print("取得的停車場太少，不更新")
         sys.exit(0)
