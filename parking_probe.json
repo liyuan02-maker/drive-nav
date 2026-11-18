@@ -1,202 +1,85 @@
 {
  "Taipei": {
-  "parks": 673,
-  "sample": [
-   {
-    "CarParkID": "TPE0096",
-    "CarParkName": {
-     "Zh_tw": "府前廣場地下停車場"
-    },
-    "TotalSpaces": 1998,
-    "AvailableSpaces": 908,
-    "Availabilities": [
-     {
-      "SpaceType": 1,
-      "NumberOfSpaces": 1998,
-      "AvailableSpaces": 908
-     },
-     {
-      "SpaceType": 2,
-      "NumberOfSpaces": 1405,
-      "AvailableSpaces": 1283
-     },
-     {
-      "SpaceType": 7,
-      "NumberOfSpaces": 40,
-      "AvailableSpaces": 11
-     },
-     {
-      "SpaceType": 9,
-      "NumberOfSpaces": 45,
-      "AvailableSpaces": 6
-     }
-    ],
-    "ServiceStatus": 1,
-    "FullStatus": 0,
-    "ChargeStatus": 1,
-    "DataCollectTime": "2026-11-18T20:06:25+08:00"
-   }
-  ],
+  "live": 1194,
+  "kept": 0,
   "cors": "*"
  },
  "NewTaipei": {
-  "parks": 0,
-  "sample": [],
-  "cors": "*"
+  "live": 0
  },
  "Taoyuan": {
-  "parks": 154,
-  "sample": [
-   {
-    "CarParkID": "AO070012",
-    "CarParkName": {
-     "Zh_tw": "大湳公有停車場(桃交)"
-    },
-    "TotalSpaces": 165,
-    "AvailableSpaces": 46,
-    "Availabilities": [
-     {
-      "SpaceType": 1,
-      "NumberOfSpaces": 165,
-      "AvailableSpaces": 46
-     }
-    ],
-    "ServiceStatus": 1,
-    "FullStatus": 0,
-    "ServiceAvailableLevel": "165",
-    "AlmostFullLevel": "165",
-    "FullLevel": "196",
-    "OverCrowdingLevel": "207",
-    "ChargeStatus": 1,
-    "Remark": "無",
-    "DataCollectTime": "2026-11-18T20:09:00+08:00"
-   }
-  ],
+  "live": 200,
+  "kept": 126,
   "cors": "*"
  },
  "Taichung": {
-  "parks": 88784,
-  "sample": [
-   {
-    "CarParkID": "01P0C0001E",
-    "CarParkName": {
-     "Zh_tw": "中區-交通局-自由一期立體P(B1F-6F)"
-    },
-    "TotalSpaces": 470,
-    "AvailableSpaces": 188,
-    "Availabilities": [
-     {
-      "SpaceType": 1,
-      "NumberOfSpaces": 290,
-      "AvailableSpaces": 122
-     },
-     {
-      "SpaceType": 2,
-      "NumberOfSpaces": 180,
-      "AvailableSpaces": 66
-     }
-    ],
-    "ServiceStatus": 1,
-    "FullStatus": 0,
-    "ChargeStatus": 1,
-    "DataCollectTime": "2026-11-18T20:09:01+08:00"
-   }
-  ],
+  "live": 1133,
+  "kept": 76845,
   "cors": "*"
  },
  "Tainan": {
-  "parks": 109,
-  "sample": [
-   {
-    "CarParkID": "00343229",
-    "CarParkName": {
-     "Zh_tw": "青年路立體停車場"
-    },
-    "TotalSpaces": 236,
-    "AvailableSpaces": 104,
-    "Availabilities": [
-     {
-      "SpaceType": 1,
-      "NumberOfSpaces": 191,
-      "AvailableSpaces": 75
-     },
-     {
-      "SpaceType": 2,
-      "NumberOfSpaces": 45,
-      "AvailableSpaces": 29
-     }
-    ],
-    "ServiceStatus": 1,
-    "FullStatus": 0,
-    "ChargeStatus": 1,
-    "DataCollectTime": "2026-11-18T20:10:54+08:00"
-   }
-  ],
+  "live": 75,
+  "kept": 74,
   "cors": "*"
  },
  "Kaohsiung": {
-  "parks": 755,
-  "sample": [
-   {
-    "CarParkID": "KHA00001",
-    "CarParkName": {
-     "Zh_tw": "五都重平站停車場"
-    },
-    "TotalSpaces": 54,
-    "AvailableSpaces": 4,
-    "Availabilities": [
-     {
-      "SpaceType": 1,
-      "NumberOfSpaces": 54,
-      "AvailableSpaces": 4
-     }
-    ],
-    "ServiceStatus": 1,
-    "FullStatus": 0,
-    "ChargeStatus": 1,
-    "DataCollectTime": "2026-11-18T20:11:56+08:00"
-   }
-  ],
+  "live": 731,
+  "kept": 731,
   "cors": "*"
  },
  "Keelung": {
-  "parks": 39,
-  "sample": [
-   {
-    "CarParkID": "KEE11101",
-    "CarParkName": {
-     "Zh_tw": "力揚基隆信二立體"
-    },
-    "TotalSpaces": 1000,
-    "AvailableSpaces": 228,
-    "Availabilities": [
-     {
-      "SpaceType": 1,
-      "NumberOfSpaces": 500,
-      "AvailableSpaces": 228
-     }
-    ],
-    "ServiceStatus": 1,
-    "FullStatus": 0,
-    "ChargeStatus": 1,
-    "DataCollectTime": "2026-11-18T20:11:34+08:00"
-   }
-  ],
+  "live": 86,
+  "kept": 38,
   "cors": "*"
  },
  "Hsinchu": {
-  "parks": 24,
-  "sample": [],
-  "cors": "*"
+  "live": 0
  },
  "HsinchuCounty": {
-  "parks": 39,
-  "sample": [],
-  "cors": "*"
+  "live": 0
  },
  "MiaoliCounty": {
-  "parks": 104,
-  "sample": [],
+  "live": 0
+ },
+ "ChanghuaCounty": {
+  "live": 0
+ },
+ "NantouCounty": {
+  "live": 0
+ },
+ "YunlinCounty": {
+  "live": 1,
+  "kept": 1,
   "cors": "*"
+ },
+ "Chiayi": {
+  "error": "too many requests"
+ },
+ "ChiayiCounty": {
+  "error": "too many requests"
+ },
+ "PingtungCounty": {
+  "error": "too many requests"
+ },
+ "YilanCounty": {
+  "error": "too many requests"
+ },
+ "HualienCounty": {
+  "error": "too many requests"
+ },
+ "TaitungCounty": {
+  "error": "too many requests"
+ },
+ "KinmenCounty": {
+  "error": "too many requests"
+ },
+ "PenghuCounty": {
+  "error": "too many requests"
+ },
+ "LienchiangCounty": {
+  "error": "too many requests"
+ },
+ "filter_test": {
+  "error": "too many requests"
  }
 }
