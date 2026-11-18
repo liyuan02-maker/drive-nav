@@ -1,76 +1,23 @@
 {
  "Taipei": {
-  "live": 1194,
-  "records": 673,
-  "kept": 455,
+  "live": 1191,
+  "records": 0,
+  "kept": 0,
   "cors": "*",
   "sample_live": [
    "916",
    "932",
    "TPE0001"
   ],
-  "sample_park": [
-   {
-    "CarParkID": "TPE1154",
-    "CarParkName": {
-     "Zh_tw": "雙園堤外平面停車場"
-    },
-    "CarParkShortName": {},
-    "OperatorID": "21101573",
-    "Description": "小型車位175格(含身心障礙車位4格,親子車位5格,電動車充電位4格),機車94格（含身心障礙機車停車位4格）",
-    "CarParkType": 3,
-    "ParkingGuideType": 2,
-    "ParkingTypes": [
-     1
-    ],
-    "ParkingSiteTypes": [
-     13
-    ],
-    "ChargeTypes": [
-     1
-    ],
-    "EmergencyPhone": "02-25995546",
-    "CarParkPosition": {
-     "PositionLat": 25.03264,
-     "PositionLon": 121.48764
-    },
-    "Address": "臺北市大同區延平北路四段205號B1",
-    "FareDescription": "依現場公告為準",
-    "IsFreeParkingOutOfHours": 1,
-    "IsPublic": 1,
-    "IsMotorcycle": 0,
-    "OperationType": 2,
-    "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 1,
-    "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 0,
-    "ReservationAvailable": 0,
-    "WheelchairAccessible": 1,
-    "OvernightPermitted": 1,
-    "TicketMachine": 0,
-    "Toilet": 1,
-    "Restaurant": 0,
-    "GasStation": 0,
-    "Shop": 0,
-    "Gated": 1,
-    "Lighting": 1,
-    "SecureParking": 1,
-    "TicketOffice": 0,
-    "ProhibitedForAnyHazardousMaterialLoads": 0,
-    "SecurityGuard": 1,
-    "Supervision": 1,
-    "City": "Taipei",
-    "CityCode": "TPE"
-   }
-  ]
+  "sample_park": []
  },
  "NewTaipei": {
   "live": 0
  },
  "Taoyuan": {
-  "live": 201,
+  "live": 202,
   "records": 154,
-  "kept": 126,
+  "kept": 127,
   "cors": "*",
   "sample_live": [
    "AO0100003",
@@ -137,7 +84,7 @@
  },
  "Taichung": {
   "live": 1133,
-  "records": 88784,
+  "records": 88866,
   "kept": 1110,
   "cors": "*",
   "sample_live": [
@@ -147,13 +94,13 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "08P1C0176A",
+    "CarParkID": "17P0M0002A",
     "CarParkName": {
-     "Zh_tw": "北屯區-民營-Times台中昌平山西P"
+     "Zh_tw": "潭子區-臺鐵-潭子車站法定機車P"
     },
     "CarParkShortName": {},
     "OperatorID": "",
-    "Description": "台灣普客二四(股)公司運營。",
+    "Description": "(110)中市交停規證字第121號，自2021年11月5日至2036年11月4日止，宜舍企業股份有限公司運營。",
     "CarParkType": 1,
     "ParkingGuideType": 255,
     "ParkingTypes": [
@@ -166,18 +113,18 @@
      255
     ],
     "CarParkPosition": {
-     "PositionLat": 24.18578,
-     "PositionLon": 120.69055
+     "PositionLat": 24.21371,
+     "PositionLon": 120.70629
     },
-    "Address": "台中市北屯區山西路三段429號旁空地",
-    "FareDescription": "40元/半小時，月租4000元。",
+    "Address": "臺中市潭子區潭陽里22鄰中山路二段352-1號",
+    "FareDescription": "(1)機車平假日50元/當日當次(入場30分鐘內免費)。(2)機車月租：每月每輛1,000元。(3)免收停車費車輛依據「臺中市公有停車場收費自治條例」辦理。",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 0,
     "IsMotorcycle": 0,
     "OperationType": 3,
-    "LiveOccuppancyAvailable": 1,
+    "LiveOccuppancyAvailable": 0,
     "EVRechargingAvailable": 0,
-    "MonthlyTicketAvailable": 0,
+    "MonthlyTicketAvailable": 1,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 0,
@@ -211,30 +158,30 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "89050740",
+    "CarParkID": "61620111-6",
     "CarParkName": {
-     "Zh_tw": "北園公兒停車場"
+     "Zh_tw": "立德停車場G區"
     },
     "CarParkShortName": {},
-    "OperatorID": "70369154",
-    "Description": "平面停車場小型車167格（含身心障礙車格、婦幼車格各4格及綠能優先車位9格）",
+    "OperatorID": "64912334",
+    "Description": "小型車14格(含身心障礙停車為1格、婦幼車格1格)",
     "CarParkType": 1,
-    "ParkingGuideType": 2,
+    "ParkingGuideType": 1,
     "ParkingTypes": [
-     2
+     254
     ],
     "ParkingSiteTypes": [
-     20
+     254
     ],
     "ChargeTypes": [
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 23.01315,
-     "PositionLon": 120.22463
+     "PositionLat": 22.97631,
+     "PositionLon": 120.21459
     },
-    "Address": "臺南市北區元寶里北園街114巷停車場",
-    "FareDescription": "計時20元/時，12小時內最高100元",
+    "Address": "台南市東區立德八路與立德一路交叉口南側",
+    "FareDescription": "計時20元/時,當日最高120元時(跨日重新計費)",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
@@ -242,7 +189,7 @@
     "LiveOccuppancyAvailable": 1,
     "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 1,
+    "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
@@ -251,7 +198,7 @@
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
-    "Gated": 0,
+    "Gated": 1,
     "Lighting": 1,
     "SecureParking": 1,
     "TicketOffice": 0,
@@ -275,14 +222,14 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "KHB00705",
+    "CarParkID": "KHB01059",
     "CarParkName": {
-     "Zh_tw": "酬勤裕興路停車場"
+     "Zh_tw": "杉民明倫路停車場"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "停5518",
-    "OperatorID": "83021179",
-    "Description": "小型車61輛(含身心障礙者專用停車位2輛、電動汽車充電專用停車位1輛(1慢充)",
+    "CarParkRegNo": "停6492",
+    "OperatorID": "85010079",
+    "Description": "小型車26輛(含身心障礙者專用停車位1輛)。",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
@@ -295,21 +242,21 @@
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 22.67198,
-     "PositionLon": 120.29297
+     "PositionLat": 22.66229,
+     "PositionLon": 120.29774
     },
-    "Address": "華榮路616巷與裕興路129巷口北側",
-    "FareDescription": "1.計時收費：每半小時50元(當日連續停放最高收費500元)。2.月租收費：每月5,000元。3.電動汽車充電專用停車位充電費率：每分鐘1元(停車費另計)。",
+    "Address": "明倫路196號南側",
+    "FareDescription": "計時收費：每半小時50元(當日連續停放最高收費500元)。月租收費：每月5,000元。",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 0,
     "IsMotorcycle": 0,
     "OperationType": 3,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 1,
+    "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 1,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 1,
+    "WheelchairAccessible": 0,
     "OvernightPermitted": 1,
     "TicketMachine": 1,
     "Toilet": 0,
@@ -341,61 +288,62 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "KEE12107",
+    "CarParkID": "KEE12401",
     "CarParkName": {
-     "Zh_tw": "區域探索館平面停車場"
+     "Zh_tw": "基隆市中和路168巷停車場",
+     "En": "Zhonghe Rd., Parking Lot"
     },
     "CarParkShortName": {},
-    "OperatorID": "52492792",
-    "Description": "平面式小型車148格。",
+    "CarParkRegNo": "基市停車登字第109010號",
+    "OperatorID": "80682490",
+    "Description": "平面式小型車 49 格(含身心障礙停車位1格 婦幼專用車位1格)",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
-     1,
-     2,
-     3
+     4
     ],
     "ParkingSiteTypes": [
-     10,
-     8,
-     13
+     20
     ],
     "ChargeTypes": [
+     3,
      1
     ],
-    "EmergencyPhone": "02-87718502",
+    "EmergencyPhone": "0900219002",
     "CarParkPosition": {
-     "PositionLat": 25.14075,
-     "PositionLon": 121.79495
+     "PositionLat": 25.15127,
+     "PositionLon": 121.71499
     },
-    "Address": "基隆市中正區北寧路367號",
+    "Address": "基隆市中山區中和路168巷大慶大城社區旁",
     "ImageURLs": [
      ""
     ],
-    "FareDescription": "小型車平日每小時20元、假日每小時50元。",
+    "WebURL": "https://www.altob.com.tw/",
+    "FareDescription": "小型車每小時20 元。",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 0,
+    "IsPublic": 1,
     "IsMotorcycle": 0,
     "OperationType": 1,
-    "LiveOccuppancyAvailable": 1,
+    "LiveOccuppancyAvailable": 0,
     "EVRechargingAvailable": 1,
     "MonthlyTicketAvailable": 0,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
-    "TicketMachine": 0,
-    "Toilet": 1,
+    "TicketMachine": 1,
+    "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
-    "Gated": 1,
+    "Gated": 0,
     "Lighting": 1,
-    "SecureParking": 0,
-    "TicketOffice": 1,
-    "ProhibitedForAnyHazardousMaterialLoads": 0,
-    "SecurityGuard": 1,
+    "SecureParking": 1,
+    "TicketOffice": 0,
+    "ProhibitedForAnyHazardousMaterialLoads": 1,
+    "SecurityGuard": 0,
     "Supervision": 1,
+    "LandMark": "大慶大城社區",
     "City": "Keelung",
     "CityCode": "KEE"
    }
@@ -426,41 +374,46 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "A01",
+    "CarParkID": "yun12015",
     "CarParkName": {
-     "Zh_tw": "雲林溪加蓋停車場"
+     "Zh_tw": "DS Parking東燊停車場(國民運動中心莊敬路)"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "1083326081-4",
-    "OperatorID": "YUN87158061",
-    "Description": "平面停車場75個(含無障礙停車位)",
+    "CarParkRegNo": "1120600011-1",
+    "OperatorID": "08772486",
+    "Description": "平面停車場",
     "CarParkType": 1,
     "ParkingGuideType": 1,
-    "ParkingTypes": [],
+    "ParkingTypes": [
+     2,
+     4
+    ],
     "ParkingSiteTypes": [
-     5,
-     19,
-     20
+     6,
+     5
+    ],
+    "ChargeTypes": [
+     1
     ],
     "CarParkPosition": {
-     "PositionLat": 23.706520080566406,
-     "PositionLon": 120.53692626953125
+     "PositionLat": 23.703273,
+     "PositionLon": 120.54337
     },
-    "Email": "ylhg30208@mail.yunlin.gov.tw",
-    "Address": "雲林縣斗六市民生南路6號",
-    "FareDescription": "每次30元",
+    "Address": "640雲林縣斗六市公正街195巷2號",
+    "FareDescription": "平日 10元/30分，最高收費120元\r\n假日 15元/30分，最高收費150元",
+    "SpecialOfferDescription": "前10分鐘免費",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
     "OperationType": 1,
     "LiveOccuppancyAvailable": 0,
     "EVRechargingAvailable": 0,
-    "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 1,
+    "MonthlyTicketAvailable": 0,
+    "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 1,
+    "WheelchairAccessible": 0,
     "OvernightPermitted": 1,
-    "TicketMachine": 1,
+    "TicketMachine": 0,
     "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
@@ -471,7 +424,7 @@
     "TicketOffice": 0,
     "ProhibitedForAnyHazardousMaterialLoads": 0,
     "SecurityGuard": 0,
-    "Supervision": 1,
+    "Supervision": 0,
     "SupervisionType": 1,
     "City": "YunlinCounty",
     "CityCode": "YUN"
@@ -496,36 +449,30 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "PT0014",
+    "CarParkID": "PT0009",
     "CarParkName": {
-     "Zh_tw": "東港鎮中山路平面式路外停車場"
+     "Zh_tw": "屏菸1936文化基地立體停車場"
     },
     "CarParkShortName": {},
-    "OperatorID": "PIF12745271",
-    "Description": "小客車停車格62格(含身障2格及婦幼2格)",
-    "CarParkType": 1,
+    "OperatorID": "PIF80738683",
+    "Description": "小型車323格(含婦幼12格，身障7格，電動樁4格)",
+    "CarParkType": 2,
     "ParkingGuideType": 1,
-    "ParkingTypes": [
-     2,
-     4
-    ],
-    "ParkingSiteTypes": [
-     4
-    ],
+    "ParkingTypes": [],
+    "ParkingSiteTypes": [],
     "ChargeTypes": [
      1
     ],
-    "Telephone": "0800208333",
+    "Telephone": "087324313",
     "CarParkPosition": {
-     "PositionLat": 22.465850830078125,
-     "PositionLon": 120.45105743408203
+     "PositionLat": 22.66213035583496,
+     "PositionLon": 120.50489807128906
     },
-    "Email": "shanna@pss-group.com",
-    "Address": "屏東縣東港鎮褔德里中山路27號後方平面停車場",
-    "FareDescription": "每小時20元",
-    "SpecialOfferDescription": "身障半價",
+    "Email": "miruai0925199627@gmail.com",
+    "Address": "屏東縣屏東市菸廠路3號",
+    "FareDescription": "計時:每小時20元當日最高100元",
     "IsFreeParkingOutOfHours": 0,
-    "VehicleRestriction": "只允許小型車停放",
+    "VehicleRestriction": "限高2.1小型車，大型車不可停",
     "IsPublic": 1,
     "IsMotorcycle": 0,
     "OperationType": 1,
@@ -535,15 +482,15 @@
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 0,
-    "OvernightPermitted": 1,
-    "TicketMachine": 1,
+    "OvernightPermitted": 0,
+    "TicketMachine": 0,
     "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
-    "Gated": 1,
-    "Lighting": 1,
-    "SecureParking": 1,
+    "Gated": 0,
+    "Lighting": 0,
+    "SecureParking": 0,
     "TicketOffice": 0,
     "ProhibitedForAnyHazardousMaterialLoads": 0,
     "SecurityGuard": 0,
@@ -565,13 +512,13 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "70",
+    "CarParkID": "25",
     "CarParkName": {
-     "Zh_tw": "冬山河生態綠舟停車場"
+     "Zh_tw": "宜蘭幸福（停六）停車場"
     },
     "CarParkShortName": {},
     "CarParkRegNo": "\r\n      ",
-    "OperatorID": "70369154",
+    "OperatorID": "42953583",
     "Description": "",
     "CarParkType": 255,
     "ParkingGuideType": 1,
@@ -585,17 +532,17 @@
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 24.6377115051105,
-     "PositionLon": 121.787175312499
+     "PositionLat": 24.751327,
+     "PositionLon": 121.756441
     },
-    "Address": "宜蘭縣冬山鄉冬山路二段172號-冬山鄉珍珠二段877、886、887、888、889等5筆地號",
+    "Address": "宜蘭縣宜蘭市壯一段82-9、82-63、82-64、82-66、82-89、82-96、82-97、101等8地號",
     "FareDescription": "未知",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
     "OperationType": 1,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 1,
+    "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 0,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
