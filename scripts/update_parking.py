@@ -17,14 +17,19 @@ UA = "Mozilla/5.0 (drive-nav parking updater; +https://github.com/liyuan02-maker
 
 
 def token():
-    cid, sec = os.environ.get("TDX_CLIENT_ID"), os.environ.get("TDX_CLIENT_SECRET")
+    cid, sec = (os.environ.get("TDX_CLIENT_ID") or "").strip(), (os.environ.get("TDX_CLIENT_SECRET") or "").strip()
     if not (cid and sec):
         print("沒有 TDX 金鑰，用非會員額度")
         return None
     body = urllib.parse.urlencode({"grant_type": "client_credentials", "client_id": cid, "client_secret": sec}).encode()
     req = urllib.request.Request(TOKEN_URL, data=body, headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.loads(r.read())["access_token"]
+    print(f"TDX 帳號：Client Id 長度 {len(cid)}，開頭 {cid[:4]}…；Client Secret 長度 {len(sec)}")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.loads(r.read())["access_token"]
+    except urllib.error.HTTPError as e:
+        print("TDX 拒絕這組帳號：", e.code, e.read().decode("utf-8", "replace")[:300])
+        raise
 
 
 def get(url, tok, want_headers=False):
