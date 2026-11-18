@@ -5,13 +5,14 @@
   /v1/Parking/OffStreet/ParkingAvailability/City/{City}  即時剩餘車位（網頁開啟時直接查，這裡只確認哪些縣市有）
 有設定 GitHub Secrets（TDX_CLIENT_ID、TDX_CLIENT_SECRET）就用會員身分，否則用非會員額度試試。
 """
-import json, os, sys, time, urllib.parse, urllib.request
+import json, os, re, sys, time, urllib.parse, urllib.request
 
 BASE = "https://tdx.transportdata.tw/api/basic/v1/Parking/OffStreet"
 TOKEN_URL = "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token"
 CITIES = ["Taipei", "NewTaipei", "Taoyuan", "Taichung", "Tainan", "Kaohsiung", "Keelung", "Hsinchu", "HsinchuCounty",
           "MiaoliCounty", "ChanghuaCounty", "NantouCounty", "YunlinCounty", "Chiayi", "ChiayiCounty", "PingtungCounty",
           "YilanCounty", "HualienCounty", "TaitungCounty", "KinmenCounty", "PenghuCounty", "LienchiangCounty"]
+PAUSE = 8
 UA = "Mozilla/5.0 (drive-nav parking updater; +https://github.com/liyuan02-maker/drive-nav)"
 
 
@@ -73,6 +74,8 @@ def main():
         tok = token()
     except Exception as e:  # noqa: BLE001
         print("取得 TDX token 失敗，改用非會員額度：", e)
+    global PAUSE
+    PAUSE = 1 if tok else 8
     parks, probe = [], {}
     for city in CITIES:
         # 先拿即時空位清單：只保留有即時空位的停車場（台中的停車場清單有 8 萬多筆，大多沒有即時資料）
@@ -82,34 +85,38 @@ def main():
         except Exception as e:  # noqa: BLE001
             print(city, "即時空位失敗", e)
             probe[city] = {"error": str(e)}
-            time.sleep(8)
+            time.sleep(PAUSE)
             continue
-        time.sleep(8)
+        time.sleep(PAUSE)
         if not live:
             print(city, "沒有即時空位資料")
             probe[city] = {"live": 0}
             continue
         try:
-            data = get(f"{BASE}/CarPark/City/{city}?$format=JSON&$select=CarParkID,CarParkName,CarParkPosition,Address,FareDescription", tok)
+            data = get(f"{BASE}/CarPark/City/{city}?$format=JSON", tok)
         except Exception as e:  # noqa: BLE001
             print(city, "停車場清單失敗", e)
             probe[city] = {"live": len(live), "error": str(e)}
-            time.sleep(8)
+            time.sleep(PAUSE)
             continue
         n0 = len(parks)
-        for c in records(data, "CarParkID"):
-            if c["CarParkID"] not in live:
+        recs = records(data, "CarParkID")
+        seen = set()
+        for c in recs:
+            if c["CarParkID"] not in live or c["CarParkID"] in seen:
                 continue
+            seen.add(c["CarParkID"])
             pos = c.get("CarParkPosition") or {}
             lat, lon = pos.get("PositionLat"), pos.get("PositionLon")
             if not lat or not lon:
                 continue
-            parks.append({"id": c["CarParkID"], "c": city, "n": zh(c.get("CarParkName")),
+            parks.append({"id": c["CarParkID"], "c": city, "n": re.sub(r"^[^-]{1,5}區-[^-]{1,8}-", "", zh(c.get("CarParkName"))),
                           "lat": round(float(lat), 6), "lon": round(float(lon), 6),
                           "a": zh(c.get("Address"))[:60], "f": zh(c.get("FareDescription"))[:80]})
-        probe[city] = {"live": len(live), "kept": len(parks) - n0, "cors": hd.get("Access-Control-Allow-Origin")}
+        probe[city] = {"live": len(live), "records": len(recs), "kept": len(parks) - n0, "cors": hd.get("Access-Control-Allow-Origin"),
+                       "sample_live": sorted(live)[:3], "sample_park": recs[:1]}
         print(city, "即時空位", len(live), "個，有位置的", len(parks) - n0, "個")
-        time.sleep(8)
+        time.sleep(PAUSE)
     if len(parks) < 300:
         print("取得的停車場太少，不更新")
         sys.exit(0)
