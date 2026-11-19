@@ -353,6 +353,22 @@ html[lang=en].navigating .controls .langbtn{min-width:0}
   .altpick{left:8px;right:8px;bottom:64px}
   .toast{bottom:auto;top:46%}
 }
+#menuBtn,.moremenu{display:none}
+@media (orientation:portrait) and (max-width:899px){
+  #menuBtn{display:grid;--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Ccircle cx='5' cy='12' r='2.3'/%3E%3Ccircle cx='12' cy='12' r='2.3'/%3E%3Ccircle cx='19' cy='12' r='2.3'/%3E%3C/svg%3E")}
+  #menuBtn[aria-expanded="true"]{color:var(--accent)}
+  .controls.open #menuBtn{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E");color:var(--accent)}
+  #layerBtn{display:none}
+  .controls{position:relative}
+  .moremenu:not([hidden]){display:grid;position:absolute;right:0;bottom:calc(100% + 8px);z-index:9;min-width:210px;gap:6px;padding:8px;background:rgba(17,26,33,.97);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .moremenu>button{height:44px;padding:0 12px;font-size:15px;text-align:left;justify-content:flex-start;display:flex;align-items:center;gap:8px;color:var(--fg)}
+  .moremenu #coBtn[aria-pressed="true"],.moremenu #trafficBtn[aria-pressed="true"]{color:var(--ok);border-color:var(--ok)}
+  .moremenu #trafficBtn{border:1px solid var(--line);border-radius:12px;background:var(--raise)}
+  .moremenu #layers{display:flex!important;position:static;padding:0;border:0;background:none;box-shadow:none;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .moremenu #layers button{flex:1;text-align:center;padding:10px 4px;border-radius:0;font-size:13.5px}
+  .moremenu #layers button+button{border-left:1px solid var(--line)}
+  .moremenu .mlabel{font-size:12px;color:var(--muted);padding:2px 4px 0}
+}
 @media (orientation:portrait) and (max-width:370px){.maptop>.nav,.maptop>.hud{width:100px}.hud .num{font-size:44px}.hud .num.three{font-size:34px}}
 </style>
 </head>
@@ -366,7 +382,9 @@ html[lang=en].navigating .controls .langbtn{min-width:0}
       <button class="btn" id="coBtn" aria-pressed="false">攝影機</button>
       <button class="btn langbtn" id="langBtn" aria-label="Switch to English / 切換成中文"></button>
       <button class="btn" id="more" aria-expanded="false">設定</button>
+      <button class="btn" id="menuBtn" aria-expanded="false" aria-label="更多">更多</button>
     </div>
+    <div class="moremenu" id="moreMenu" hidden aria-label="更多"></div>
     <div class="extra">
       <div class="label" data-en="Language">介面語言 Language</div>
       <div class="seg" id="langSeg" role="group" aria-label="Language"><button data-l="zh">中文</button><button data-l="en">English</button></div>
@@ -502,7 +520,7 @@ const LANG=LS.get('lang','zh');
 /* ---------- 介面語言：中文／English ---------- */
 // 切到英文時：畫面上出現的中文即時換成英文（含之後動態產生的提示），語音改英文，Google 路線、搜尋、地名也要英文版
 const EN=LANG==='en',L=(zh,en)=>EN?en:zh;
-const I18N={'路線偏好':'Route options','避開國道':'Avoid freeways','避開收費路段':'Avoid tolls','避開渡輪':'Avoid ferries','選擇路線':'Choose a route','開始':'Start','暫停營業':'Closed','已滿':'Full','找停車場':'Find parking','尋找目的地附近的停車場…':'Finding parking near your destination…','尋找附近的停車場…':'Finding parking nearby…','目的地附近的停車場（點一下直接導航過去）':'Parking near your destination (tap to navigate there)','附近的停車場（點一下直接導航過去）':'Parking nearby (tap to navigate there)','目的地附近找不到停車場':'No parking found near your destination','附近找不到停車場':'No parking found nearby','營業中':'Open','休息中':'Closed','免費':'Free','地下停車場':'Underground parking','路邊停車格':'Street parking','這個頁面不是從 https 網址打開，地圖和搜尋會連不上':'This page wasn’t opened from an https address, so maps and search can’t connect','Google Map ID（選填）':'Google Map ID (optional)','Apple MapKit JS 權杖':'Apple MapKit JS token','TomTom API 金鑰':'TomTom API key','已內建金鑰；要用自己的再貼上':'Built-in key in use; paste your own to replace it','這段路沒有速限資料':'No speed limit data for this road',
+const I18N={'更多':'More','路線偏好':'Route options','避開國道':'Avoid freeways','避開收費路段':'Avoid tolls','避開渡輪':'Avoid ferries','選擇路線':'Choose a route','開始':'Start','暫停營業':'Closed','已滿':'Full','找停車場':'Find parking','尋找目的地附近的停車場…':'Finding parking near your destination…','尋找附近的停車場…':'Finding parking nearby…','目的地附近的停車場（點一下直接導航過去）':'Parking near your destination (tap to navigate there)','附近的停車場（點一下直接導航過去）':'Parking nearby (tap to navigate there)','目的地附近找不到停車場':'No parking found near your destination','附近找不到停車場':'No parking found nearby','營業中':'Open','休息中':'Closed','免費':'Free','地下停車場':'Underground parking','路邊停車格':'Street parking','這個頁面不是從 https 網址打開，地圖和搜尋會連不上':'This page wasn’t opened from an https address, so maps and search can’t connect','Google Map ID（選填）':'Google Map ID (optional)','Apple MapKit JS 權杖':'Apple MapKit JS token','TomTom API 金鑰':'TomTom API key','已內建金鑰；要用自己的再貼上':'Built-in key in use; paste your own to replace it','這段路沒有速限資料':'No speed limit data for this road',
 '操作':'Controls','搜尋目的地':'Search','改目的地':'Route','結束':'End','語音':'Voice','攝影機':'Camera','設定':'Settings','收起':'Close',
 '地圖來源':'Map source','免費地圖':'Free map','Google 地圖':'Google Maps','Apple 地圖':'Apple Maps','儲存':'Save','交通方式':'Travel mode',
 '汽車':'Car','機車':'Scooter','自行車':'Bicycle','步行':'Walking','地圖顏色':'Map colors','自動':'Auto','白天':'Day','夜間':'Night',
@@ -1052,8 +1070,11 @@ function openSheet(){$('sheet').hidden=false;endSetFav();renderFav();renderPlan(
 function closeSheet(){$('sheet').hidden=true}
 function toggleSteps(open){const o=open??$('steps').hidden;$('steps').hidden=!o;$('navCard').setAttribute('aria-expanded',o);if(o)renderSteps()}
 {const mq=PORTRAIT,hud=$('hud'),home=hud.nextElementSibling,mb=document.querySelector('.mapbtns'),mbHome=mb.parentNode,mbNext=mb.nextElementSibling,row=document.querySelector('.controls>.row'),top=document.querySelector('.maptop');
-  const place=()=>{if(mq.matches){if(hud.parentNode!==top)$('navCard').after(hud);if(mb.parentNode!==row)row.append(mb)}else{if(hud.parentNode!==home.parentNode)home.before(hud);if(mb.parentNode!==mbHome)mbHome.insertBefore(mb,mbNext)}A&&A.resize&&A.resize()};
+  const MV=['coBtn','trafficBtn','layers','langBtn','more'].map(id=>{const e=$(id);return{e,p:e.parentNode,n:e.nextSibling}}),menu=$('moreMenu');
+  const place=()=>{if(mq.matches){if(hud.parentNode!==top)$('navCard').after(hud);if(mb.parentNode!==row){row.append(mb);row.append($('menuBtn'))}MV.forEach(m=>{if(m.e.parentNode!==menu)menu.append(m.e)})}else{menu.hidden=true;$('menuBtn').setAttribute('aria-expanded',false);MV.slice().reverse().forEach(m=>{if(m.e.parentNode===menu)m.p.insertBefore(m.e,m.n&&m.n.parentNode===m.p?m.n:null)});if(hud.parentNode!==home.parentNode)home.before(hud);if(mb.parentNode!==mbHome)mbHome.insertBefore(mb,mbNext)}A&&A.resize&&A.resize()};
   mq.addEventListener?mq.addEventListener('change',place):mq.addListener(place);place()}
+$('menuBtn').addEventListener('click',e=>{e.stopPropagation();if($('controls').classList.contains('open')){$('more').click();return}const o=$('moreMenu').hidden;$('moreMenu').hidden=!o;$('menuBtn').setAttribute('aria-expanded',o)});
+document.addEventListener('click',e=>{const m=$('moreMenu');if(m.hidden||m.contains(e.target)&&!e.target.closest('#more,#langBtn'))return;if(e.target.closest('#menuBtn'))return;m.hidden=true;$('menuBtn').setAttribute('aria-expanded',false)});
 $('navCard').addEventListener('click',()=>toggleSteps());
 $('navCard').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleSteps()}});
 $('stClose').addEventListener('click',()=>toggleSteps(false));
