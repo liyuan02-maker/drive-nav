@@ -227,6 +227,24 @@ html.navigating .wxpill{display:none!important}
 .seg button{border:0;background:var(--raise);padding:7px 12px;font-size:13.5px}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button.on{background:var(--line);color:var(--accent)}
+.spdpanel{position:absolute;right:60px;top:10px;z-index:6;width:184px;max-width:calc(100% - 140px);background:rgba(17,26,33,.95);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.45);overflow:hidden}
+.sphead{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;padding:7px 9px;color:var(--fg);text-align:left}
+.sphead b{font-size:13px;font-family:var(--display)}
+.sphead #spdSum{flex:1;text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sphead .chev{font-size:11px;color:var(--muted);transition:transform .15s}
+.spdpanel.min .chev{transform:rotate(-90deg)}
+.spdpanel.min .splist{display:none}
+.splist{max-height:min(38vh,300px);overflow-y:auto;padding:0 6px 6px;display:grid;gap:2px}
+.splist .sr{font-size:11px;color:var(--muted);padding:5px 3px 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.splist .sp{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:7px;align-items:center;padding:3px 3px}
+.splist .sp i{align-self:stretch;border-radius:2px;background:var(--muted)}
+.splist .sp .nm{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.splist .sp .v{font:700 15px var(--display);font-variant-numeric:tabular-nums}
+.splist .sp.g i{background:#2fbf71}.splist .sp.g .v{color:#3ddc84}
+.splist .sp.y i{background:#f2b33d}.splist .sp.y .v{color:#f5c04a}
+.splist .sp.r i{background:#e5484d}.splist .sp.r .v{color:#ff6b6f}
+.splist .sp.n .v{color:var(--muted);font-weight:500}
+.splist .note{font-size:11px;color:var(--muted);padding:4px 3px 0}
 .altpick{position:absolute;left:10px;right:60px;bottom:12px;z-index:9;background:rgba(17,26,33,.97);border:1px solid var(--line);border-radius:14px;padding:8px;display:grid;gap:6px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .althead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px}
 .althead b{font-family:var(--display);font-size:15px}
@@ -360,6 +378,9 @@ html[lang=en].navigating .controls .langbtn{min-width:0}
   .cctv{align-self:start;justify-self:end;margin:8px 8px 0 0}
   .recenter,.banner{bottom:64px}
   .altpick{left:8px;right:8px;bottom:64px}
+  .spdpanel{right:8px;top:calc(8px + min(44vw,180px) * .5625 + 40px);width:176px;max-width:calc(100% - 140px)}
+  #cctv[hidden] ~ .mapwrap .spdpanel{top:8px}
+  .splist{max-height:min(26vh,240px)}
   .toast{bottom:auto;top:46%}
 }
 #menuBtn,.moremenu{display:none}
@@ -471,6 +492,7 @@ html[lang=en].navigating .controls .langbtn{min-width:0}
       <div class="wxpill" id="wxPill" hidden><span id="wxIcon"></span><span id="wxText"></span></div>
       </div>
     </div>
+    <div class="spdpanel" id="spdPanel" hidden><button class="sphead" id="spdHead" aria-expanded="true"><b>沿路車速</b><span id="spdSum"></span><span class="chev" aria-hidden="true">▾</span></button><div class="splist" id="spdList"></div></div>
     <div class="altpick" id="altPick" hidden aria-label="選擇路線"><div class="althead"><b>選擇路線</b><button class="btn primary" id="altGo">開始</button></div><div class="altlist" id="altList"></div></div>
     <div class="banner" id="banner" hidden><div id="bannerText"></div><button class="btn primary" id="bannerBtn" hidden></button></div>
     <div class="mapbtns">
@@ -529,7 +551,7 @@ const LANG=LS.get('lang','zh');
 /* ---------- 介面語言：中文／English ---------- */
 // 切到英文時：畫面上出現的中文即時換成英文（含之後動態產生的提示），語音改英文，Google 路線、搜尋、地名也要英文版
 const EN=LANG==='en',L=(zh,en)=>EN?en:zh;
-const I18N={'已選目的地：':'Destination: ','更多':'More','用說的搜尋':'Search by voice','請說出地點…':'Say a place…','路線偏好':'Route options','避開國道':'Avoid freeways','避開收費路段':'Avoid tolls','避開渡輪':'Avoid ferries','選擇路線':'Choose a route','開始':'Start','暫停營業':'Closed','已滿':'Full','找停車場':'Find parking','尋找目的地附近的停車場…':'Finding parking near your destination…','尋找附近的停車場…':'Finding parking nearby…','目的地附近的停車場（點一下直接導航過去）':'Parking near your destination (tap to navigate there)','附近的停車場（點一下直接導航過去）':'Parking nearby (tap to navigate there)','目的地附近找不到停車場':'No parking found near your destination','附近找不到停車場':'No parking found nearby','營業中':'Open','休息中':'Closed','免費':'Free','地下停車場':'Underground parking','路邊停車格':'Street parking','這個頁面不是從 https 網址打開，地圖和搜尋會連不上':'This page wasn’t opened from an https address, so maps and search can’t connect','Google Map ID（選填）':'Google Map ID (optional)','Apple MapKit JS 權杖':'Apple MapKit JS token','TomTom API 金鑰':'TomTom API key','已內建金鑰；要用自己的再貼上':'Built-in key in use; paste your own to replace it','這段路沒有速限資料':'No speed limit data for this road',
+const I18N={'沿路車速':'Speeds ahead','已選目的地：':'Destination: ','更多':'More','用說的搜尋':'Search by voice','請說出地點…':'Say a place…','路線偏好':'Route options','避開國道':'Avoid freeways','避開收費路段':'Avoid tolls','避開渡輪':'Avoid ferries','選擇路線':'Choose a route','開始':'Start','暫停營業':'Closed','已滿':'Full','找停車場':'Find parking','尋找目的地附近的停車場…':'Finding parking near your destination…','尋找附近的停車場…':'Finding parking nearby…','目的地附近的停車場（點一下直接導航過去）':'Parking near your destination (tap to navigate there)','附近的停車場（點一下直接導航過去）':'Parking nearby (tap to navigate there)','目的地附近找不到停車場':'No parking found near your destination','附近找不到停車場':'No parking found nearby','營業中':'Open','休息中':'Closed','免費':'Free','地下停車場':'Underground parking','路邊停車格':'Street parking','這個頁面不是從 https 網址打開，地圖和搜尋會連不上':'This page wasn’t opened from an https address, so maps and search can’t connect','Google Map ID（選填）':'Google Map ID (optional)','Apple MapKit JS 權杖':'Apple MapKit JS token','TomTom API 金鑰':'TomTom API key','已內建金鑰；要用自己的再貼上':'Built-in key in use; paste your own to replace it','這段路沒有速限資料':'No speed limit data for this road',
 '操作':'Controls','搜尋目的地':'Search','改目的地':'Route','結束':'End','語音':'Voice','攝影機':'Camera','設定':'Settings','收起':'Close',
 '地圖來源':'Map source','免費地圖':'Free map','Google 地圖':'Google Maps','Apple 地圖':'Apple Maps','儲存':'Save','交通方式':'Travel mode',
 '汽車':'Car','機車':'Scooter','自行車':'Bicycle','步行':'Walking','地圖顏色':'Map colors','自動':'Auto','白天':'Day','夜間':'Night',
@@ -1189,7 +1211,61 @@ async function planRoute(fresh){
   drawRoute();progress();updateHUD();follow(true);
   routeSignals(S.route);wxForRoute(fresh);evAlongRoute(S.route);
   if(fresh)showAlts(r);else $('altPick').hidden=true;
+  secUpdate(true);
 }
+/* ---------- 沿路路段車速：國道、快速公路、市區快速道路（TDX 即時路況，約每分鐘更新） ---------- */
+let SECS=null,secP=null;const LIVE={};
+function loadSecs(){if(SECS)return Promise.resolve(SECS);if(!secP)secP=getJSON('sections.json?d='+new Date().toISOString().slice(0,10),{},30000).then(j=>{
+  SECS=(j.s||[]).map(x=>{let a=90,b=-90,c=180,d=-180;for(const[la,lo]of x.g){if(la<a)a=la;if(la>b)b=la;if(lo<c)c=lo;if(lo>d)d=lo}x.bb=[a,b,c,d];return x});return SECS}).catch(e=>{secP=null;throw e});return secP}
+function routeSecs(r){if(!SECS||!r)return[];let a=90,b=-90,c=180,d=-180;for(const[lo,la]of r.coords){if(la<a)a=la;if(la>b)b=la;if(lo<c)c=lo;if(lo>d)d=lo}
+  const m=.005,out=[];
+  for(const x of SECS){const B=x.bb;if(B[1]<a-m||B[0]>b+m||B[3]<c-m||B[2]>d+m)continue;
+    const g=x.g,n=Math.min(7,g.length),ss=[];let hit=0;
+    for(let k=0;k<n;k++){const q=g[Math.round(k*(g.length-1)/(n-1||1))],h=snapRoute(r,{lat:q[0],lon:q[1]},40);if(h){hit++;ss.push(h.s)}}
+    if(hit<Math.max(2,Math.ceil(n*.6)))continue;let mono=0;for(let k=1;k<ss.length;k++)if(ss[k]>=ss[k-1]-15)mono++;if(mono<ss.length-1-(ss.length>4?1:0))continue;
+    const sa=Math.min(...ss),sb=Math.max(...ss);if(sb-sa<120)continue;out.push({x,sa,sb})}
+  out.sort((p,q)=>p.sa-q.sa);
+  // 重疊的（同一段路被兩個來源都算到）只留一個
+  // 高架和底下的路重疊（例如五楊高架和國道一號）：路線說明寫到「高架」或已經判斷在高架上，就留高架那段，否則留平面
+  const up=S.level==='up'||r.steps.some(st=>/高架/.test(st.text||''))||/高架/.test(r.via||''),pref=x=>/高架/.test(x.r+x.a+x.b)?(up?1:-1):0;
+  const ov=(p,o)=>Math.min(p.sb,o.sb)-Math.max(p.sa,o.sa)>Math.min(o.sb-o.sa,p.sb-p.sa)*.6;
+  return out.filter((o,i)=>!out.some((p,j)=>j!==i&&ov(p,o)&&(p.x.r===o.x.r?j<i:pref(p)>pref(o)||pref(p)===pref(o)&&j<i)))}
+async function liveFor(kind,ids){const k=kind,c=LIVE[k];if(c&&Date.now()-c.t<150000&&ids.every(id=>id in c.m))return c.m;
+  const path=kind==='Freeway'||kind==='Highway'?kind:'City/'+kind;
+  const base=`https://tdx.transportdata.tw/api/basic/v2/Road/Traffic/Live/${path}?$format=JSON&$select=SectionID,TravelTime,TravelSpeed,CongestionLevel,DataCollectTime`;
+  let j;try{j=ids.length<=40?await getJSON(base+'&$filter='+encodeURIComponent(ids.map(id=>`SectionID eq '${id}'`).join(' or ')),{},15000):await getJSON(base,{},25000)}
+  catch(e){if(e.status===429){S.liveHold=Date.now()+600000;throw e}if(ids.length>40)throw e;j=await getJSON(base,{},25000)}
+  const m={...(c&&Date.now()-c.t<90000?c.m:{})};for(const t of (j.LiveTraffics||[]))m[t.SectionID]={v:t.TravelSpeed,tt:t.TravelTime,lv:+t.CongestionLevel,at:t.DataCollectTime};
+  LIVE[k]={t:Date.now(),m};return m}
+const DIRZH={N:'北向',S:'南向',E:'東向',W:'西向',NE:'東北向',NW:'西北向',SE:'東南向',SW:'西南向'},DIREN={N:'northbound',S:'southbound',E:'eastbound',W:'westbound',NE:'NE',NW:'NW',SE:'SE',SW:'SW'};
+function spdCls(v,c){if(!v)return'n';const[g,y]=c===0?[80,40]:[60,30];return v>=g?'g':v>=y?'y':'r'}
+let secRun=0;
+async function secUpdate(rematch){const r=S.route;if(!r||!motorized()){$('spdPanel').hidden=true;return}
+  const my=++secRun;
+  try{await loadSecs()}catch(e){return}
+  if(rematch||!r.secs)r.secs=routeSecs(r);if(my!==secRun||S.route!==r)return;
+  const list=r.secs.filter(o=>o.sb>r.s+50);if(!list.length){$('spdPanel').hidden=true;return}
+  const byK={};list.forEach(o=>(byK[o.x.k]=byK[o.x.k]||[]).push(o.x.id));
+  const live={};await Promise.all(Object.entries(byK).map(async([k,ids])=>{try{Object.assign(live,await liveFor(k,ids))}catch(e){}}));
+  if(my!==secRun||S.route!==r)return;
+  // 合併成一列一列：有起訖名稱的照原本一段一列；沒有名稱的，同一條路連續幾段併成約 3 公里一列
+  const rows=[];let cur=null;
+  for(const o of list){const x=o.x,len=Math.max(1,o.sb-Math.max(o.sa,r.s)),lv=live[x.id],v=lv&&lv.v>0?lv.v:0,key=x.r+'|'+x.d;
+    const named=!!(x.a&&x.b);
+    if(cur&&cur.key===key&&!named&&!cur.named&&cur.L<3000){cur.L+=len;if(v){cur.vt+=len/v;cur.vl+=len}cur.b=x.m?x.m[1]:'';cur.sb=o.sb;continue}
+    cur={key,road:x.r,d:x.d,c:x.c,named,a:named?x.a:(x.m?x.m[0]:''),b:named?x.b:(x.m?x.m[1]:''),L:len,vt:v?len/v:0,vl:v?len:0,sa:o.sa,sb:o.sb};rows.push(cur)}
+  let h='',lastRoad='',slow=null;
+  for(const w of rows){const v=w.vl>w.L*.3?Math.round(w.vl/w.vt):0,cls=spdCls(v,w.c);if(v&&(!slow||v<slow))slow=v;
+    const road=w.road+(w.d?' '+(EN?DIREN[w.d]||w.d:DIRZH[w.d]||w.d):'');
+    if(road!==lastRoad){h+=`<div class="sr">${esc(road)}</div>`;lastRoad=road}
+    const nm=w.a&&w.b?(w.named?`${w.a}→${w.b}`:`${w.a.replace(/\+.*$/,'')}–${w.b.replace(/\+.*$/,'')}`):(L(`前方 ${fmtD(Math.max(0,w.sa-r.s))}`,`in ${fmtD(Math.max(0,w.sa-r.s))}`));
+    h+=`<div class="sp ${cls}" title="${esc(nm)}"><i></i><span class="nm">${esc(nm)}</span><span class="v">${v||'—'}</span></div>`}
+  if(!Object.keys(live).length)h+=`<p class="note">${L('即時車速暫時查不到','Live speeds unavailable right now')}</p>`;
+  $('spdList').innerHTML=h;$('spdSum').textContent=slow?L(`最慢 ${slow}`,`min ${slow}`):'';
+  $('spdPanel').hidden=false;$('spdPanel').classList.toggle('min',!!LS.get('spdMin',false))}
+$('spdHead').addEventListener('click',()=>{const m=!$('spdPanel').classList.contains('min');$('spdPanel').classList.toggle('min',m);$('spdHead').setAttribute('aria-expanded',!m);LS.set('spdMin',m)});
+// TDX 非會員每個網路位址每天能查的次數有限，所以每 3 分鐘才更新一次；被限流就停 10 分鐘
+setInterval(()=>{if(S.route&&!document.hidden&&!$('spdPanel').classList.contains('min')&&Date.now()>(S.liveHold||0))secUpdate(false)},180000);
 /* 開始導航時有其他路線：列出來讓人挑，預設最快的那條；開動或 25 秒後自動收起 */
 let altT=0;
 function viaOf(r){if(r.via)return r.via;const n={};r.steps.forEach(st=>{const m=roadIn&&roadIn(st.text||'');if(m)n[m]=(n[m]||0)+1});return Object.keys(n).sort((a,b)=>n[b]-n[a]).slice(0,2).join('、')}
@@ -1200,7 +1276,7 @@ function showAlts(r){const list=[r,...(r.alts||[])].filter((x,i,a)=>i===0||Math.
   $('altPick').hidden=false;clearTimeout(altT);altT=setTimeout(()=>{$('altPick').hidden=true},25000)}
 $('altList').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const i=+b.dataset.a,r=S.altList&&S.altList[i];if(!r||i===S.altCur)return;
   S.altCur=i;[...$('altList').children].forEach((x,k)=>x.classList.toggle('on',k===i));
-  buildRoute(r);S.said.clear();S.offCount=0;S.lastReroute=Date.now();drawRoute();progress();updateHUD();follow(true);routeSignals(S.route);evAlongRoute(S.route);
+  buildRoute(r);S.said.clear();S.offCount=0;S.lastReroute=Date.now();drawRoute();progress();updateHUD();follow(true);routeSignals(S.route);evAlongRoute(S.route);secUpdate(true);
   clearTimeout(altT);altT=setTimeout(()=>{$('altPick').hidden=true},25000);
   say(L(`改走這條，約${Math.max(1,Math.round(r.duration/60))}分鐘`,`Switched route, about ${Math.max(1,Math.round(r.duration/60))} minutes`))});
 $('altGo').addEventListener('click',()=>{$('altPick').hidden=true;clearTimeout(altT)});
@@ -1413,7 +1489,7 @@ function showBanner(kind,html,btn,ms,fn){const b=$('banner');b.className='banner
   const bb=$('bannerBtn');bb.hidden=!btn;if(btn){bb.textContent=btn;bb.onclick=()=>{b.hidden=true;S.bannerHold=false;fn&&fn()}}
   clearTimeout(bannerT);if(ms){S.bannerHold=true;bannerT=setTimeout(()=>{b.hidden=true;S.bannerHold=false},ms)}}
 function endNav(arrived){S.route=null;$('wxPill').hidden=true;S.plan.stops=[];if(!arrived)S.plan.dest=null;drawPins();drawRoute();resetNavUI();$('banner').hidden=true;S.bannerHold=false;follow(true);if(arrived)S.plan.dest=null}
-function resetNavUI(){$('lanePill').hidden=true;$('altPick').hidden=true;document.documentElement.classList.remove('navigating');$('steps').hidden=true;$('navCard').setAttribute('aria-expanded',false);$('navCard').hidden=true;$('mArrow').className='arrow idle';$('mArrow').innerHTML=ICON.search;$('mDist').textContent='要去哪裡？';$('mRoad').textContent='點這裡搜尋';$('mDest').hidden=true;$('eta').hidden=true;$('endBtn').hidden=true;$('searchBtn').textContent='搜尋目的地';$('trafficBtn').hidden=!(A&&A.trafficOK())}
+function resetNavUI(){$('lanePill').hidden=true;$('spdPanel').hidden=true;$('altPick').hidden=true;document.documentElement.classList.remove('navigating');$('steps').hidden=true;$('navCard').setAttribute('aria-expanded',false);$('navCard').hidden=true;$('mArrow').className='arrow idle';$('mArrow').innerHTML=ICON.search;$('mDist').textContent='要去哪裡？';$('mRoad').textContent='點這裡搜尋';$('mDest').hidden=true;$('eta').hidden=true;$('endBtn').hidden=true;$('searchBtn').textContent='搜尋目的地';$('trafficBtn').hidden=!(A&&A.trafficOK())}
 $('endBtn').addEventListener('click',()=>{endNav(false);say('已結束導航')});
 
 /* ---------- 測速照相與速限（OpenStreetMap / Overpass） ---------- */
