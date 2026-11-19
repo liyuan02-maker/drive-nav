@@ -227,19 +227,19 @@ html.navigating .wxpill{display:none!important}
 .seg button{border:0;background:var(--raise);padding:7px 12px;font-size:13.5px}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button.on{background:var(--line);color:var(--accent)}
-.spdpanel{position:absolute;right:60px;top:10px;z-index:6;width:184px;max-width:calc(100% - 140px);background:rgba(17,26,33,.95);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.45);overflow:hidden}
-.sphead{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;padding:7px 9px;color:var(--fg);text-align:left}
-.sphead b{font-size:13px;font-family:var(--display)}
-.sphead #spdSum{flex:1;text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.spdpanel{position:absolute;right:60px;top:10px;z-index:6;width:156px;max-width:calc(100% - 140px);background:rgba(17,26,33,.95);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.45);overflow:hidden}
+.sphead{display:flex;align-items:center;gap:5px;width:100%;background:none;border:0;padding:5px 8px;color:var(--fg);text-align:left}
+.sphead b{font-size:12px;font-family:var(--display)}
+.sphead #spdSum{flex:1;text-align:right;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .sphead .chev{font-size:11px;color:var(--muted);transition:transform .15s}
 .spdpanel.min .chev{transform:rotate(-90deg)}
 .spdpanel.min .splist{display:none}
 .splist{max-height:min(38vh,300px);overflow-y:auto;padding:0 6px 6px;display:grid;gap:2px}
-.splist .sr{font-size:11px;color:var(--muted);padding:5px 3px 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.splist .sp{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:7px;align-items:center;padding:3px 3px}
+.splist .sr{font-size:10.5px;color:var(--muted);padding:3px 2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.splist .sp{display:grid;grid-template-columns:3px minmax(0,1fr) auto;gap:6px;align-items:center;padding:2px 2px}
 .splist .sp i{align-self:stretch;border-radius:2px;background:var(--muted)}
-.splist .sp .nm{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.splist .sp .v{font:700 15px var(--display);font-variant-numeric:tabular-nums}
+.splist .sp .nm{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.splist .sp .v{font:700 13px var(--display);font-variant-numeric:tabular-nums}
 .splist .sp.g i{background:#2fbf71}.splist .sp.g .v{color:#3ddc84}
 .splist .sp.y i{background:#f2b33d}.splist .sp.y .v{color:#f5c04a}
 .splist .sp.r i{background:#e5484d}.splist .sp.r .v{color:#ff6b6f}
@@ -378,7 +378,7 @@ html[lang=en].navigating .controls .langbtn{min-width:0}
   .cctv{align-self:start;justify-self:end;margin:8px 8px 0 0}
   .recenter,.banner{bottom:64px}
   .altpick{left:8px;right:8px;bottom:64px}
-  .spdpanel{right:8px;top:calc(8px + min(44vw,180px) * .5625 + 40px);width:176px;max-width:calc(100% - 140px)}
+  .spdpanel{right:8px;top:calc(8px + min(44vw,180px) * .5625 + 40px);width:150px;max-width:calc(100% - 140px)}
   #cctv[hidden] ~ .mapwrap .spdpanel{top:8px}
   .splist{max-height:min(26vh,240px)}
   .toast{bottom:auto;top:46%}
@@ -1254,16 +1254,18 @@ async function secUpdate(rematch){const r=S.route;if(!r||!motorized()){$('spdPan
     const named=!!(x.a&&x.b);
     if(cur&&cur.key===key&&!named&&!cur.named&&cur.L<3000){cur.L+=len;if(v){cur.vt+=len/v;cur.vl+=len}cur.b=x.m?x.m[1]:'';cur.sb=o.sb;continue}
     cur={key,road:x.r,d:x.d,c:x.c,named,a:named?x.a:(x.m?x.m[0]:''),b:named?x.b:(x.m?x.m[1]:''),L:len,vt:v?len/v:0,vl:v?len:0,sa:o.sa,sb:o.sb};rows.push(cur)}
-  let h='',lastRoad='',slow=null;
-  for(const w of rows){const v=w.vl>w.L*.3?Math.round(w.vl/w.vt):0,cls=spdCls(v,w.c);if(v&&(!slow||v<slow))slow=v;
+  let h='',lastRoad='',slow=null;S.secAt=Date.now();
+  rows.forEach(w=>{const v=w.vl>w.L*.3?Math.round(w.vl/w.vt):0;if(v&&(!slow||v<slow))slow=v});
+  for(const w of rows.slice(0,4)){const v=w.vl>w.L*.3?Math.round(w.vl/w.vt):0,cls=spdCls(v,w.c);
     const road=w.road+(w.d?' '+(EN?DIREN[w.d]||w.d:DIRZH[w.d]||w.d):'');
     if(road!==lastRoad){h+=`<div class="sr">${esc(road)}</div>`;lastRoad=road}
     const nm=w.a&&w.b?(w.named?`${w.a}→${w.b}`:`${w.a.replace(/\+.*$/,'')}–${w.b.replace(/\+.*$/,'')}`):(L(`前方 ${fmtD(Math.max(0,w.sa-r.s))}`,`in ${fmtD(Math.max(0,w.sa-r.s))}`));
     h+=`<div class="sp ${cls}" title="${esc(nm)}"><i></i><span class="nm">${esc(nm)}</span><span class="v">${v||'—'}</span></div>`}
   if(!Object.keys(live).length)h+=`<p class="note">${L('即時車速暫時查不到','Live speeds unavailable right now')}</p>`;
   $('spdList').innerHTML=h;$('spdSum').textContent=slow?L(`最慢 ${slow}`,`min ${slow}`):'';
-  $('spdPanel').hidden=false;$('spdPanel').classList.toggle('min',!!LS.get('spdMin',false))}
-$('spdHead').addEventListener('click',()=>{const m=!$('spdPanel').classList.contains('min');$('spdPanel').classList.toggle('min',m);$('spdHead').setAttribute('aria-expanded',!m);LS.set('spdMin',m)});
+  const was=$('spdPanel').hidden;$('spdPanel').hidden=false;if(was||rematch){$('spdPanel').classList.add('min');$('spdHead').setAttribute('aria-expanded',false)}}
+let spdT=0;$('spdHead').addEventListener('click',()=>{const m=!$('spdPanel').classList.contains('min');$('spdPanel').classList.toggle('min',m);$('spdHead').setAttribute('aria-expanded',!m);
+  clearTimeout(spdT);if(!m){if(S.route&&Date.now()-(S.secAt||0)>150000&&Date.now()>(S.liveHold||0))secUpdate(false);spdT=setTimeout(()=>{$('spdPanel').classList.add('min');$('spdHead').setAttribute('aria-expanded',false)},20000)}});
 // TDX 非會員每個網路位址每天能查的次數有限，所以每 3 分鐘才更新一次；被限流就停 10 分鐘
 setInterval(()=>{if(S.route&&!document.hidden&&!$('spdPanel').classList.contains('min')&&Date.now()>(S.liveHold||0))secUpdate(false)},180000);
 /* 開始導航時有其他路線：列出來讓人挑，預設最快的那條；開動或 25 秒後自動收起 */
