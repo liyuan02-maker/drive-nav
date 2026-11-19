@@ -675,10 +675,23 @@ function why(e){if(!e)return'未知錯誤';
   return e.message||'未知錯誤'}
 
 /* ---------- 聲音 ---------- */
-let actx=null,zhVoice=null;
-function pickVoice(){try{const vs=speechSynthesis.getVoices();if(EN){zhVoice=vs.find(v=>/en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;return}zhVoice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/zh[-_]HK/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null}catch(e){}}
+let actx=null;
+/* 語音：iPhone 的語音清單裡有些是沒下載的高品質語音或趣味語音，選到會沒聲音，所以只挑確定能用的；
+   英文介面時，句子裡的中文地名改用中文語音念，英文部分用英文語音 */
+let zhVoice=null,enVoice=null,voiceBad=false;
+const FUNNY=/Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Grandma|Grandpa|Rocko|Shelley|Sandy|Reed|Eddy|Flo/i;
+function pickVoice(){try{const vs=speechSynthesis.getVoices().filter(v=>!FUNNY.test(v.name));
+  const best=(re,pref)=>{const l=vs.filter(v=>re.test(v.lang));return l.find(v=>pref.test(v.name)&&v.localService!==false)||l.find(v=>v.default)||l.find(v=>v.localService!==false)||null};
+  zhVoice=best(/zh[-_]TW/i,/Mei-?Jia|美佳|Meijia/i)||best(/zh[-_]HK/i,/Sin-?ji/i)||best(/^zh/i,/Ting-?Ting/i);
+  enVoice=best(/en[-_]US/i,/Samantha|Siri|Ava|Allison|Susan|Alex|Google US/i)||best(/^en/i,/Daniel|Karen|Moira/i)}catch(e){}}
 try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}catch(e){}
-function say(t){if(!S.voice)return;try{const u=new SpeechSynthesisUtterance(EN?tr(t):t);u.lang=EN?'en-US':'zh-TW';if(zhVoice)u.voice=zhVoice;u.rate=1.05;speechSynthesis.speak(u)}catch(e){}}
+function speakPart(text,en,first){const u=new SpeechSynthesisUtterance(text);u.lang=en?'en-US':'zh-TW';const v=en?enVoice:zhVoice;if(v&&!voiceBad)u.voice=v;u.rate=en?1:1.05;
+  if(first&&u.voice){let ok=false;u.onstart=()=>{ok=true};setTimeout(()=>{if(!ok&&!speechSynthesis.speaking){voiceBad=true;try{speechSynthesis.cancel()}catch(e){}speakPart(text,en,false)}},1600)}
+  speechSynthesis.speak(u)}
+function say(t){if(!S.voice)return;try{
+  if(!EN){speakPart(t,false,true);return}
+  const x=tr(t),parts=x.split(/([⺀-鿿豈-﫿＀-￯][⺀-鿿豈-﫿＀-￯0-9０-９\s（）()·．-]*)/).map(p=>p.trim()).filter(p=>p&&/[\p{L}\p{N}]/u.test(p));
+  parts.forEach((p,i)=>speakPart(p,!/[⺀-鿿豈-﫿]/.test(p),i===0))}catch(e){}}
 function beep(f=1400,d=.1){if(!actx||!S.voice)return;try{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.09,actx.currentTime);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
 
 /* ---------- 箭頭 ---------- */
