@@ -908,6 +908,7 @@ function freshFix(){return new Promise(res=>{if(S.pos&&Date.now()-(S.fixT||0)<80
 const safe=(name,fn)=>{try{fn()}catch(e){S.jsErr=name+'：'+(e&&e.message);console.error('['+name+']',e)}};
 function onPos(p,rough){if(!rough)S.fixT=Date.now();
   const c=p.coords,now={lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:p.timestamp};
+  if(!rough&&c.altitude!=null){S.alt=S.alt==null?c.altitude:S.alt*.6+c.altitude*.4;S.altAcc=c.altitudeAccuracy}
   let v=(c.speed!=null&&c.speed>=0)?c.speed*3.6:null;
   // 停車判斷：車速低於 3 km/h，或位置只是在誤差範圍內飄動，就當作停住，畫面不再跟著飄
   if(S.pos&&!rough){const moved=hav(S.pos,now),jitter=Math.max(6,Math.min(30,(c.accuracy||20)*.6));
@@ -1381,7 +1382,7 @@ async function ensureArea(){
   for(const el of j.elements||[]){const tg=el.tags||{};
     if(el.type==='node'&&tg.highway==='traffic_signals'){sigs.push({lat:el.lat,lon:el.lon})}
     else if(el.type==='node'){cams.push({lat:el.lat,lon:el.lon,lim:parseLim(tg.maxspeed),dir:tg.direction,id:el.id,db:tg.direction&&!isNaN(+tg.direction)?+tg.direction:null})}
-    else if(el.type==='way'&&el.geometry){const lim=parseLim(tg.maxspeed);ways.push({lim,cls:tg.highway,g:el.geometry,oneway:tg.oneway==='yes'||/motorway/.test(tg.highway),name:tg.name||tg.ref||''})}}
+    else if(el.type==='way'&&el.geometry){const lim=parseLim(tg.maxspeed);ways.push({lim,cls:tg.highway,g:el.geometry,oneway:tg.oneway==='yes'||/motorway/.test(tg.highway),name:tg.name||tg.ref||'',id:el.id,nodes:el.nodes||[],up:(+tg.layer||0)>0||tg.bridge==='viaduct'||(!!tg.bridge&&tg.bridge!=='no'&&/高架/.test((tg.name||'')+(tg.ref||'')+(tg['bridge:name']||'')))})}}
   S.wayC={lat:p.lat,lon:p.lon};S.wayT=Date.now();
   S.sigArea=clusterPts(sigs);
   setArea(S.official?{ways}:{cams,ways});
@@ -1392,13 +1393,35 @@ function snapCamsToRoute(){const r=S.route;if(!r||!S.area)return;for(const c of 
 // 沒有標速限的路段，依道路類型推算（道路交通安全規則：一般道路沒有標誌時 50，沒有劃分車道的巷道 30）
 const CLS_LIM={motorway:100,motorway_link:60,trunk:80,trunk_link:50,primary:50,primary_link:40,secondary:50,secondary_link:40,tertiary:50,tertiary_link:40,unclassified:50,living_street:30};
 const estLim=w=>w.cls==='residential'?(/[巷弄]/.test(w.name)||!w.name?30:50):CLS_LIM[w.cls]||null;
+/* 高架和平面重疊時（例如五楊高架和底下的國道一號）分辨在哪一層：
+   1. 延續剛才那條路：同一條或接在一起的路段加分，突然跳到另一層、又沒有相連的扣分
+   2. 導航中：路線這一段寫著「高架」就偏向高架
+   3. 高度：在只有平面道路的地方記下當時的 GPS 高度，之後高出 10 公尺以上就偏向高架 */
+function pickWay(cand){if(!cand.size)return null;
+  const ws=[...cand.keys()],mixed=ws.some(w=>w.up)&&ws.some(w=>!w.up);
+  const prev=S.wayCur&&S.area&&S.area.ways.find(w=>w.id===S.wayCur.id)||S.wayCur;const pn=prev?new Set(prev.nodes):null;
+  let step='';if(S.route){const r=S.route;for(let i=r.steps.length-1;i>=0;i--){if(r.steps[i].s<=r.s+3){step=r.steps[i].text||'';break}}if(!step)step=r.firstRoad||''}
+  const altOk=S.alt!=null&&S.altAcc!=null&&S.altAcc<=20,g=S.gAlt&&Date.now()-S.gAlt.t<180000?S.gAlt.v:null,dh=altOk&&g!=null?S.alt-g:null;
+  let best=null;
+  for(const[w,sc0]of cand){let sc=sc0;
+    if(prev){if(w.id===prev.id)sc-=14;else if(w.nodes.some(n=>pn.has(n)))sc-=10;else if(mixed&&w.up!==prev.up)sc+=12}
+    if(mixed){if(/高架/.test(step))sc+=w.up?-10:10;
+      if(dh!=null){if(dh>10)sc+=w.up?-8:8;else if(dh<4)sc+=w.up?8:-8}}
+    if(!best||sc<best.score)best={score:sc,w}}
+  if(best){S.wayCur={id:best.w.id,nodes:best.w.nodes,up:best.w.up};S.level=mixed?(best.w.up?'up':'ground'):null;
+    if(!mixed&&!best.w.up&&altOk)S.gAlt={v:S.alt,t:Date.now()}}
+  else S.level=null;
+  return best}
+// 官方測速點的地址寫著在高架上或高架下
+const camLevel=c=>{const a=c.addr||'';if(!/高架/.test(a))return null;return/高架[道橋路]{0,2}下|高架下/.test(a)?'ground':'up'};
 function updateLimit(){
-  const p=S.pos;if(!p)return;const a=S.area;let best=null;
+  const p=S.pos;if(!p)return;const a=S.area;let best=null;const cand=new Map();
   if(a){const pj=mkProj(p.lat,p.lon),o={x:0,y:0};
     for(const w of a.ways){for(let i=0;i<w.g.length-1;i++){const A=pj(w.g[i]),B=pj(w.g[i+1]);if(Math.abs(A.x)>60&&Math.abs(B.x)>60&&Math.sign(A.x)===Math.sign(B.x))continue;
       const q=segDist(o,A,B);if(q.d>28)continue;const sb=brg(w.g[i],w.g[i+1]);let ad=adiff(sb,S.heading);if(!w.oneway)ad=Math.min(ad,180-ad);
       // 有標速限的路段優先；同樣近時，選方向對的
-      const score=q.d+(S.speed>8?ad*.6:0)-(w.lim?6:0);if(!best||score<best.score)best={score,w}}}}
+      const score=q.d+(S.speed>8?ad*.6:0)-(w.lim?6:0);const k=cand.get(w);if(k==null||score<k)cand.set(w,score)}}
+    best=pickWay(cand)}
   let lim=null,est=false;
   if(best){if(best.w.lim)lim=best.w.lim;else{lim=estLim(best.w);est=!!lim}}
   // 都沒有資料時：旁邊 150 m 內有同方向的國道攝影機，就當作在國道上（約 100）
@@ -1412,6 +1435,7 @@ function updateLimit(){
 function updateCam(){
   const a=S.area,p=S.pos;S.camAhead=null;if(!a||!p)return;let best=null;
   for(const c of a.cams){let d;
+    if(S.level&&c.addr){const lv=camLevel(c);if(S.level==='up'?lv!=='up':lv==='up')continue}
     if(S.route&&c.rs!=null){d=c.rs-S.route.s;if(d<-5||d>2500)continue}
     else{d=hav(p,c);if(d>1600)continue;if(S.speed>5&&adiff(brg(p,c),S.heading)>30&&d>40)continue;if(c.db!=null&&S.speed>5&&adiff(c.db,S.heading)>60)continue}
     if(!best||d<best.d)best={c,d:Math.max(0,d)}}
