@@ -127,14 +127,24 @@ def build(kind, path_sec, path_shape, tok, probe):
     secs = records(sec, "SectionID")
     shapes = {s["SectionID"]: s.get("Geometry") for s in records(shp, "SectionID")}
     out = []
+    code = re.compile(r"^[0-9A-Z]{6,}$")
     for s in secs:
+        # 只留國道（0）、省道快速公路（1）、市區快速道路（2）
+        rc = s.get("RoadClass")
+        if rc is None or int(rc) > 2:
+            continue
         g = parse_wkt(shapes.get(s["SectionID"]))
         if len(g) < 2:
             continue
-        rs = s.get("RoadSection") or {}
-        out.append({"id": s["SectionID"], "k": kind, "r": zh(s.get("RoadName")),
-                    "a": zh(rs.get("Start")), "b": zh(rs.get("End")), "d": s.get("RoadDirection") or "",
-                    "lim": s.get("SpeedLimit") or None, "g": simplify(g)})
+        rs, road = s.get("RoadSection") or {}, zh(s.get("RoadName"))
+        a, b = zh(rs.get("Start")), zh(rs.get("End"))
+        if code.match(a) or code.match(b) or a == road or b == road:
+            m = re.search(r"\((.+?)到(.+?)\)", zh(s.get("SectionName")))
+            a, b = (m.group(1), m.group(2)) if m and not code.match(m.group(1)) else ("", "")
+        mi = s.get("SectionMile") or {}
+        out.append({"id": s["SectionID"], "k": kind, "c": int(rc), "r": road, "a": a, "b": b, "d": s.get("RoadDirection") or "",
+                    "lim": s.get("SpeedLimit") or None, "m": [mi.get("StartKM"), mi.get("EndKM")] if mi.get("StartKM") else None,
+                    "g": simplify(g, 15)})
     probe[kind] = {"sections": len(secs), "shapes": len(shapes), "kept": len(out), "cors": hd.get("Access-Control-Allow-Origin"),
                    "sample_section": secs[:1], "sample_shape": (records(shp, "SectionID")[:1] or [None])[0]}
     print(kind, "路段", len(secs), "形狀", len(shapes), "保留", len(out))
@@ -169,7 +179,7 @@ def main():
         print("沒有舊資料", e)
     with open("sections_probe.json", "w", encoding="utf-8") as f:
         json.dump(probe, f, ensure_ascii=False, indent=1)
-    if len(allsec) < 200:
+    if len(allsec) < 150:
         print("路段太少，不更新 sections.json")
         return
     with open("sections.json", "w", encoding="utf-8") as f:
