@@ -1476,9 +1476,9 @@ function updateHUD(){
   if(cam){const fast=S.speed>80,warn=fast?1000:500;$('eType').textContent='測速';$('eDist').innerHTML=cam.d>=1000?(cam.d/1000).toFixed(1)+'<small>km</small>':Math.round(cam.d)+'<small>m</small>';
     $('eName').textContent=(cam.c.lim?'限速 '+cam.c.lim+' · ':'')+(cam.c.addr?cam.c.addr.replace(/^(..[縣市])/,''):'OpenStreetMap');$('eBar').style.width=Math.max(0,Math.min(100,100*(1-cam.d/(warn*1.6))))+'%'}
   else{$('eType').textContent='測速';$('eDist').textContent='—';$('eName').textContent=S.area&&S.area.cams?(S.area.cams.length||S.official?'前方無測速點':'前方無已知測速點'):(S.areaErr?'測速資料暫時載入失敗':'載入測速資料中');$('eBar').style.width='0'}
-  const over=motorized()&&lim&&S.speed>lim+1,near=cam&&cam.d<(S.speed>80?1000:500);
-  // 超速超過 3 km/h 持續 2 秒：整個畫面變紅、地圖外框閃紅、語音提醒（之後每 45 秒提醒一次）
-  const hard=over&&S.speed>lim+3;if(hard){if(!S.overSince)S.overSince=Date.now()}else S.overSince=0;
+  const OVER_TOL=8,over=motorized()&&lim&&S.speed>lim+OVER_TOL,near=cam&&cam.d<(S.speed>80?1000:500);
+  // 超過速限 8 km/h 以上：時速表變色；持續 2 秒：整個畫面變紅、地圖外框閃紅、語音提醒（之後每 45 秒提醒一次）
+  const hard=over;if(hard){if(!S.overSince)S.overSince=Date.now()}else S.overSince=0;
   const alarm=hard&&Date.now()-S.overSince>2000;document.documentElement.classList.toggle('overspeed',!!alarm);
   $('overTxt').hidden=!alarm;if(alarm)$('overTxt').textContent=`超速 +${Math.round(S.speed-lim)}`;
   if(alarm&&Date.now()-(S.overSaid||0)>45000){S.overSaid=Date.now();say(`超速，限速${lim}`);beep(1200,.15)}
