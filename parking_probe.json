@@ -1,6 +1,6 @@
 {
  "Taipei": {
-  "live": 1187,
+  "live": 1185,
   "records": 0,
   "kept": 0,
   "cors": "*",
@@ -15,136 +15,19 @@
   "live": 0
  },
  "Taoyuan": {
-  "live": 199,
-  "records": 154,
-  "kept": 126,
+  "live": 196,
+  "records": 0,
+  "kept": 0,
   "cors": "*",
   "sample_live": [
    "AO0100003",
    "AO0100005",
    "AO010001"
   ],
-  "sample_park": [
-   {
-    "CarParkID": "AO020011",
-    "CarParkName": {
-     "Zh_tw": "南園停車場"
-    },
-    "CarParkShortName": {},
-    "CarParkRegNo": "府交停第1070328917號",
-    "OperatorID": "TAO86711789",
-    "Description": "汽車60機車20",
-    "CarParkType": 1,
-    "ParkingGuideType": 1,
-    "ParkingTypes": [
-     4
-    ],
-    "ParkingSiteTypes": [
-     20
-    ],
-    "ChargeTypes": [
-     1,
-     3
-    ],
-    "Telephone": "(03)4275807",
-    "CarParkPosition": {
-     "PositionLat": 24.971500396728516,
-     "PositionLon": 121.22846984863281
-    },
-    "Email": "didier0209@gmail.com",
-    "Address": "桃園市中壢區南園二路",
-    "FareDescription": "30/h",
-    "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
-    "IsMotorcycle": 0,
-    "OperationType": 1,
-    "LiveOccuppancyAvailable": 0,
-    "EVRechargingAvailable": 0,
-    "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 0,
-    "ReservationAvailable": 0,
-    "WheelchairAccessible": 0,
-    "OvernightPermitted": 0,
-    "TicketMachine": 0,
-    "Toilet": 0,
-    "Restaurant": 0,
-    "GasStation": 0,
-    "Shop": 0,
-    "Gated": 0,
-    "Lighting": 0,
-    "SecureParking": 0,
-    "TicketOffice": 0,
-    "ProhibitedForAnyHazardousMaterialLoads": 0,
-    "SecurityGuard": 0,
-    "Supervision": 0,
-    "City": "Taoyuan",
-    "CityCode": "TAO"
-   }
-  ]
+  "sample_park": []
  },
  "Taichung": {
-  "live": 1133,
-  "records": 88866,
-  "kept": 1110,
-  "cors": "*",
-  "sample_live": [
-   "01P0C0001E",
-   "01P0C0002B",
-   "01P0C0004A"
-  ],
-  "sample_park": [
-   {
-    "CarParkID": "04P0C0011A",
-    "CarParkName": {
-     "Zh_tw": "西區-交通局-貴和P"
-    },
-    "CarParkShortName": {},
-    "OperatorID": "",
-    "Description": "(107)中市交停規證字第103號，自2018年11月23日至2033年9月30日止，交通局委外竑穗興業股份有限公司運營(契約起迄：115.08.01~118.07.31)。",
-    "CarParkType": 1,
-    "ParkingGuideType": 255,
-    "ParkingTypes": [
-     255
-    ],
-    "ParkingSiteTypes": [
-     255
-    ],
-    "ChargeTypes": [
-     255
-    ],
-    "CarParkPosition": {
-     "PositionLat": 24.136316,
-     "PositionLon": 120.670667
-    },
-    "Address": "臺中市西區貴和街、大全街",
-    "FareDescription": "汽車：10元/半小時，月票：1200元/月\r\n『符合身心障礙者使用之車輛停車優惠』",
-    "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
-    "IsMotorcycle": 0,
-    "OperationType": 1,
-    "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 0,
-    "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 0,
-    "ReservationAvailable": 0,
-    "WheelchairAccessible": 0,
-    "OvernightPermitted": 0,
-    "TicketMachine": 0,
-    "Toilet": 0,
-    "Restaurant": 0,
-    "GasStation": 0,
-    "Shop": 0,
-    "Gated": 0,
-    "Lighting": 0,
-    "SecureParking": 0,
-    "TicketOffice": 0,
-    "ProhibitedForAnyHazardousMaterialLoads": 0,
-    "SecurityGuard": 0,
-    "Supervision": 0,
-    "City": "Taichung",
-    "CityCode": "TXG"
-   }
-  ]
+  "error": "too many requests"
  },
  "Tainan": {
   "live": 75,
@@ -158,13 +41,13 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "94286443",
+    "CarParkID": "81319364",
     "CarParkName": {
-     "Zh_tw": "永康中華立體停車場"
+     "Zh_tw": "竑穗水交社停車場"
     },
     "CarParkShortName": {},
     "OperatorID": "12745271",
-    "Description": "平面式小型車289格(含身心障礙停5格、婦幼車格5格及綠能車位5格)。",
+    "Description": "平面式小型車199 格(含身心障礙4格、婦幼車格4格及綠能車位4格)。",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
@@ -177,19 +60,19 @@
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 23.00072,
-     "PositionLon": 120.23762
+     "PositionLat": 22.97607,
+     "PositionLon": 120.19894
     },
-    "Address": "台南市永康區華興街77號",
-    "FareDescription": "半小時10元(第一小時以小時計，當日最高收費200元,月租2400元",
+    "Address": "台南市南區興昌路53巷口旁停車場",
+    "FareDescription": "",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
+    "IsPublic": 0,
     "IsMotorcycle": 0,
-    "OperationType": 1,
+    "OperationType": 3,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 1,
+    "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 0,
+    "SeasonTicketAvailable": 1,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
@@ -211,136 +94,50 @@
   ]
  },
  "Kaohsiung": {
-  "live": 731,
-  "error": "too many requests"
- },
- "Keelung": {
-  "live": 86,
-  "records": 39,
-  "kept": 38,
+  "live": 732,
+  "records": 755,
+  "kept": 732,
   "cors": "*",
   "sample_live": [
-   "KEE11101",
-   "KEE11102",
-   "KEE11104"
+   "KHA00001",
+   "KHA00002",
+   "KHA00003"
   ],
   "sample_park": [
    {
-    "CarParkID": "KEE12103",
+    "CarParkID": "KHB00437",
     "CarParkName": {
-     "Zh_tw": "力揚基隆義二"
+     "Zh_tw": "霖雅新下街停車場"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "84136348",
-    "OperatorID": "72882495",
-    "Description": "停車場聯絡人聯絡人:王仁聖聯絡電話:02-2455-1299n業務經理:鄭雲龍 Brian Cheng",
-    "CarParkType": 255,
-    "ParkingGuideType": 255,
-    "ParkingTypes": [
-     255
-    ],
-    "ParkingSiteTypes": [
-     255
-    ],
-    "ChargeTypes": [
-     255
-    ],
-    "EmergencyPhone": "02-2455-1299",
-    "CarParkPosition": {
-     "PositionLat": 25.1365,
-     "PositionLon": 121.74892
-    },
-    "Address": "義二路266號(斜對面)",
-    "ImageURLs": [
-     ""
-    ],
-    "FareDescription": "停車場聯絡人聯絡人:王仁聖聯絡電話:02-2455-1299n業務經理:鄭雲龍 Brian Cheng",
-    "SpecialOfferDescription": "停車場聯絡人聯絡人:王仁聖聯絡電話:02-2455-1299n業務經理:鄭雲龍 Brian Cheng",
-    "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
-    "IsMotorcycle": 0,
-    "OperationType": 1,
-    "LiveOccuppancyAvailable": 0,
-    "EVRechargingAvailable": 1,
-    "MonthlyTicketAvailable": 0,
-    "SeasonTicketAvailable": 0,
-    "ReservationAvailable": 0,
-    "WheelchairAccessible": 0,
-    "OvernightPermitted": 0,
-    "TicketMachine": 0,
-    "Toilet": 0,
-    "Restaurant": 0,
-    "GasStation": 0,
-    "Shop": 0,
-    "Gated": 0,
-    "Lighting": 0,
-    "SecureParking": 0,
-    "TicketOffice": 0,
-    "ProhibitedForAnyHazardousMaterialLoads": 0,
-    "SecurityGuard": 0,
-    "Supervision": 0,
-    "SupervisionType": 255,
-    "City": "Keelung",
-    "CityCode": "KEE"
-   }
-  ]
- },
- "Hsinchu": {
-  "live": 0
- },
- "HsinchuCounty": {
-  "live": 0
- },
- "MiaoliCounty": {
-  "live": 0
- },
- "ChanghuaCounty": {
-  "error": "too many requests"
- },
- "NantouCounty": {
-  "live": 0
- },
- "YunlinCounty": {
-  "live": 1,
-  "records": 4,
-  "kept": 1,
-  "cors": "*",
-  "sample_live": [
-   "yun12019"
-  ],
-  "sample_park": [
-   {
-    "CarParkID": "A01",
-    "CarParkName": {
-     "Zh_tw": "雲林溪加蓋停車場"
-    },
-    "CarParkShortName": {},
-    "CarParkRegNo": "1083326081-4",
-    "OperatorID": "YUN87158061",
-    "Description": "平面停車場75個(含無障礙停車位)",
+    "CarParkRegNo": "停6746",
+    "OperatorID": "42815169",
+    "Description": "小型車41輛(含身心障礙者專用停車位1輛)",
     "CarParkType": 1,
     "ParkingGuideType": 1,
-    "ParkingTypes": [],
+    "ParkingTypes": [
+     2
+    ],
     "ParkingSiteTypes": [
-     5,
-     19,
-     20
+     254
+    ],
+    "ChargeTypes": [
+     1
     ],
     "CarParkPosition": {
-     "PositionLat": 23.706520080566406,
-     "PositionLon": 120.53692626953125
+     "PositionLat": 22.66849,
+     "PositionLon": 120.30475
     },
-    "Email": "ylhg30208@mail.yunlin.gov.tw",
-    "Address": "雲林縣斗六市民生南路6號",
-    "FareDescription": "每次30元",
+    "Address": "新下街與太原街80巷口西南側",
+    "FareDescription": "1.計時收費：每半小時50元（當日連續停放最高收費500元）。2.月租收費：每月5,000元。",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
+    "IsPublic": 0,
     "IsMotorcycle": 0,
-    "OperationType": 1,
-    "LiveOccuppancyAvailable": 0,
+    "OperationType": 3,
+    "LiveOccuppancyAvailable": 1,
     "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 1,
+    "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
@@ -357,10 +154,32 @@
     "SecurityGuard": 0,
     "Supervision": 1,
     "SupervisionType": 1,
-    "City": "YunlinCounty",
-    "CityCode": "YUN"
+    "City": "Kaohsiung",
+    "CityCode": "KHH"
    }
   ]
+ },
+ "Keelung": {
+  "live": 86,
+  "error": "too many requests"
+ },
+ "Hsinchu": {
+  "live": 0
+ },
+ "HsinchuCounty": {
+  "live": 0
+ },
+ "MiaoliCounty": {
+  "live": 0
+ },
+ "ChanghuaCounty": {
+  "live": 0
+ },
+ "NantouCounty": {
+  "live": 0
+ },
+ "YunlinCounty": {
+  "error": "too many requests"
  },
  "Chiayi": {
   "live": 0
@@ -369,72 +188,77 @@
   "live": 0
  },
  "PingtungCounty": {
-  "error": "too many requests"
- },
- "YilanCounty": {
-  "live": 72,
-  "records": 79,
-  "kept": 41,
+  "live": 24,
+  "records": 20,
+  "kept": 2,
   "cors": "*",
   "sample_live": [
-   "1",
-   "104",
-   "108"
+   "00293092",
+   "00502020",
+   "00502056"
   ],
   "sample_park": [
    {
-    "CarParkID": "39",
+    "CarParkID": "PT0014",
     "CarParkName": {
-     "Zh_tw": "陽明停車場"
+     "Zh_tw": "東港鎮中山路平面式路外停車場"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "\r\n      ",
-    "OperatorID": "85565675",
-    "Description": "",
-    "CarParkType": 255,
+    "OperatorID": "PIF12745271",
+    "Description": "小客車停車格62格(含身障2格及婦幼2格)",
+    "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
-     255
+     2,
+     4
     ],
     "ParkingSiteTypes": [
-     10
+     4
     ],
     "ChargeTypes": [
      1
     ],
+    "Telephone": "0800208333",
     "CarParkPosition": {
-     "PositionLat": 24.676208,
-     "PositionLon": 121.77668
+     "PositionLat": 22.465850830078125,
+     "PositionLon": 120.45105743408203
     },
-    "Address": "羅東鎮東安段754地號",
-    "FareDescription": "未知",
+    "Email": "shanna@pss-group.com",
+    "Address": "屏東縣東港鎮褔德里中山路27號後方平面停車場",
+    "FareDescription": "每小時20元",
+    "SpecialOfferDescription": "身障半價",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 0,
+    "VehicleRestriction": "只允許小型車停放",
+    "IsPublic": 1,
     "IsMotorcycle": 0,
-    "OperationType": 3,
-    "LiveOccuppancyAvailable": 0,
+    "OperationType": 1,
+    "LiveOccuppancyAvailable": 1,
     "EVRechargingAvailable": 0,
-    "MonthlyTicketAvailable": 0,
+    "MonthlyTicketAvailable": 1,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 0,
-    "OvernightPermitted": 0,
-    "TicketMachine": 0,
+    "OvernightPermitted": 1,
+    "TicketMachine": 1,
     "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
-    "Gated": 0,
-    "Lighting": 0,
-    "SecureParking": 0,
+    "Gated": 1,
+    "Lighting": 1,
+    "SecureParking": 1,
     "TicketOffice": 0,
     "ProhibitedForAnyHazardousMaterialLoads": 0,
     "SecurityGuard": 0,
     "Supervision": 0,
-    "City": "YilanCounty",
-    "CityCode": "ILA"
+    "City": "PingtungCounty",
+    "CityCode": "PIF"
    }
   ]
+ },
+ "YilanCounty": {
+  "live": 72,
+  "error": "too many requests"
  },
  "HualienCounty": {
   "live": 18,
@@ -458,22 +282,8 @@
     "Description": "高架橋下平面停車場",
     "CarParkType": 1,
     "ParkingGuideType": 1,
-    "ParkingTypes": [
-     4,
-     2,
-     1
-    ],
-    "ParkingSiteTypes": [
-     20,
-     1,
-     8,
-     5,
-     4
-    ],
-    "ChargeTypes": [
-     1,
-     3
-    ],
+    "ParkingTypes": [],
+    "ParkingSiteTypes": [],
     "Telephone": "0968201620",
     "CarParkPosition": {
      "PositionLat": 23.869020462036133,
@@ -516,10 +326,66 @@
   "live": 0
  },
  "KinmenCounty": {
-  "error": "too many requests"
+  "live": 4,
+  "records": 5,
+  "kept": 4,
+  "cors": "*",
+  "sample_live": [
+   "KIN0001",
+   "KIN0002",
+   "KIN0004"
+  ],
+  "sample_park": [
+   {
+    "CarParkID": "KIN0002",
+    "CarParkName": {
+     "Zh_tw": "金門高中停車場"
+    },
+    "CarParkShortName": {},
+    "OperatorID": "KIN54619682",
+    "Description": "平面停車場共141格(含身障3格)",
+    "CarParkType": 1,
+    "ParkingGuideType": 1,
+    "ParkingTypes": [],
+    "ParkingSiteTypes": [],
+    "EmergencyPhone": "0800-779-979",
+    "CarParkPosition": {
+     "PositionLat": 24.435150146484375,
+     "PositionLon": 118.31405639648438
+    },
+    "Address": "金門縣金城鎮光前路94號",
+    "FareDescription": "目前免收費",
+    "IsFreeParkingOutOfHours": 0,
+    "IsPublic": 1,
+    "IsMotorcycle": 0,
+    "OperationType": 1,
+    "LiveOccuppancyAvailable": 1,
+    "EVRechargingAvailable": 0,
+    "MonthlyTicketAvailable": 1,
+    "SeasonTicketAvailable": 1,
+    "ReservationAvailable": 0,
+    "WheelchairAccessible": 0,
+    "OvernightPermitted": 1,
+    "TicketMachine": 1,
+    "Toilet": 0,
+    "Restaurant": 0,
+    "GasStation": 0,
+    "Shop": 0,
+    "Gated": 0,
+    "Lighting": 1,
+    "SecureParking": 0,
+    "TicketOffice": 0,
+    "ProhibitedForAnyHazardousMaterialLoads": 0,
+    "SecurityGuard": 0,
+    "Supervision": 1,
+    "SupervisionType": 255,
+    "City": "KinmenCounty",
+    "CityCode": "KIN"
+   }
+  ]
  },
  "PenghuCounty": {
-  "live": 0
+  "error": "too many requests"
  },
  "LienchiangCounty": {
   "live": 0
