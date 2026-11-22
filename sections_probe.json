@@ -73,8 +73,8 @@
    }
   ],
   "sample_shape": {
-   "SectionID": "3000900019927U",
-   "Geometry": "LINESTRING(121.54542 23.94168,121.54521 23.94153,121.54490 23.94128,121.54483 23.94122,121.54342 23.94000,121.54342 23.94000,121.54341 23.93999,121.54289 23.93954,121.54256 23.93923,121.54254 23.93921,121.54252 23.93919,121.54244 23.93911)"
+   "SectionID": "BE17001225K700225K500",
+   "Geometry": "LINESTRING(120.29394 22.63443,120.29391 22.63451,120.29379 22.63480,120.29365 22.63517,120.29347 22.63564,120.29329 22.63611)"
   }
  },
  "Taipei": {
@@ -125,35 +125,35 @@
   "cors": "*",
   "sample_section": [
    {
-    "SectionID": "L_6350570600020H",
+    "SectionID": "L_6350570600010H",
     "LinkIDs": [
      {
-      "LinkID": "6350570600020H"
+      "LinkID": "6350570600010H"
      }
     ],
-    "SectionName": "三民路二段(三民路一段到春日路)",
+    "SectionName": "三民路二段(三民路二段到民生路)",
     "RoadID": "635057H",
     "RoadName": "三民路二段",
     "RoadClass": 6,
     "RoadDirection": "W",
     "RoadSection": {
-     "Start": "8KCPPC08",
-     "End": "8K36PBWQ"
+     "Start": "8K36PBWQ",
+     "End": "8JQ3PBTM"
     },
-    "SectionLength": 0.3094,
+    "SectionLength": 0.3696,
     "SectionStart": {
-     "PositionLat": 25.001308,
-     "PositionLon": 121.31709
-    },
-    "SectionEnd": {
      "PositionLat": 25.000883,
      "PositionLon": 121.31407
+    },
+    "SectionEnd": {
+     "PositionLat": 24.999996,
+     "PositionLon": 121.31055
     }
    }
   ],
   "sample_shape": {
-   "SectionID": "L_6350460300000H",
-   "Geometry": "LINESTRING(121.32325 24.99609,121.32352 24.99587,121.32389 24.99549,121.32395 24.99542)"
+   "SectionID": "L_6350440000000H",
+   "Geometry": "LINESTRING(121.17021 24.90852,121.17021 24.90888,121.17021 24.90903,121.1702 24.90913,121.1702 24.90921,121.1702 24.9093,121.1702 24.90931,121.1702 24.90938,121.17018 24.90957,121.17018 24.90985,121.17016 24.91003,121.17016 24.91015,121.17015 24.91017,121.17014 24.91026,121.17013 24.91038,121.17013 24.91044,121.17012 24.91067,121.17011 24.91081,121.17011 24.9109,121.1701 24.91106,121.1701 24.91117,121.1701 24.91122,121.17009 24.91134,121.17009 24.91143,121.17009 24.91146,121.17008 24.91154,121.17008 24.91162,121.17007 24.91179,121.17006 24.91204,121.17006 24.91212,121.17006 24.91214,121.17005 24.91231,121.17004 24.91245,121.17006 24.9126)"
   }
  },
  "Taichung": {
@@ -235,8 +235,8 @@
   }
  },
  "Kaohsiung": {
-  "sections": 308,
-  "shapes": 308,
+  "sections": 310,
+  "shapes": 310,
   "kept": 9,
   "cors": "*",
   "sample_section": [
@@ -357,406 +357,42 @@
   }
  },
  "MiaoliCounty": {
-  "sections": 4,
-  "shapes": 4,
-  "kept": 0,
-  "cors": "*",
-  "sample_section": [
-   {
-    "SectionID": "MIA083E",
-    "SectionName": "台72(石圍到汶坑)",
-    "RoadID": "00720",
-    "RoadName": "台72",
-    "RoadClass": 3,
-    "RoadDirection": "E",
-    "RoadSection": {
-     "Start": "石圍",
-     "End": "汶坑"
-    },
-    "SectionLength": 3.199,
-    "SectionMile": {
-     "StartKM": "24K+600",
-     "EndKM": "27K+800"
-    },
-    "SectionStart": {
-     "PositionLat": 24.46642,
-     "PositionLon": 120.82311
-    },
-    "SectionEnd": {
-     "PositionLat": 24.46181,
-     "PositionLon": 120.8531
-    }
-   }
-  ],
-  "sample_shape": {
-   "SectionID": "MIA083E",
-   "Geometry": "LINESTRING(120.82312 24.46641,120.82446 24.46582,120.82460 24.46577,120.82471 24.46573,120.82478 24.46571,120.82497 24.46564,120.82533 24.46549,120.82551 24.46541,120.82634 24.46507,120.82694 24.46480,120.82698 24.46479,120.82716 24.46471,120.82752 24.46457,120.82793 24.46440,120.82798 24.46438,120.82812 24.46433,120.82830 24.46427,120.82849 24.46421,120.82867 24.46414,120.82881 24.46409,120.82886 24.46408,120.82923 24.46397,120.82934 24.46394,120.82942 24.46392,120.82962 24.46388,120.82981 24.46384,120.82998 24.46380,120.83000 24.46380,120.83036 24.46374,120.83059 24.46371,120.83096 24.46367,120.83132 24.46363,120.83172 24.46362,120.83217 24.46362,120.83248 24.46362,120.83297 24.46365,120.83330 24.46369,120.83377 24.46375,120.83432 24.46383,120.83451 24.46385,120.83464 24.46387,120.83510 24.46394,120.83552 24.46400,120.83557 24.46400,120.83571 24.46402,120.83610 24.46408,120.83623 24.46410,120.83629 24.46411,120.83690 24.46419,120.83722 24.46423,120.83741 24.46425,120.83779 24.46430,120.83836 24.46439,120.83856 24.46442,120.83896 24.46449,120.83917 24.46452,120.83937 24.46456,120.83939 24.46456,120.83957 24.46459,120.83959 24.46459,120.83997 24.46466,120.84017 24.46469,120.84018 24.46469,120.84028 24.46470,120.84048 24.46472,120.84066 24.46474,120.84067 24.46474,120.84087 24.46476,120.84091 24.46477,120.84106 24.46478,120.84120 24.46478,120.84126 24.46479,120.84146 24.46479,120.84165 24.46479,120.84166 24.46479,120.84185 24.46480,120.84199 24.46480,120.84205 24.46480,120.84225 24.46479,120.84245 24.46478,120.84247 24.46478,120.84264 24.46476,120.84284 24.46475,120.84297 24.46474,120.84304 24.46473,120.84323 24.46471,120.84343 24.46468,120.84353 24.46467,120.84362 24.46466,120.84382 24.46463,120.84402 24.46460,120.84458 24.46452,120.84493 24.46447,120.84525 24.46444,120.84583 24.46441,120.84664 24.46444,120.84736 24.46446,120.84748 24.46447,120.84756 24.46447,120.84767 24.46447,120.84775 24.46447,120.84790 24.46447,120.84795 24.46446,120.84815 24.46445,120.84816 24.46445,120.84834 24.46442,120.84848 24.46441,120.84868 24.46437,120.84873 24.46436,120.84893 24.46432,120.84908 24.46428,120.84936 24.46421,120.84965 24.46411,120.84983 24.46404,120.85004 24.46395,120.85013 24.46391,120.85022 24.46387,120.85028 24.46384,120.85035 24.46381,120.85049 24.46374,120.85053 24.46372,120.85072 24.46361,120.85082 24.46355,120.85089 24.46350,120.85096 24.46346,120.85102 24.46341,120.85112 24.46334,120.85117 24.46330,120.85139 24.46313,120.85147 24.46306,120.85152 24.46302,120.85157 24.46298,120.85164 24.46293,120.85168 24.46290,120.85179 24.46282,120.85184 24.46279,120.85189 24.46275,120.85205 24.46262,120.85235 24.46240,120.85236 24.46240,120.85251 24.46228,120.85266 24.46217,120.85281 24.46205,120.85288 24.46200,120.85295 24.46196,120.85311 24.46184,120.85311 24.46183)"
-  }
+  "error": "too many requests"
  },
  "ChanghuaCounty": {
-  "error": "HTTP Error 400: Bad Request"
+  "error": "too many requests"
  },
  "NantouCounty": {
-  "error": "HTTP Error 400: Bad Request"
+  "error": "too many requests"
  },
  "YunlinCounty": {
-  "sections": 41,
-  "shapes": 41,
-  "kept": 41,
-  "cors": "*",
-  "sample_section": [
-   {
-    "SectionID": "T000001",
-    "LinkIDs": [
-     {
-      "LinkID": "6662290400010P"
-     },
-     {
-      "LinkID": "6662290400090P"
-     }
-    ],
-    "SectionName": "台19線",
-    "RoadID": "6662290400010P",
-    "RoadName": "台19線",
-    "RoadClass": 0,
-    "RoadDirection": "S",
-    "RoadSection": {
-     "Start": "新南路",
-     "End": "大同路"
-    }
-   }
-  ],
-  "sample_shape": {
-   "SectionID": "T000041",
-   "Geometry": "LINESTRING(120.295563 23.577152,120.295615 23.577071,120.295659 23.577003,120.295732 23.576886,120.295918 23.576591,120.296081 23.576333,120.296122 23.576268,120.296161 23.576206,120.29654 23.575595,120.296576 23.575537,120.29659 23.575514,120.296794 23.575184,120.296957 23.574919,120.297054 23.574761,120.297102 23.574685,120.297109 23.574672,120.297291 23.57438,120.297533 23.573992,120.297587 23.573905,120.29766 23.573788,120.297672 23.573769,120.298046 23.573167,120.298143 23.572991,120.298143 23.572991,120.298143 23.572991)"
-  }
+  "error": "too many requests"
  },
  "Chiayi": {
-  "error": "HTTP Error 400: Bad Request"
+  "error": "too many requests"
  },
  "ChiayiCounty": {
-  "error": "HTTP Error 400: Bad Request"
+  "error": "too many requests"
  },
  "PingtungCounty": {
-  "sections": 90,
-  "shapes": 90,
-  "kept": 0,
-  "cors": "*",
-  "sample_section": [
-   {
-    "SectionID": "1-3",
-    "LinkIDs": [
-     {
-      "LinkID": "3000100043645T"
-     },
-     {
-      "LinkID": "3000100043714T"
-     },
-     {
-      "LinkID": "3000100043867T"
-     }
-    ],
-    "SectionName": "台1線(建興路-沿山公路)",
-    "RoadID": "300010",
-    "RoadName": "台1線",
-    "RoadClass": 3,
-    "RoadDirection": "S",
-    "RoadSection": {
-     "Start": "建興路",
-     "End": "沿山公路"
-    },
-    "SectionStart": {
-     "PositionLat": 22.38688,
-     "PositionLon": 120.59413
-    },
-    "SectionEnd": {
-     "PositionLat": 22.368597,
-     "PositionLon": 120.60713
-    }
-   }
-  ],
-  "sample_shape": {
-   "SectionID": "1-3",
-   "Geometry": "LINESTRING (120.594134 22.38688, 120.596462 22.381291, 120.597492 22.378841, 120.597868 22.378236, 120.607132 22.368597)"
-  }
+  "error": "too many requests"
  },
  "YilanCounty": {
   "error": "too many requests"
  },
  "HualienCounty": {
-  "error": "HTTP Error 400: Bad Request"
+  "error": "too many requests"
  },
  "TaitungCounty": {
-  "error": "HTTP Error 400: Bad Request"
+  "error": "too many requests"
  },
  "live_Freeway": {
-  "cors": "*",
-  "sample": {
-   "UpdateTime": "2026-11-19T19:05:59+08:00",
-   "UpdateInterval": 60,
-   "SrcUpdateTime": "2026-11-19T19:04:00+08:00",
-   "SrcUpdateInterval": 60,
-   "AuthorityCode": "NFB",
-   "LinkVersion": "25.06.1",
-   "LiveTraffics": [
-    {
-     "SectionID": "0001",
-     "LinkIDs": [
-      {
-       "LinkID": "0000100000000C"
-      },
-      {
-       "LinkID": "0000100000040C"
-      },
-      {
-       "LinkID": "0000100000080C"
-      },
-      {
-       "LinkID": "0000100000110C"
-      }
-     ],
-     "TravelTime": 58,
-     "TravelSpeed": 67,
-     "CongestionLevelID": "A",
-     "CongestionLevel": "2",
-     "DataSources": {
-      "HasHistorical": 0,
-      "HasVD": 1,
-      "HasAVI": 0,
-      "HasETAG": 0,
-      "HasGVP": 0,
-      "HasCVP": 0,
-      "HasOthers": 0
-     },
-     "DataCollectTime": "2026-11-19T19:05:00+08:00"
-    },
-    {
-     "SectionID": "0003",
-     "LinkIDs": [
-      {
-       "LinkID": "0000100000080C"
-      },
-      {
-       "LinkID": "0000100000110C"
-      },
-      {
-       "LinkID": "0000100000130C"
-      },
-      {
-       "LinkID": "0000100000200C"
-      },
-      {
-       "LinkID": "0000100000260C"
-      }
-     ],
-     "TravelTime": 61,
-     "TravelSpeed": 84,
-     "CongestionLevelID": "A",
-     "CongestionLevel": "1",
-     "DataSources": {
-      "HasHistorical": 0,
-      "HasVD": 1,
-      "HasAVI": 0,
-      "HasETAG": 0,
-      "HasGVP": 0,
-      "HasCVP": 0,
-      "HasOthers": 0
-     },
-     "DataCollectTime": "2026-11-19T19:05:00+08:00"
-    },
-    {
-     "SectionID": "0005",
-     "LinkIDs": [
-      {
-       "LinkID": "0000100000200C"
-      },
-      {
-       "LinkID": "0000100000260C"
-      },
-      {
-       "LinkID": "0000100000300C"
-      },
-      {
-       "LinkID": "0000100000400C"
-      },
-      {
-       "LinkID": "0000100000500C"
-      }
-     ],
-     "TravelTime": 90,
-     "TravelSpeed": 93,
-     "CongestionLevelID": "A",
-     "CongestionLevel": "1",
-     "DataSources": {
-      "HasHistorical": 0,
-      "HasVD": 1,
-      "HasAVI": 0,
-      "HasETAG": 0,
-      "HasGVP": 0,
-      "HasCVP": 0,
-      "HasOthers": 0
-     },
-     "DataCollectTime": "2026-11-19T19:05:00+08:00"
-    }
-   ]
-  }
+  "error": "too many requests"
  },
  "live_Highway": {
-  "cors": "*",
-  "sample": {
-   "UpdateTime": "2026-11-19T19:08:58+08:00",
-   "UpdateInterval": 60,
-   "SrcUpdateTime": "2026-11-19T19:07:35+08:00",
-   "SrcUpdateInterval": 60,
-   "AuthorityCode": "THB",
-   "LinkVersion": "23.09.1",
-   "LiveTraffics": [
-    {
-     "SectionID": "3000900117175U",
-     "LinkIDs": [
-      {
-       "LinkID": "3000900117175U"
-      }
-     ],
-     "TravelTime": 27,
-     "TravelSpeed": 63,
-     "CongestionLevelID": "B",
-     "CongestionLevel": "1",
-     "DataSources": {
-      "HasHistorical": 0,
-      "HasVD": 1,
-      "HasAVI": 0,
-      "HasETAG": 1,
-      "HasGVP": 1,
-      "HasCVP": 0,
-      "HasOthers": 0
-     },
-     "DataCollectTime": "2026-11-19T19:08:36+08:00"
-    },
-    {
-     "SectionID": "1006100108200O",
-     "LinkIDs": [
-      {
-       "LinkID": "1006100108200O"
-      }
-     ],
-     "TravelTime": 23,
-     "TravelSpeed": 80,
-     "CongestionLevelID": "B",
-     "CongestionLevel": "1",
-     "DataSources": {
-      "HasHistorical": 0,
-      "HasVD": 1,
-      "HasAVI": 0,
-      "HasETAG": 1,
-      "HasGVP": 1,
-      "HasCVP": 0,
-      "HasOthers": 0
-     },
-     "DataCollectTime": "2026-11-19T19:08:36+08:00"
-    },
-    {
-     "SectionID": "3000900142220V",
-     "LinkIDs": [
-      {
-       "LinkID": "3000900142220V"
-      }
-     ],
-     "TravelTime": 7,
-     "TravelSpeed": 81,
-     "CongestionLevelID": "B",
-     "CongestionLevel": "1",
-     "DataSources": {
-      "HasHistorical": 0,
-      "HasVD": 1,
-      "HasAVI": 0,
-      "HasETAG": 1,
-      "HasGVP": 1,
-      "HasCVP": 0,
-      "HasOthers": 0
-     },
-     "DataCollectTime": "2026-11-19T19:08:36+08:00"
-    }
-   ]
-  }
+  "error": "too many requests"
  },
  "live_Taipei": {
-  "cors": "*",
-  "sample": {
-   "UpdateTime": "2026-11-19T19:08:58+08:00",
-   "UpdateInterval": 60,
-   "SrcUpdateTime": "2026-11-19T19:07:30+08:00",
-   "SrcUpdateInterval": 60,
-   "AuthorityCode": "TPE",
-   "LinkVersion": "25.12.1",
-   "LiveTraffics": [
-    {
-     "SectionID": "L_2000100000020A",
-     "LinkIDs": [
-      {
-       "LinkID": "2000100000020A"
-      }
-     ],
-     "TravelTime": 25,
-     "TravelSpeed": 74,
-     "CongestionLevelID": "RoadClass2_default",
-     "CongestionLevel": "1",
-     "DataSources": {
-      "HasHistorical": 0,
-      "HasVD": 1,
-      "HasAVI": 0,
-      "HasETAG": 0,
-      "HasGVP": 0,
-      "HasCVP": 0,
-      "HasOthers": 0
-     },
-     "DataCollectTime": "2026-11-19T19:07:00+08:00"
-    },
-    {
-     "SectionID": "L_2000100000090A",
-     "LinkIDs": [
-      {
-       "LinkID": "2000100000090A"
-      }
-     ],
-     "TravelTime": 0,
-     "TravelSpeed": 0,
-     "CongestionLevelID": "RoadClass2_default",
-     "CongestionLevel": "0",
-     "DataSources": {
-      "HasHistorical": 0,
-      "HasVD": 0,
-      "HasAVI": 0,
-      "HasETAG": 0,
-      "HasGVP": 0,
-      "HasCVP": 0,
-      "HasOthers": 0
-     },
-     "DataCollectTime": "2026-11-19T19:07:00+08:00"
-    },
-    {
-     "SectionID": "L_2000100000120A",
-     "LinkIDs": [
-      {
-       "LinkID": "2000100000120A"
-      }
-     ],
-     "TravelTime": 54,
-     "TravelSpeed": 54,
-     "CongestionLevelID": "RoadClass2_default",
-     "CongestionLevel": "4",
-     "DataSources": {
-      "HasHistorical": 0,
-      "HasVD": 1,
-      "HasAVI": 0,
-      "HasETAG": 0,
-      "HasGVP": 0,
-      "HasCVP": 0,
-      "HasOthers": 0
-     },
-     "DataCollectTime": "2026-11-19T19:07:00+08:00"
-    }
-   ]
-  }
+  "error": "too many requests"
  }
 }
