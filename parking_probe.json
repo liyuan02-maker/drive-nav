@@ -1,6 +1,6 @@
 {
  "Taipei": {
-  "live": 1180,
+  "live": 1185,
   "records": 0,
   "kept": 0,
   "cors": "*",
@@ -15,21 +15,77 @@
   "live": 0
  },
  "Taoyuan": {
-  "live": 188,
-  "records": 0,
-  "kept": 0,
+  "live": 202,
+  "records": 154,
+  "kept": 127,
   "cors": "*",
   "sample_live": [
    "AO0100003",
    "AO0100005",
    "AO010001"
   ],
-  "sample_park": []
+  "sample_park": [
+   {
+    "CarParkID": "AO020011",
+    "CarParkName": {
+     "Zh_tw": "南園停車場"
+    },
+    "CarParkShortName": {},
+    "CarParkRegNo": "府交停第1070328917號",
+    "OperatorID": "TAO86711789",
+    "Description": "汽車60機車20",
+    "CarParkType": 1,
+    "ParkingGuideType": 1,
+    "ParkingTypes": [
+     4
+    ],
+    "ParkingSiteTypes": [
+     20
+    ],
+    "ChargeTypes": [
+     1,
+     3
+    ],
+    "Telephone": "(03)4275807",
+    "CarParkPosition": {
+     "PositionLat": 24.971500396728516,
+     "PositionLon": 121.22846984863281
+    },
+    "Email": "didier0209@gmail.com",
+    "Address": "桃園市中壢區南園二路",
+    "FareDescription": "30/h",
+    "IsFreeParkingOutOfHours": 0,
+    "IsPublic": 1,
+    "IsMotorcycle": 0,
+    "OperationType": 1,
+    "LiveOccuppancyAvailable": 0,
+    "EVRechargingAvailable": 0,
+    "MonthlyTicketAvailable": 1,
+    "SeasonTicketAvailable": 0,
+    "ReservationAvailable": 0,
+    "WheelchairAccessible": 0,
+    "OvernightPermitted": 0,
+    "TicketMachine": 0,
+    "Toilet": 0,
+    "Restaurant": 0,
+    "GasStation": 0,
+    "Shop": 0,
+    "Gated": 0,
+    "Lighting": 0,
+    "SecureParking": 0,
+    "TicketOffice": 0,
+    "ProhibitedForAnyHazardousMaterialLoads": 0,
+    "SecurityGuard": 0,
+    "Supervision": 0,
+    "City": "Taoyuan",
+    "CityCode": "TAO"
+   }
+  ]
  },
  "Taichung": {
-  "live": 1137,
+  "live": 1139,
   "records": 89030,
-  "kept": 1114,
+  "kept": 1116,
   "cors": "*",
   "sample_live": [
    "01P0C0001E",
@@ -38,13 +94,13 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "04P0C0022A",
+    "CarParkID": "09P0M0003A",
     "CarParkName": {
-     "Zh_tw": "西區-文化局-臺中市大墩文化中心平面P"
+     "Zh_tw": "豐原區-臺鐵-豐原火車站附設機車A區P"
     },
     "CarParkShortName": {},
     "OperatorID": "",
-    "Description": "(109)中市交停規證字第035號，自2020年3月11日至2035年3月10日止，臺中市政府文化局委外寶盛國際股份有限公司運營(契約起迄：113.01.01~115.12.31)。",
+    "Description": "(113)中市交停規證字第249號，自2024年10月22日至2029年10月14日止，宜舍企業股份有限公司運營。",
     "CarParkType": 1,
     "ParkingGuideType": 255,
     "ParkingTypes": [
@@ -57,21 +113,21 @@
      255
     ],
     "CarParkPosition": {
-     "PositionLat": 24.141943,
-     "PositionLon": 120.665679
+     "PositionLat": 24.25265,
+     "PositionLon": 120.72272
     },
-    "Address": "臺中市西區英才路600號",
-    "FareDescription": "20元/時",
+    "Address": "臺中市豐原區豐原里12鄰中正路1-1號",
+    "FareDescription": "機車A區30元/次，月票600元",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
+    "IsPublic": 0,
     "IsMotorcycle": 0,
-    "OperationType": 1,
+    "OperationType": 3,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 1,
-    "MonthlyTicketAvailable": 1,
+    "EVRechargingAvailable": 0,
+    "MonthlyTicketAvailable": 0,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 0,
+    "WheelchairAccessible": 1,
     "OvernightPermitted": 0,
     "TicketMachine": 0,
     "Toilet": 0,
@@ -91,9 +147,9 @@
   ]
  },
  "Tainan": {
-  "live": 75,
+  "live": 77,
   "records": 109,
-  "kept": 74,
+  "kept": 76,
   "cors": "*",
   "sample_live": [
    "00343229",
@@ -102,17 +158,17 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "88908204",
+    "CarParkID": "88909843",
     "CarParkName": {
-     "Zh_tw": "LM陽光電城停車場"
+     "Zh_tw": "復華一街停車場"
     },
     "CarParkShortName": {},
-    "OperatorID": "50885758",
-    "Description": "平面小型車101格(含身心障礙停、婦幼車格各6格及綠能車位9格)。",
+    "OperatorID": "12745271",
+    "Description": "平面式小型車55格(含身心障礙停2格、婦幼車格2格及綠能車位2格)。",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
-     2
+     4
     ],
     "ParkingSiteTypes": [
      20
@@ -121,19 +177,19 @@
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 23.10965,
-     "PositionLon": 120.30657
+     "PositionLat": 23.00529,
+     "PositionLon": 120.245
     },
-    "Address": "台南市新市區龍目井路北側",
-    "FareDescription": "計時20元/時，當日最高120元時(跨日重新計費)",
+    "Address": "臺南市永康區復國里復華一街與19巷西南側",
+    "FareDescription": "每小時20元，當日最高收費400元,月租1300元",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
     "OperationType": 1,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 0,
+    "EVRechargingAvailable": 1,
     "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 1,
+    "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
@@ -147,7 +203,7 @@
     "SecureParking": 1,
     "TicketOffice": 0,
     "ProhibitedForAnyHazardousMaterialLoads": 0,
-    "SecurityGuard": 1,
+    "SecurityGuard": 0,
     "Supervision": 1,
     "City": "Tainan",
     "CityCode": "TNN"
@@ -166,34 +222,34 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "KHA00084",
+    "CarParkID": "KHA00077",
     "CarParkName": {
-     "Zh_tw": "同慶"
+     "Zh_tw": "澄德段停一停車場"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "841",
+    "CarParkRegNo": "833",
     "OperatorID": "12745271",
-    "Description": "平面小型車111格\n平面機車110格",
+    "Description": "平面小型車114格",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
      2
     ],
     "ParkingSiteTypes": [
-     20,
      4,
-     254
+     254,
+     20
     ],
     "ChargeTypes": [
-     3,
-     1
+     1,
+     3
     ],
     "CarParkPosition": {
-     "PositionLat": 22.62818,
-     "PositionLon": 120.32285
+     "PositionLat": 22.68579,
+     "PositionLon": 120.34154
     },
-    "Address": "高雄市苓雅區同慶路31號旁",
-    "FareDescription": "計時15元/半小時 當日上限120元",
+    "Address": "高雄市仁武區八德東路與京吉6路",
+    "FareDescription": "計次30元/6小時 當日上限60元",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
@@ -235,61 +291,57 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "KEE12704",
+    "CarParkID": "KEE12204",
     "CarParkName": {
-     "Zh_tw": "崇孝街停車場"
+     "Zh_tw": "基隆醫院停車場"
     },
     "CarParkShortName": {},
-    "OperatorID": "72635093",
-    "Description": "210格小型車格(含5格身障)",
+    "OperatorID": "70369154",
+    "Description": "戶外平面停車場",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
-     3,
-     1,
      4
     ],
     "ParkingSiteTypes": [
-     4,
-     8,
-     10
+     4
     ],
     "ChargeTypes": [
-     3,
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 25.09695,
-     "PositionLon": 121.71044
+     "PositionLat": 25.13074,
+     "PositionLon": 121.74846
     },
-    "Address": "基隆市.七堵區.大華段303.1034.1294地號)",
+    "Address": "基隆市信義區信二路268號",
     "ImageURLs": [
      ""
     ],
     "FareDescription": "小型車每小時30元。",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
+    "IsPublic": 0,
     "IsMotorcycle": 0,
-    "OperationType": 1,
+    "OperationType": 3,
     "LiveOccuppancyAvailable": 1,
     "EVRechargingAvailable": 1,
-    "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 1,
+    "MonthlyTicketAvailable": 0,
+    "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 0,
+    "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
-    "TicketMachine": 0,
+    "TicketMachine": 1,
     "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
     "Gated": 1,
     "Lighting": 1,
-    "SecureParking": 0,
-    "TicketOffice": 0,
+    "SecureParking": 1,
+    "TicketOffice": 1,
     "ProhibitedForAnyHazardousMaterialLoads": 0,
     "SecurityGuard": 1,
     "Supervision": 1,
+    "SupervisionType": 1,
     "City": "Keelung",
     "CityCode": "KEE"
    }
@@ -312,7 +364,7 @@
  },
  "YunlinCounty": {
   "live": 1,
-  "records": 4,
+  "records": 3,
   "kept": 1,
   "cors": "*",
   "sample_live": [
@@ -331,14 +383,14 @@
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
-     1,
      4,
-     2
+     2,
+     1
     ],
     "ParkingSiteTypes": [
-     8,
      4,
-     5
+     5,
+     8
     ],
     "ChargeTypes": [
      1
