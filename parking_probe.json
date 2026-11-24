@@ -1,6 +1,6 @@
 {
  "Taipei": {
-  "live": 1185,
+  "live": 1193,
   "records": 0,
   "kept": 0,
   "cors": "*",
@@ -26,14 +26,14 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "AO020011",
+    "CarParkID": "AO040005",
     "CarParkName": {
-     "Zh_tw": "南園停車場"
+     "Zh_tw": "大竹圍平面停車場"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "府交停第1070328917號",
-    "OperatorID": "TAO86711789",
-    "Description": "汽車60機車20",
+    "CarParkRegNo": "府交停第1060086004號",
+    "OperatorID": "TAO84136348",
+    "Description": "小型車17格、臨停20元/時、進場未滿30分鐘免費、月租2400元",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
@@ -46,14 +46,14 @@
      1,
      3
     ],
-    "Telephone": "(03)4275807",
+    "Telephone": "(02)24551299",
     "CarParkPosition": {
-     "PositionLat": 24.971500396728516,
-     "PositionLon": 121.22846984863281
+     "PositionLat": 25.023880004882812,
+     "PositionLon": 121.26165008544922
     },
-    "Email": "didier0209@gmail.com",
-    "Address": "桃園市中壢區南園二路",
-    "FareDescription": "30/h",
+    "Email": "lyparking@hotmail.com",
+    "Address": "桃園市蘆竹區博愛街與明德街交叉口",
+    "FareDescription": "臨停20元/時、進場未滿30分鐘免費、月租2400元",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
@@ -63,20 +63,20 @@
     "MonthlyTicketAvailable": 1,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 0,
-    "OvernightPermitted": 0,
-    "TicketMachine": 0,
+    "WheelchairAccessible": 1,
+    "OvernightPermitted": 1,
+    "TicketMachine": 1,
     "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
-    "Gated": 0,
-    "Lighting": 0,
-    "SecureParking": 0,
+    "Gated": 1,
+    "Lighting": 1,
+    "SecureParking": 1,
     "TicketOffice": 0,
     "ProhibitedForAnyHazardousMaterialLoads": 0,
-    "SecurityGuard": 0,
-    "Supervision": 0,
+    "SecurityGuard": 1,
+    "Supervision": 1,
     "City": "Taoyuan",
     "CityCode": "TAO"
    }
@@ -84,7 +84,7 @@
  },
  "Taichung": {
   "live": 1139,
-  "records": 89030,
+  "records": 1310,
   "kept": 1116,
   "cors": "*",
   "sample_live": [
@@ -94,13 +94,13 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "09P0M0003A",
+    "CarParkID": "06P0C0039A",
     "CarParkName": {
-     "Zh_tw": "豐原區-臺鐵-豐原火車站附設機車A區P"
+     "Zh_tw": "西屯區-交通局-(細停)麗澤國小校門左側P"
     },
     "CarParkShortName": {},
-    "OperatorID": "",
-    "Description": "(113)中市交停規證字第249號，自2024年10月22日至2029年10月14日止，宜舍企業股份有限公司運營。",
+    "OperatorID": "10927394",
+    "Description": "臺中市政府交通局自營。",
     "CarParkType": 1,
     "ParkingGuideType": 255,
     "ParkingTypes": [
@@ -113,21 +113,21 @@
      255
     ],
     "CarParkPosition": {
-     "PositionLat": 24.25265,
-     "PositionLon": 120.72272
+     "PositionLat": 24.19544,
+     "PositionLon": 120.61331
     },
-    "Address": "臺中市豐原區豐原里12鄰中正路1-1號",
-    "FareDescription": "機車A區30元/次，月票600元",
+    "Address": "西屯區國安二路242巷199號",
+    "FareDescription": "交通局免費",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 0,
+    "IsPublic": 1,
     "IsMotorcycle": 0,
-    "OperationType": 3,
+    "OperationType": 2,
     "LiveOccuppancyAvailable": 1,
     "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 0,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 1,
+    "WheelchairAccessible": 0,
     "OvernightPermitted": 0,
     "TicketMachine": 0,
     "Toilet": 0,
@@ -158,36 +158,36 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "88909843",
+    "CarParkID": "89022098",
     "CarParkName": {
-     "Zh_tw": "復華一街停車場"
+     "Zh_tw": "竑穗新市富中停車場"
     },
     "CarParkShortName": {},
     "OperatorID": "12745271",
-    "Description": "平面式小型車55格(含身心障礙停2格、婦幼車格2格及綠能車位2格)。",
+    "Description": "平面式小型車77格(含身心障礙2格、婦幼車格2格及綠能車位2格)。",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
      4
     ],
     "ParkingSiteTypes": [
-     20
+     4
     ],
     "ChargeTypes": [
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 23.00529,
-     "PositionLon": 120.245
+     "PositionLat": 23.08307,
+     "PositionLon": 120.29348
     },
-    "Address": "臺南市永康區復國里復華一街與19巷西南側",
-    "FareDescription": "每小時20元，當日最高收費400元,月租1300元",
+    "Address": "台南市新市區富中街132號對面",
+    "FareDescription": "",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
+    "IsPublic": 0,
     "IsMotorcycle": 0,
-    "OperationType": 1,
+    "OperationType": 3,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 1,
+    "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 1,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
@@ -211,9 +211,9 @@
   ]
  },
  "Kaohsiung": {
-  "live": 732,
+  "live": 733,
   "records": 755,
-  "kept": 732,
+  "kept": 733,
   "cors": "*",
   "sample_live": [
    "KHA00001",
@@ -222,58 +222,55 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "KHA00077",
+    "CarParkID": "KHB01219",
     "CarParkName": {
-     "Zh_tw": "澄德段停一停車場"
+     "Zh_tw": "Times高雄文育路停車場"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "833",
-    "OperatorID": "12745271",
-    "Description": "平面小型車114格",
+    "CarParkRegNo": "停7133",
+    "OperatorID": "28858068",
+    "Description": "小型車17格(含身障1格)",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
-     2
+     4
     ],
     "ParkingSiteTypes": [
-     4,
-     254,
-     20
+     4
     ],
     "ChargeTypes": [
      1,
      3
     ],
     "CarParkPosition": {
-     "PositionLat": 22.68579,
-     "PositionLon": 120.34154
+     "PositionLat": 22.67334,
+     "PositionLon": 120.31477
     },
-    "Address": "高雄市仁武區八德東路與京吉6路",
-    "FareDescription": "計次30元/6小時 當日上限60元",
+    "Address": "左營區文育路32號旁",
+    "FareDescription": "每半小時50元（當日連續停放最高收費500元）",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
+    "IsPublic": 0,
     "IsMotorcycle": 0,
-    "OperationType": 1,
+    "OperationType": 3,
     "LiveOccuppancyAvailable": 1,
     "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 1,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 0,
+    "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
-    "TicketMachine": 0,
+    "TicketMachine": 1,
     "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
-    "Gated": 1,
+    "Gated": 0,
     "Lighting": 1,
     "SecureParking": 1,
     "TicketOffice": 0,
     "ProhibitedForAnyHazardousMaterialLoads": 0,
     "SecurityGuard": 0,
-    "Supervision": 1,
-    "SupervisionType": 1,
+    "Supervision": 0,
     "City": "Kaohsiung",
     "CityCode": "KHH"
    }
@@ -291,43 +288,46 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "KEE12204",
+    "CarParkID": "KEE22112",
     "CarParkName": {
-     "Zh_tw": "基隆醫院停車場"
+     "Zh_tw": "非凡物業管理顧問有限公司八尺門停車場"
     },
     "CarParkShortName": {},
-    "OperatorID": "70369154",
-    "Description": "戶外平面停車場",
+    "CarParkRegNo": "申辦中",
+    "OperatorID": "92762321",
+    "Geometry": "????????",
+    "Description": "八尺門平面停車場",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
      4
     ],
     "ParkingSiteTypes": [
-     4
+     10
     ],
     "ChargeTypes": [
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 25.13074,
-     "PositionLon": 121.74846
+     "PositionLat": 25.1558,
+     "PositionLon": 121.7702
     },
-    "Address": "基隆市信義區信二路268號",
+    "Address": "基隆市中正區和一路2巷11之28號東南側",
     "ImageURLs": [
      ""
     ],
-    "FareDescription": "小型車每小時30元。",
+    "FareDescription": "小型車平日每小時30元、假日每小時40元。",
     "IsFreeParkingOutOfHours": 0,
+    "VehicleRestriction": "小型車",
     "IsPublic": 0,
     "IsMotorcycle": 0,
     "OperationType": 3,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 1,
+    "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 0,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 1,
+    "WheelchairAccessible": 0,
     "OvernightPermitted": 1,
     "TicketMachine": 1,
     "Toilet": 0,
@@ -364,7 +364,7 @@
  },
  "YunlinCounty": {
   "live": 1,
-  "records": 3,
+  "records": 4,
   "kept": 1,
   "cors": "*",
   "sample_live": [
@@ -384,13 +384,13 @@
     "ParkingGuideType": 1,
     "ParkingTypes": [
      4,
-     2,
-     1
+     1,
+     2
     ],
     "ParkingSiteTypes": [
      4,
-     5,
-     8
+     8,
+     5
     ],
     "ChargeTypes": [
      1
