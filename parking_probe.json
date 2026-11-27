@@ -1,6 +1,6 @@
 {
  "Taipei": {
-  "live": 1191,
+  "live": 1197,
   "records": 0,
   "kept": 0,
   "cors": "*",
@@ -15,9 +15,9 @@
   "live": 0
  },
  "Taoyuan": {
-  "live": 197,
+  "live": 199,
   "records": 154,
-  "kept": 124,
+  "kept": 126,
   "cors": "*",
   "sample_live": [
    "AO0100003",
@@ -26,59 +26,57 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "AO010001",
+    "CarParkID": "AO020011",
     "CarParkName": {
-     "Zh_tw": "西門地下停車場"
+     "Zh_tw": "南園停車場"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "府交停第1080212568號",
-    "OperatorID": "TAO80304384",
-    "Description": "地下二層停車場",
-    "CarParkType": 3,
-    "ParkingGuideType": 2,
+    "CarParkRegNo": "府交停第1070328917號",
+    "OperatorID": "TAO86711789",
+    "Description": "汽車60機車20",
+    "CarParkType": 1,
+    "ParkingGuideType": 1,
     "ParkingTypes": [
-     2
+     4
     ],
     "ParkingSiteTypes": [
-     19
+     20
     ],
     "ChargeTypes": [
-     1
+     1,
+     3
     ],
-    "Telephone": "(03)3310804",
-    "EmergencyPhone": "0800021111    ",
+    "Telephone": "(03)4275807",
     "CarParkPosition": {
-     "PositionLat": 24.99394989013672,
-     "PositionLon": 121.30442810058594
+     "PositionLat": 24.971500396728516,
+     "PositionLon": 121.22846984863281
     },
-    "Email": "kennylin77@gmail.com",
-    "Address": "桃園市桃園區育樂街42-1號",
-    "WebURL": "https://www.youparking.com.tw/",
-    "FareDescription": "計時:30元/時，每日最高150元",
-    "SpecialOfferDescription": "身障優惠",
+    "Email": "didier0209@gmail.com",
+    "Address": "桃園市中壢區南園二路",
+    "FareDescription": "30/h",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
     "OperationType": 1,
     "LiveOccuppancyAvailable": 0,
-    "EVRechargingAvailable": 1,
+    "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 1,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 0,
-    "OvernightPermitted": 1,
-    "TicketMachine": 1,
-    "Toilet": 1,
+    "OvernightPermitted": 0,
+    "TicketMachine": 0,
+    "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
-    "Gated": 1,
-    "Lighting": 1,
-    "SecureParking": 1,
+    "Gated": 0,
+    "Lighting": 0,
+    "SecureParking": 0,
     "TicketOffice": 0,
     "ProhibitedForAnyHazardousMaterialLoads": 0,
-    "SecurityGuard": 1,
-    "Supervision": 1,
+    "SecurityGuard": 0,
+    "Supervision": 0,
     "City": "Taoyuan",
     "CityCode": "TAO"
    }
@@ -96,13 +94,13 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "02P0C0014A",
+    "CarParkID": "26P0C0001A",
     "CarParkName": {
-     "Zh_tw": "東區-臺鐵-精武車站附設P"
+     "Zh_tw": "霧峰區-公所-本堂里多功能P"
     },
     "CarParkShortName": {},
-    "OperatorID": "24450981",
-    "Description": "(113)中市交停規證字第244號，自2024年10月22日至2029年10月14日止，宜舍企業股份有限公司運營。",
+    "OperatorID": "12745271",
+    "Description": "(112)中市交停規證字第212號，自2023年10月20日至2038年10月19日止，公所委外竑穗興業股份有限公司運營(契約起迄：114.08.01~117.07.31)。",
     "CarParkType": 1,
     "ParkingGuideType": 255,
     "ParkingTypes": [
@@ -115,18 +113,18 @@
      255
     ],
     "CarParkPosition": {
-     "PositionLat": 24.1508,
-     "PositionLon": 120.69788
+     "PositionLat": 24.05801,
+     "PositionLon": 120.69716
     },
-    "Address": "臺中市東區東光路161號",
-    "FareDescription": "汽車20元/半小時，假日25元/半小時。第一小時未滿30分鐘免費，超過30分鐘以一小時計。【機車】平日30元、假日50元，進場前30分鐘免費。",
+    "Address": "臺中市霧峰區中正路675巷與育群路交叉口",
+    "FareDescription": "10元/半小時，月租1800元/月",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 0,
+    "IsPublic": 1,
     "IsMotorcycle": 0,
-    "OperationType": 3,
+    "OperationType": 1,
     "LiveOccuppancyAvailable": 1,
     "EVRechargingAvailable": 0,
-    "MonthlyTicketAvailable": 1,
+    "MonthlyTicketAvailable": 0,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 0,
@@ -160,38 +158,38 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "81290514",
+    "CarParkID": "61620111-1",
     "CarParkName": {
-     "Zh_tw": "東橋八街停車場"
+     "Zh_tw": "立德停車場B區"
     },
     "CarParkShortName": {},
-    "OperatorID": "80304384",
-    "Description": "平面停車場小型車91格（含身心障礙車2格、婦幼車格2格及綠能車位5格）",
+    "OperatorID": "64912334",
+    "Description": "小型車25格(含身心障礙停車為1格)",
     "CarParkType": 1,
-    "ParkingGuideType": 2,
+    "ParkingGuideType": 1,
     "ParkingTypes": [
-     2
+     254
     ],
     "ParkingSiteTypes": [
-     20
+     254
     ],
     "ChargeTypes": [
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 23.02071,
-     "PositionLon": 120.23356
+     "PositionLat": 22.97654,
+     "PositionLon": 120.21495
     },
-    "Address": "臺南市永康區東橋八街58號旁空地停車場",
-    "FareDescription": "計時20元/時，12小時內最高120元",
+    "Address": "台南市東區立德八路與立德一路交叉口南側",
+    "FareDescription": "計時20元/時,當日最高120元時(跨日重新計費)",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
     "OperationType": 1,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 1,
+    "EVRechargingAvailable": 0,
     "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 1,
+    "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
@@ -200,7 +198,7 @@
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
-    "Gated": 0,
+    "Gated": 1,
     "Lighting": 1,
     "SecureParking": 1,
     "TicketOffice": 0,
@@ -213,9 +211,9 @@
   ]
  },
  "Kaohsiung": {
-  "live": 732,
+  "live": 731,
   "records": 755,
-  "kept": 732,
+  "kept": 731,
   "cors": "*",
   "sample_live": [
    "KHA00001",
@@ -224,48 +222,43 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "KHA00248",
+    "CarParkID": "KHB00255",
     "CarParkName": {
-     "Zh_tw": "辰淵金富停車場"
+     "Zh_tw": "谷杉興華林森停車場"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "G26",
-    "OperatorID": "22763918",
-    "Description": "小型車98輛（含身心障礙車位2輛、孕婦及育有6歲以下兒童者車位2輛）",
+    "CarParkRegNo": "停7092",
+    "OperatorID": "82929218",
+    "Description": "小型車8輛(含身心障礙者專用停車位1輛)。",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
-     254,
-     1,
      4
     ],
     "ParkingSiteTypes": [
-     19,
-     1,
      20
     ],
     "ChargeTypes": [
-     3,
      1
     ],
     "CarParkPosition": {
-     "PositionLat": 22.72385,
-     "PositionLon": 120.3193
+     "PositionLat": 22.63228,
+     "PositionLon": 120.30442
     },
-    "Address": "高雄市楠梓區加昌路與金富街交叉口",
-    "FareDescription": "15元/半小時",
+    "Address": "興華路49號對面",
+    "FareDescription": "計時收費：每半小時50元(當日連續停放最高收費500元)。月租收費：每月5,000元。 ",
     "IsFreeParkingOutOfHours": 0,
-    "IsPublic": 1,
+    "IsPublic": 0,
     "IsMotorcycle": 0,
-    "OperationType": 1,
+    "OperationType": 3,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 1,
-    "MonthlyTicketAvailable": 1,
+    "EVRechargingAvailable": 0,
+    "MonthlyTicketAvailable": 0,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
     "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
-    "TicketMachine": 1,
+    "TicketMachine": 0,
     "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
@@ -295,57 +288,63 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "KEE12402",
+    "CarParkID": "KEE12705",
     "CarParkName": {
-     "Zh_tw": "西三停車場"
+     "Zh_tw": "光明停一停車場",
+     "En": "Guangming 1st Parking Lot"
     },
     "CarParkShortName": {},
-    "OperatorID": "00277104",
-    "Description": "平面式小型車464格(含無障礙車位20格)",
+    "CarParkRegNo": "基市停車登字第109012號",
+    "OperatorID": "80682490",
+    "Description": "平面式小型車 56 格(含身心障礙停車位2格 婦幼專用車位1格)",
     "CarParkType": 1,
     "ParkingGuideType": 1,
     "ParkingTypes": [
-     2
+     4
     ],
     "ParkingSiteTypes": [
-     3
+     19,
+     20
     ],
     "ChargeTypes": [
      3,
      1
     ],
+    "EmergencyPhone": "0900219002",
     "CarParkPosition": {
-     "PositionLat": 25.13629,
-     "PositionLon": 121.74156
+     "PositionLat": 25.09808,
+     "PositionLon": 121.71691
     },
-    "Address": "基隆市仁愛區港西街16號",
+    "Address": "基隆市七堵區光明路空地(七堵區行政大樓旁)",
     "ImageURLs": [
      ""
     ],
-    "FareDescription": "小型車平日每小時30元、假日每小時40元。",
+    "WebURL": "https://www.altob.com.tw/",
+    "FareDescription": "小型車每小時30元。",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
-    "OperationType": 2,
+    "OperationType": 1,
     "LiveOccuppancyAvailable": 1,
-    "EVRechargingAvailable": 0,
-    "MonthlyTicketAvailable": 1,
+    "EVRechargingAvailable": 1,
+    "MonthlyTicketAvailable": 0,
     "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 0,
+    "WheelchairAccessible": 1,
     "OvernightPermitted": 1,
-    "TicketMachine": 0,
+    "TicketMachine": 1,
     "Toilet": 0,
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
-    "Gated": 1,
+    "Gated": 0,
     "Lighting": 1,
-    "SecureParking": 0,
+    "SecureParking": 1,
     "TicketOffice": 0,
-    "ProhibitedForAnyHazardousMaterialLoads": 0,
+    "ProhibitedForAnyHazardousMaterialLoads": 1,
     "SecurityGuard": 0,
     "Supervision": 1,
+    "LandMark": "七堵區行政大樓",
     "City": "Keelung",
     "CityCode": "KEE"
    }
@@ -376,53 +375,59 @@
   ],
   "sample_park": [
    {
-    "CarParkID": "A01",
+    "CarParkID": "yun12019",
     "CarParkName": {
-     "Zh_tw": "雲林溪加蓋停車場"
+     "Zh_tw": "雲林溪美食廣場停車場"
     },
     "CarParkShortName": {},
-    "CarParkRegNo": "1083326081-4",
-    "OperatorID": "YUN87158061",
-    "Description": "平面停車場75個(含無障礙停車位)",
+    "CarParkRegNo": "1130600277-1",
+    "OperatorID": "80743546",
+    "Description": "無",
     "CarParkType": 1,
     "ParkingGuideType": 1,
-    "ParkingTypes": [],
+    "ParkingTypes": [
+     1,
+     2,
+     4
+    ],
     "ParkingSiteTypes": [
-     5,
-     20,
-     19
+     4,
+     8,
+     5
+    ],
+    "ChargeTypes": [
+     1
     ],
     "CarParkPosition": {
-     "PositionLat": 23.706520080566406,
-     "PositionLon": 120.53692626953125
+     "PositionLat": 23.706368,
+     "PositionLon": 120.5387749
     },
-    "Email": "ylhg30208@mail.yunlin.gov.tw",
-    "Address": "雲林縣斗六市民生南路6號",
-    "FareDescription": "每次30元",
+    "Address": "640雲林縣斗六市城頂街170號 對面",
+    "FareDescription": "一小時20元",
     "IsFreeParkingOutOfHours": 0,
     "IsPublic": 1,
     "IsMotorcycle": 0,
     "OperationType": 1,
-    "LiveOccuppancyAvailable": 0,
+    "LiveOccuppancyAvailable": 1,
     "EVRechargingAvailable": 0,
-    "MonthlyTicketAvailable": 1,
-    "SeasonTicketAvailable": 1,
+    "MonthlyTicketAvailable": 0,
+    "SeasonTicketAvailable": 0,
     "ReservationAvailable": 0,
-    "WheelchairAccessible": 1,
+    "WheelchairAccessible": 0,
     "OvernightPermitted": 1,
     "TicketMachine": 1,
-    "Toilet": 0,
+    "Toilet": 1,
     "Restaurant": 0,
     "GasStation": 0,
     "Shop": 0,
     "Gated": 1,
     "Lighting": 1,
     "SecureParking": 1,
-    "TicketOffice": 0,
+    "TicketOffice": 1,
     "ProhibitedForAnyHazardousMaterialLoads": 0,
-    "SecurityGuard": 0,
+    "SecurityGuard": 1,
     "Supervision": 1,
-    "SupervisionType": 1,
+    "SupervisionType": 254,
     "City": "YunlinCounty",
     "CityCode": "YUN"
    }
